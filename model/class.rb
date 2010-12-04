@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env ruby -KU
 # =============================================================================================
 # SchemaForm
 # A high-level database construction and programming layer.

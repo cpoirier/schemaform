@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env ruby -KU
 # =============================================================================================
 # SchemaForm
 # A high-level database construction and programming layer.
@@ -20,6 +20,7 @@
 # =============================================================================================
 
 
+if $0 == 
 
 Dir[$product.relative_path("types/*.rb")].each do |path|
    require path

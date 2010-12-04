@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env ruby -KU
 # =============================================================================================
 # SchemaForm
 # A high-level database construction and programming layer.
@@ -23,9 +23,23 @@
 
 module SchemaForm
 module Model
-module Fields
+class Field
+   
+   def initialize( schema)
+   
+   def >=( lhs )
+      assert()
+      return FieldIsGTE.new( self, lhs )
+   end
+   
+   
+   
+   
+   
+   
+   
 
 
-end # Fields
+end # Field
 end # Model
 end # SchemaForm

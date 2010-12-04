@@ -23,8 +23,8 @@ class Product
       @license   = @@licenses.member?(license) ? @@licenses[license] : license
                   
       @install_directory = File.dirname(File.normalize_path($0))
-      @system_directory  = File.normalize_path(File.dirname(File.dirname(File.expand_path(__FILE__))))
-      @version           = (File.directory?("#{@system_directory}/.svn") && `which svnversion`.strip.length > 0) ? `svnversion -n "#{@system_directory}"`.split(":").pop : "$Revision: $".to_i
+      @library_directory = File.normalize_path(File.dirname(File.dirname(File.expand_path(__FILE__))))
+      @version           = (File.directory?("#{@library_directory}/.svn") && `which svnversion`.strip.length > 0) ? `svnversion -n "#{@library_directory}"`.split(":").pop : "$Revision: $".to_i
    end
    
    def descriptor()
@@ -32,8 +32,8 @@ class Product
    end
    
    
-   def system_path( relative )
-      return @system_directory + relative
+   def library_path( relative )
+      return @library_directory + relative
    end
    
    def install_path( relative )
@@ -44,8 +44,8 @@ class Product
       return File.script_path(relative, 1)
    end
    
-   def relative_system_directory( absolute )
-      return File.contract_path(absolute, @system_directory)
+   def relative_library_directory( absolute )
+      return File.contract_path(absolute, @library_directory)
    end
    
    def relative_install_directory( absolute )

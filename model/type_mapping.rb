@@ -19,7 +19,7 @@
 #             limitations under the License.
 # =============================================================================================
 
-require $product.system_path("schemaform/types.rb")
+require $schemaform.library_path("schemaform/types.rb")
 
 
 

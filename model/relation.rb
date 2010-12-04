@@ -19,7 +19,6 @@
 #             limitations under the License.
 # =============================================================================================
 
-require File.expand_path("../../tools/quality.rb")
 
 
 #

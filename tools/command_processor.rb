@@ -35,10 +35,10 @@ class CommandProcessor
    # initialize()
    #  - parses the parameters into flags and files and preps the CommandProcessor for use
    
-   def initialize( parameters, flag_default = nil, system_directory = nil )
+   def initialize( parameters, flag_default = nil, library_directory = nil )
       
       @install_directory = File.dirname(File.normalize_path($0))
-      @system_directory  = system_directory.nil? ? File.normalize_path(File.dirname(File.dirname(File.expand_path(__FILE__)))) : system_directory
+      @library_directory = library_directory.nil? ? File.normalize_path(File.dirname(File.dirname(File.expand_path(__FILE__)))) : library_directory
       
       #
       # Parse the parameters into files and flags.
@@ -72,9 +72,11 @@ class CommandProcessor
    # Set :exit if you want to exit on completion.
    
    def self.process( parameters, control, &block )
-      $command_processor = cp = self.new( parameters, control.fetch(:flag_default, nil), control.fetch(:product, nil) )
-      rc = cp.process( control, &block )
-      
+      cp = self.new( parameters, control.fetch(:flag_default, nil), control.fetch(:product, nil) )
+      rc = cp.process(control) do |flags, files|
+         yield( cp, flags, files )
+      end
+
       if control.fetch(:exit, false) then
          exit(rc)
       else
@@ -106,7 +108,7 @@ class CommandProcessor
          # 
          # Yield to the user's block to process.
          
-         instance_eval(&block)         
+         yield( @flags, @files )
          rc = 0
          
       rescue SystemExit 
@@ -132,8 +134,8 @@ class CommandProcessor
    end
    
    
-   def system_path( relative )
-      return @system_directory + relative
+   def library_path( relative )
+      return @library_directory + relative
    end
    
    def install_path( relative )
@@ -144,8 +146,8 @@ class CommandProcessor
       return File.script_path(relative, 1)
    end
    
-   def relative_system_directory( absolute )
-      return File.contract_path(absolute, @system_directory)
+   def relative_library_directory( absolute )
+      return File.contract_path(absolute, @library_directory)
    end
    
    def relative_install_directory( absolute )

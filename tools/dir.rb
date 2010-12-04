@@ -11,6 +11,8 @@
 # governing permissions and limitations under the License.
 #================================================================================================================================
 
+require( File.dirname(File.expand_path(__FILE__)) + "/string.rb" )
+
 
 class Dir
 

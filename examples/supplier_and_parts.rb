@@ -20,13 +20,8 @@
 # =============================================================================================
 
 require "#{File.dirname(File.expand_path(__FILE__))}/../tools/command_processor.rb"
-CommandProcessor.process(ARGV, :exit => true) do |flags, files|
-
+CommandProcessor.process(ARGV, :exit => true) do
+   require system_path("model/schema.rb")
    
-
-   puts "hi"
-
-
-
-
+   
 end

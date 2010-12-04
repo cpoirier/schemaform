@@ -118,7 +118,7 @@ class Schema
    #
    # Defines a class within the Schema.
    
-   function define_class( name, &block )
+   def define_class( name, &block )
       assert( !@entities.member?(name), "duplicate entity name", {"name" => name} )
       @entities[name] = Class.new( name, &block )      
    end

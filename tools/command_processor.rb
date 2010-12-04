@@ -13,6 +13,8 @@
 
 
 require( File.dirname(File.expand_path(__FILE__)) + "/object.rb" )
+require( File.dirname(File.expand_path(__FILE__)) + "/file.rb"   )
+require( File.dirname(File.expand_path(__FILE__)) + "/dir.rb"    )
 
 
 
@@ -27,16 +29,16 @@ require( File.dirname(File.expand_path(__FILE__)) + "/object.rb" )
 
 class CommandProcessor
 
-   attr_accessor :product
-   
+   attr_reader :files, :flags
    
    #
    # initialize()
    #  - parses the parameters into flags and files and preps the CommandProcessor for use
    
-   def initialize( parameters, flag_default = nil, product = nil )
-
-      @product = product
+   def initialize( parameters, flag_default = nil, system_directory = nil )
+      
+      @install_directory = File.dirname(File.normalize_path($0))
+      @system_directory  = system_directory.nil? ? File.normalize_path(File.dirname(File.dirname(File.expand_path(__FILE__)))) : system_directory
       
       #
       # Parse the parameters into files and flags.
@@ -69,11 +71,9 @@ class CommandProcessor
    # Any parameters from initialize() or process() can be passed via the control hash.  
    # Set :exit if you want to exit on completion.
    
-   def self.process( parameters, control = {} )
-      cp = self.new( parameters, control.fetch(:flag_default, nil), control.fetch(:product, nil) )
-      rc = cp.process( control.fetch(:load_tools, true), control.fetch(:hijack_std, true) ) do |flags, files|
-         yield( flags, files )
-      end
+   def self.process( parameters, control, &block )
+      $command_processor = cp = self.new( parameters, control.fetch(:flag_default, nil), control.fetch(:product, nil) )
+      rc = cp.process( control, &block )
       
       if control.fetch(:exit, false) then
          exit(rc)
@@ -88,7 +88,7 @@ class CommandProcessor
    #  - calls your block, capturing all errors and referring them to report_* for reporting
    #  - returns 0 on success, some higher integer on failure (for use with exit)
 
-   def process( load_tools = true, hijack_std = true )
+   def process( control, &block )
       rc = 1
       
       begin
@@ -96,9 +96,9 @@ class CommandProcessor
          #
          # Load all tools.
          
-         if load_tools then
+         if control.fetch(:load_tools, true) then
             Dir["#{File.dirname(File.expand_path(__FILE__))}/*.rb"].each {|path| require path }
-            if hijack_std then
+            if control.fetch(:hijack_std, true) then
                ContextStream.hijack_std() 
             end
          end         
@@ -106,7 +106,7 @@ class CommandProcessor
          # 
          # Yield to the user's block to process.
          
-         yield( @flags, @files )
+         instance_eval(&block)         
          rc = 0
          
       rescue SystemExit 
@@ -130,6 +130,28 @@ class CommandProcessor
 
       return rc
    end
+   
+   
+   def system_path( relative )
+      return @system_directory + relative
+   end
+   
+   def install_path( relative )
+      return @install_directory + relative
+   end
+   
+   def relative_path( relative )
+      return File.script_path(relative, 1)
+   end
+   
+   def relative_system_directory( absolute )
+      return File.contract_path(absolute, @system_directory)
+   end
+   
+   def relative_install_directory( absolute )
+      return File.contract_path(absolute, @install_directory)
+   end
+   
 
 
    #
@@ -163,7 +185,7 @@ class CommandProcessor
    
    def report_load_error( e, stream = $stderr ) 
       message = e.class.method_defined?("failsafe_message") ? e.failsafe_message : e.message
-      message = "no such file to load -- " + (@product ? @product.relative_install_directory($1) : $1) if message =~ /no such file to load -- (.*)$/
+      message = "no such file to load -- " + relative_install_directory($1) if message =~ /no such file to load -- (.*)$/
       return report_exception( e, stream, message )
    end
 
@@ -192,7 +214,7 @@ class CommandProcessor
    
    def print_backtrace( elements, stream = $stderr )
       elements.each do |line| 
-         stream.puts( "• " + (@product ? @product.relative_install_directory(line) : line) )
+         stream.puts( "• " + relative_install_directory(line) )
       end
    end
    
@@ -224,7 +246,7 @@ end
 # Test the class.
 
 if $0 == __FILE__
-   parsed = Tapestry::CommandLineParser.new( )
+   parsed = CommandLineParser.new( )
 
    if parsed.flags.empty? then
       puts( "No flags." )

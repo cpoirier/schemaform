@@ -36,7 +36,10 @@ class Schema
    
    def self.define( name, &block )
       @@monitor.synchronize do
-         assert( !@@schemas.member?(name), "duplicate schema name", {"name" => name, "existing" => @@schemas[name].source} )
+         if @@schemas.member?(name) then
+            raise AssertionFailure.new("duplicate schema name", {"name" => name, "existing" => @@schemas[name].source})
+         end
+         
          @@schemas[name] = self.new( name, caller()[0], &block )
       end
    end
@@ -145,9 +148,9 @@ private
       @name         = name
       @source       = source
       @mappings     = {}
-      @all_types    = Namespace.new()
-      @scalar_types = Namespace.new()
-      @entities     = Namespace.new()
+      @all_types    = {}
+      @scalar_types = {}
+      @entities     = {}
       
       register_native_types()
 

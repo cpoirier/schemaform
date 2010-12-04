@@ -21,6 +21,30 @@ class Hash
       self[key] = type.new() unless type.nil? || self.member?(key)
       return self.ruby_get(key)
    end
+
+   
+   #
+   # If not in Ruby 1.9 or better, ensure initial order is respected by each and keys.
+   
+   if RUBY_VERSION < "1.9" then
+      alias ruby_set []=
+      
+      def []=( key, value )
+         @key_order = [] if @key_order.nil?
+         @key_order << key unless member?(key)
+         ruby_set( key, value )
+      end
+      
+      def keys
+         @key_order
+      end
+      
+      def each()
+         keys.each do |key|
+            yield( key, self[key] )
+         end
+      end
+   end
    
    
    #

@@ -44,6 +44,27 @@ class Schema
       end
    end
    
+   
+   # ==========================================================================================
+   #                                     Definition Language
+   # ==========================================================================================
+   
+      
+   #
+   # Defines an entity within the Schema.
+   
+   def define( name, parent = nil, &block )
+      assert( !@entities.member?(name), "duplicate entity name", {"name" => name} )
+      assert( parent.nil? || @entities.member?(parent), "parent not defined", {"name" => parent} )
+      @entities[name] = Entity.new( name, parent, &block )      
+   end
+   
+   
+   
+   
+   
+   
+   
    #
    # Returns the schema name.
    
@@ -117,15 +138,6 @@ class Schema
    end
 
 
-   #
-   # Defines a class within the Schema.
-   
-   def define_class( name, &block )
-      assert( !@entities.member?(name), "duplicate entity name", {"name" => name} )
-      @entities[name] = Class.new( name, &block )      
-   end
-   
-   
    #
    # Returns a relation representing the entirety of a class.
    
@@ -228,3 +240,6 @@ private
 end # Schema
 end # Model
 end # SchemaForm
+
+
+require $schemaform.relative_path("entity.rb")

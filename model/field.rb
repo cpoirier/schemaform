@@ -25,37 +25,18 @@ module SchemaForm
 module Model
 class Field
    
-   def initialize( schema)
-   
-   def >=( lhs )
-      assert()
-      return FieldIsGTE.new( self, lhs )
-   end
-   
-   
-   define_class :Role do
-      field :name        , text_type(40)
-      field :parents     , {|role| role.find_matching(:RoleInheritance).return_only(:parent => :role)}
-      field :ancestors   , {|role| role.find_matching(:RoleInheritance).follow(:RoleInheritance, :role, :parent).return_only(:parent => :role)}
-      field :closure     , {|role| relation(:role => role.id) + role.ancestors}
-      field :capabilities, {|role| role.closure.join(:RoleCapability).return_only(:capability)}
-   end
-   
-   What is this?
-   
-   |role| 
-     - must be something used to calculate the typing and nature of what is being generated
-     - must also generate something that can be be used as that generated thing
-     
-   
-   
-   
-   
-   
-   
-   
+   # def initialize( schema)
+   # 
+   # def >=( lhs )
+   #    assert()
+   #    return FieldIsGTE.new( self, lhs )
+   # end
+   # 
 
 
 end # Field
 end # Model
 end # SchemaForm
+
+
+Dir[$schemaform.relative_path("fields/*.rb")].each {|path| require path}

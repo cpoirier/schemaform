@@ -20,38 +20,16 @@
 # =============================================================================================
 
 
-#
-# Defines a si
-# Provides a naming context and a unit of storage within the SchemaForm system.  Multiple
-# Schemas can coexist within one physical database, but names are unique.
 
 module SchemaForm
 module Model
-class Class
-      
-   def initialize( name, &block )
-      @name   = name
-      @fields = Namespace.new()
-      instance_eval(&block) if block_given?
-   end
-   
-   
-   #
-   # Defines a stored (as opposed to derived) field for the class.
-   
-   def stored( name, type, default = nil, &block )
-      register_field( Fields::StoredField.new(name, type) )
-   end
+module Fields
+
+class DerivedField < Field
+end
 
 
-protected
 
-   def register_field( field )
-      assert( !@fields.member?(field.name), "duplicate field name #{field.name}" )      
-   end
-      
-
-   
-end # Class
+end # Fields
 end # Model
 end # SchemaForm

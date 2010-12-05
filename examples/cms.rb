@@ -34,24 +34,25 @@ def example_cms_schema()
       # and so on).  Each Account (below) has exactly one Role, and draws the Role's full 
       # set of direct and inherited capabilities.
       
-      define_class :Role do
-         field :name        , text_type(40)
-         field :parents     , lambda {|role| role.find_matching(:RoleInheritance).return_only(:parent => :role)}
-         field :ancestors   , lambda {|role| role.find_matching(:RoleInheritance).follow(:RoleInheritance, :role, :parent).return_only(:parent => :role)}
-         field :closure     , lambda {|role| relation(:role => role.id) + role.ancestors}
-         field :capabilities, lambda {|role| role.closure.join(:RoleCapability).return_only(:capability)}
+      define :Role do
+         field :name                  , text(40)
+         field :parents               , lambda {|role| role.find_matching(:RoleInheritance).return_only(:parent => :role)}
+         field :ancestors             , lambda {|role| role.find_matching(:RoleInheritance).follow(:RoleInheritance, :role, :parent).return_only(:parent => :role)}
+         field :closure               , lambda {|role| relation(:role => role.id) + role.ancestors}
+         field :capabilities          , lambda {|role| role.closure.join(:RoleCapability).return_only(:capability)}
+         field :inherited_capabilities, lambda {|role| role.ancestors.join(:RoleCapability).return_only(:capability)}
       end
 
-      define_class :Capability do
+      define :Capability do
          field :name, text(40)
       end
 
-      define_class :Role do
+      define :RoleInheritance do
          field :role  , :Role
          field :parent, :Role
       end
 
-      define_class :RoleCapability do
+      define :RoleCapability do
          field :role      , :Role
          field :capability, :Capability
       end
@@ -59,7 +60,7 @@ def example_cms_schema()
 
       #=== Accounts and related classes =======================================================
 
-      define_class :Account do
+      define :Account do
          field :email_address  , text(50)
          field :display_name   , text(50)
          field :safe_name      , text(50)
@@ -71,14 +72,14 @@ def example_cms_schema()
          key :email_address
       end
 
-      define_class :AuthenticationAttempt do
+      define :AuthenticationAttempt do
          owner :account, :Account
          field :time   , Time
          field :from   , IPAddr
          field :result , :AuthenticationResult
       end
 
-      define_class :AuthenticationResult do
+      define :AuthenticationResult do
          enumerate :valid, :invalid
       end
    end

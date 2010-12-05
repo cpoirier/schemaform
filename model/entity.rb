@@ -18,3 +18,50 @@
 #             See the License for the specific language governing permissions and
 #             limitations under the License.
 # =============================================================================================
+
+
+#
+# A single entity within the schema.
+
+module SchemaForm
+module Model
+class Entity
+      
+   def initialize( name, parent = nil, &block )
+      @name   = name
+      @parent = parent
+      @fields = {}
+      instance_eval(&block) if block_given?
+   end
+   
+   
+   #
+   # Defines a field within the entity.  If a block is given, the field is calculated,
+   # and the type will be determined for you.  Otherwise, you must supply at least a type.
+   
+   def field( name, *data, &block )
+      assert( !@fields.member?(field.name), "duplicate field name #{field.name}" )      
+      
+      if block_given? then
+         
+      else
+      end
+      
+      
+      register_field( Fields::StoredField.new(name, type) )
+   end
+
+
+protected
+
+   def register_field( field )
+   end
+      
+
+   
+end # Entity
+end # Model
+end # SchemaForm
+
+
+require $schemaform.relative_path("field.rb")

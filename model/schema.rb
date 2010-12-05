@@ -168,60 +168,60 @@ private
       
    def register_native_types()      
       
-      all_type  = register_type( InternalType.new(self, "all" , nil     ) )
-      void_type = register_type( InternalType.new(self, "void", all_type) )
-      fail_type = register_type( InternalType.new(self, "fail", all_type) )
-      any_type  = register_type( InternalType.new(self, "any" , all_type) )
-
-      @root_type = all_type
-      @any_type  = any_type
-      
-      #
-      # Intermediate, non-storable types.
-      
-      number_type    = register_type( InternalType.new(self, "number", any_type) )
-      object_type    = register_type( InternalType.new(self, "object", any_type) )
-      
-      @object_type = object_type
-
-      opaque_type    = register_type( InternalType.new(self, "opaque"   , any_type   ) )
-      recordset_type = register_type( InternalType.new(self, "recordset", opaque_type) )   # SQL recordset object
-      command_type   = register_type( InternalType.new(self, "command"  , opaque_type) )   # SQL command object
-      node_type      = register_type( InternalType.new(self, "node"     , opaque_type) )   # XML node
-
-      #
-      # Basic storable types.
-
-      integer_type    = register_type( InternalType.new(self, "integer",   number_type , true, 0) )
-      boolean_type    = register_type( InternalType.new(self, "boolean",   integer_type, true, 0) )
-      id_type         = register_type( InternalType.new(self, "id",        integer_type, true, 0) )
-      datetime_type   = register_type( InternalType.new(self, "datetime",  any_type    , true, P("now")  ) )
-                      
-      binary_type     = register_type( UndimensionedStringType.new(self, "binary", any_type   , true, "") )
-      text_type       = register_type( UndimensionedStringType.new(self, "text"  , binary_type, true, "") )
-      identifier_type = register_type( InternalType.new(self, "identifier", text_type.dimension(30), true, "") )
-
-      @boolean_type   = boolean_type
-      @false_type     = register_type( InternalType.new(self, "false", boolean_type, true) )
-      @true_type      = register_type( InternalType.new(self, "true" , boolean_type, true, Scanner::Token.atom("1")) )
-
-      #
-      # Basic parameterized types.
-      
-      list_type      = tm.register_type(  GenericType.new(tm, "list"    , any_type     ) )
-      relation_type  = tm.register_type( InternalType.new(tm, "relation", any_type     ) )
-      class_type     = tm.register_type( InternalType.new(tm, "class"   , relation_type) )
-      
-      tm.relation_type = relation_type
-      
-
-      # @arglist_type  = register_type( ListType.new(self, "arglist", @list_type, @any_type)          )
-
-      #
-      # Configure the Token system for simplified type resolution.
-
-      $debug.warn( "removed Token.missing.datatype set -- is it being used?" ) if $debug
-      # Token.missing.datatype = void_type
+      # all_type  = register_type( InternalType.new(self, "all" , nil     ) )
+      # void_type = register_type( InternalType.new(self, "void", all_type) )
+      # fail_type = register_type( InternalType.new(self, "fail", all_type) )
+      # any_type  = register_type( InternalType.new(self, "any" , all_type) )
+      # 
+      # @root_type = all_type
+      # @any_type  = any_type
+      # 
+      # #
+      # # Intermediate, non-storable types.
+      # 
+      # number_type    = register_type( InternalType.new(self, "number", any_type) )
+      # object_type    = register_type( InternalType.new(self, "object", any_type) )
+      # 
+      # @object_type = object_type
+      # 
+      # opaque_type    = register_type( InternalType.new(self, "opaque"   , any_type   ) )
+      # recordset_type = register_type( InternalType.new(self, "recordset", opaque_type) )   # SQL recordset object
+      # command_type   = register_type( InternalType.new(self, "command"  , opaque_type) )   # SQL command object
+      # node_type      = register_type( InternalType.new(self, "node"     , opaque_type) )   # XML node
+      # 
+      # #
+      # # Basic storable types.
+      # 
+      # integer_type    = register_type( InternalType.new(self, "integer",   number_type , true, 0) )
+      # boolean_type    = register_type( InternalType.new(self, "boolean",   integer_type, true, 0) )
+      # id_type         = register_type( InternalType.new(self, "id",        integer_type, true, 0) )
+      # datetime_type   = register_type( InternalType.new(self, "datetime",  any_type    , true, P("now")  ) )
+      #                 
+      # binary_type     = register_type( UndimensionedStringType.new(self, "binary", any_type   , true, "") )
+      # text_type       = register_type( UndimensionedStringType.new(self, "text"  , binary_type, true, "") )
+      # identifier_type = register_type( InternalType.new(self, "identifier", text_type.dimension(30), true, "") )
+      # 
+      # @boolean_type   = boolean_type
+      # @false_type     = register_type( InternalType.new(self, "false", boolean_type, true) )
+      # @true_type      = register_type( InternalType.new(self, "true" , boolean_type, true, Scanner::Token.atom("1")) )
+      # 
+      # #
+      # # Basic parameterized types.
+      # 
+      # list_type      = tm.register_type(  GenericType.new(tm, "list"    , any_type     ) )
+      # relation_type  = tm.register_type( InternalType.new(tm, "relation", any_type     ) )
+      # class_type     = tm.register_type( InternalType.new(tm, "class"   , relation_type) )
+      # 
+      # tm.relation_type = relation_type
+      # 
+      # 
+      # # @arglist_type  = register_type( ListType.new(self, "arglist", @list_type, @any_type)          )
+      # 
+      # #
+      # # Configure the Token system for simplified type resolution.
+      # 
+      # $debug.warn( "removed Token.missing.datatype set -- is it being used?" ) if $debug
+      # # Token.missing.datatype = void_type
    end
    
    

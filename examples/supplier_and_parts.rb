@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby -KU -KU
+#!/usr/bin/env ruby -KU
 # =============================================================================================
 # SchemaForm
 # A high-level database construction and programming layer.
@@ -19,15 +19,27 @@
 #             limitations under the License.
 # =============================================================================================
 
-require "#{File.dirname(File.expand_path(__FILE__))}/../tools/command_processor.rb"
-CommandProcessor.process(ARGV, :exit => true) do |$schemaform, flags, files|
-   require $schemaform.library_path("model/schema.rb")
 
+#
+# An example Schema definition: the classic Suppliers and Parts database.
+
+def example_supplier_and_parts_schema()
    SchemaForm::Model::Schema.define :SuppliersAndParts do
-      puts "hi"
-      
-      
-      
-      
    end
+end
+
+
+
+#
+# If called directly, set up the environment and run some tests.
+
+if $0 == __FILE__ then
+   
+   require "#{File.dirname(File.expand_path(__FILE__))}/../tools/command_processor.rb"
+   CommandProcessor.process(ARGV, :exit => true) do |$schemaform, flags, files|
+      require $schemaform.library_path("model/schema.rb")
+      schema = example_supplier_and_parts_schema()
+   end
+
+
 end

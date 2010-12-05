@@ -25,7 +25,12 @@ module SchemaForm
 module Model
 module Fields
 
-class StoredField
+class StoredField < Field
+   def initialize( entity, name, type, default )
+      super( entity, name, type )
+      @default = default
+   end
+   
 end
 
 

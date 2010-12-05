@@ -35,7 +35,7 @@ def example_cms_schema()
       # set of direct and inherited capabilities.
       
       define :Role do
-         field :name                  , text(40)
+         field :name                  , text_type(40)
          field :parents               , lambda {|role| role.find_matching(:RoleInheritance).return_only(:parent => :role)}
          field :ancestors             , lambda {|role| role.find_matching(:RoleInheritance).follow(:RoleInheritance, :role, :parent).return_only(:parent => :role)}
          field :closure               , lambda {|role| relation(:role => role.id) + role.ancestors}
@@ -44,7 +44,7 @@ def example_cms_schema()
       end
 
       define :Capability do
-         field :name, text(40)
+         field :name, text_type(40)
       end
 
       define :RoleInheritance do
@@ -61,9 +61,9 @@ def example_cms_schema()
       #=== Accounts and related classes =======================================================
 
       define :Account do
-         field :email_address  , text(50)
-         field :display_name   , text(50)
-         field :safe_name      , text(50)
+         field :email_address  , text_type(50)
+         field :display_name   , text_type(50)
+         field :safe_name      , text_type(50)
          field :hashed_password, SHA1
          field :role           , :Role
          field :lockedout_until, Time, :default => Time.past

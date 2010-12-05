@@ -56,63 +56,51 @@ class Schema
    def define( name, parent = nil, &block )
       assert( !@entities.member?(name), "duplicate entity name", {"name" => name} )
       assert( parent.nil? || @entities.member?(parent), "parent not defined", {"name" => parent} )
-      @entities[name] = Entity.new( name, parent, &block )      
+      @entities[name] = Entity.new( self, name, parent.nil? ? nil : @entities[parent], &block )      
    end
    
-   
-   
-   
-   
-   
-   
-   #
-   # Returns the schema name.
-   
-   attr_reader :name
-   
-   #
-   # Returns the source file and line of the Schema, for use in error reports.
-   
-   attr_reader :source
    
    #
    # Defines a mapping from Ruby to SchemaForm types, and how to convert from one to 
    # the other.  When defining fields, you may use either expression, and the mappings
-   # will be used to determine the other type.
-   
-   def define_mapping( ruby_type, schema_type, ruby_to_schema_mapper, schema_to_ruby_mapper )
-      @ruby_types[ruby_type    ] = Namespace.new() unless @ruby_types.member?(ruby_type)
-      @schema_types[schema_type] = Namespace.new() unless @schema_types.member?(schema_type)
-
-      assert( !@ruby_types[ruby_type].member?(schema_type)  , "Type mapping from Ruby type #{ruby_type} to Schema type #{schema_type} already defined" )
-      assert( !@schema_types[schema_type].member?(ruby_type), "Type mapping from Schema type #{schema_type} to Ruby type #{ruby_type} already defined" )
-
-      mapping = TypeMapping.new( ruby_type, schema_type, ruby_to_schema_mapper, schema_to_ruby_mapper )
-      @ruby_types[ruby_type][schema_type]   = mapping
-      @schema_types[schema_type][ruby_type] = mapping
-   end
-
+   # will be used to determine the other type.  All parameters are supplied as pairs.  
+   # The only required one is from Ruby class to SchemaForm type.  You can additionally
+   # override the default conversion routines by providing :write (Ruby => SchemaForm)
+   # and :read (SchemaForm => Ruby) procs.
    #
-   # Returns the TypeMapping for the specified Ruby or SchemaForm type.
-   
-   def find_mapping( type )
-      if type.is_a?(SchemaForm::Types::Type) then
-         type.type_closure.reverse.each do |type|   # When mapping from a named SF type to a Ruby type, we want the most general mapping!
-            return @schema_types[type].first if @schema_types.member?(type)
-         end
-      else
-         while type
-            return @ruby_types[type].first if @ruby_types.member?(type)
-            type = type.superclass
+   # Example (assumes hypothetical Ruby SHA1 class):
+   #   map SHA1 => text(40), :write => :to_s, :read => lambda {|v| SHA1.new(v)}
+   #   map SHA1 => text(40), :write => :to_s, :read => lambda {|v| SHA1.new(v)}
+      
+   def map( data )
+      ruby_type = sf_type = writer = reader = nil
+      data.each do |key, value|
+         case key
+         when :read
+            reader = value
+         when :write
+            writer = value
+         else
+            assert( key.is_a?(Class) , "please map from Ruby class"      ) 
+            assert( value.is_a?(Type), "please map to a SchemaForm Type" )
+            ruby_type = key
+            sf_type   = value
          end
       end
       
-      return nil
+      mapping = TypeMapping.new( ruby_type, schemaform_type, writer, reader )
+      
+      @mappings_by_ruby_type = [] unless @mappings_by_ruby_type.member?(ruby_type)
+      @mappings_by_sf_type   = [] unless @mappings_by_sf_type.member?(sf_type)
+      
+      assert( !@mappings_by_ruby_types[ruby_type].member?(sf_type), "type mapping from Ruby type #{ruby_type} to Schema type #{schema_type} already defined" )
+      assert( !@mappngs_by_sf_type[sf_type].member?(ruby_type)    , "type mapping from Schema type #{schema_type} to Ruby type #{ruby_type} already defined" )
+
+      @mappings_by_ruby_type[ruby_type][sf_type] = mapping
+      @mappings_by_sf_type[sf_type][ruby_type]   = mapping
    end
 
    
-   #
-   # 
    def text_type( character_limit = INFINITY )
       TextType.new(character_limit)
    end
@@ -138,6 +126,9 @@ class Schema
    end
 
 
+   
+   
+   
    #
    # Returns a relation representing the entirety of a class.
    
@@ -149,6 +140,39 @@ class Schema
    end
    
 
+   
+   
+   
+   
+   #
+   # Returns the schema name.
+   
+   attr_reader :name
+   
+   #
+   # Returns the source file and line of the Schema, for use in error reports.
+   
+   attr_reader :source
+   
+   #
+   # Returns the TypeMapping for the specified Ruby or SchemaForm type.
+   
+   def find_mapping( type )
+      if type.is_a?(SchemaForm::Types::Type) then
+         type.type_closure.reverse.each do |type|   # When mapping from a named SF type to a Ruby type, we want the most general mapping!
+            return @schema_types[type].first if @schema_types.member?(type)
+         end
+      else
+         while type
+            return @ruby_types[type].first if @ruby_types.member?(type)
+            type = type.superclass
+         end
+      end
+      
+      return nil
+   end
+
+   
 
 
 private
@@ -157,12 +181,11 @@ private
    @@schemas = {}
    
    def initialize( name, source, &block )
-      @name         = name
-      @source       = source
-      @mappings     = {}
-      @all_types    = {}
-      @scalar_types = {}
-      @entities     = {}
+      @name                  = name
+      @source                = source
+      @entities              = {}
+      @mappings_by_ruby_type = {}
+      @mappings_by_sf_type   = {}
       
       register_native_types()
 
@@ -242,4 +265,5 @@ end # Model
 end # SchemaForm
 
 
-require $schemaform.relative_path("entity.rb")
+require $schemaform.relative_path("entity.rb"      )
+require $schemaform.relative_path("type_mapping.rb")

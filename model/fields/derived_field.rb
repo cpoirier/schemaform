@@ -26,6 +26,10 @@ module Model
 module Fields
 
 class DerivedField < Field
+   def initialize( entity, name, block )
+      super( entity, name, nil )
+      @block = block
+   end
 end
 
 

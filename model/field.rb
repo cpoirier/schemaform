@@ -25,6 +25,13 @@ module SchemaForm
 module Model
 class Field
    
+   def initialize( entity, name, type )
+      @entity = entity
+      @name   = name
+      @type   = type
+   end
+   
+   
    # def initialize( schema)
    # 
    # def >=( lhs )

@@ -27,7 +27,8 @@ module SchemaForm
 module Model
 class Entity
       
-   def initialize( name, parent = nil, &block )
+   def initialize( schema, name, parent = nil, &block )
+      @schema = schema
       @name   = name
       @parent = parent
       @fields = {}
@@ -36,27 +37,49 @@ class Entity
    
    
    #
+   # Returns true if the named field is defined in this or any parent entity.
+   
+   def field?( name, check_parent = true )
+      return true if @fields.member?(name)
+      return @parent.field?(name) if check_parent && @parent.exists?
+      return false
+   end
+   
+   
+   #
    # Defines a field within the entity.  If a block is given, the field is calculated,
    # and the type will be determined for you.  Otherwise, you must supply at least a type.
    
    def field( name, *data, &block )
-      assert( !@fields.member?(field.name), "duplicate field name #{field.name}" )      
+      assert( !@fields.member?(name)               , "duplicate field name #{name}"                     )
+      assert( @parent.nil? || !@parent.field?(name), "field name conflicts with field in parent entity" )
       
+      field = nil
       if block_given? then
-         
+         field = Fields::DerivedField.new(name, &block)
       else
+         type, additional = *data
+         type_mapping = @schema.find_mapping( type )
+         
+         assert( type.exists?        , "please specify a type or a formula for this field" )
+         assert( type_mapping.exists?, "unable to find mapping for type", {"type" => type} )
+
+         field = Fields.StoredField.new(name, type_mapping, additional.fetch(:default, nil))
       end
-      
-      
-      register_field( Fields::StoredField.new(name, type) )
+
+      @fields[name] = field
    end
 
 
 protected
 
-   def register_field( field )
+   def method_missing( symbol, *args )
+      if symbol.to_s.slice(-5..-1) == "_type" then
+         @schema.send( symbol, *args )
+      else
+         super
+      end
    end
-      
 
    
 end # Entity

@@ -233,7 +233,7 @@ class CommandProcessor
    #  - prints the data collection from an exception
    
    def print_data( data, stream = $stderr )
-      unless data.empty?
+      unless data.nil? || data.empty?
          width = data.keys.inject(0){|max, current| max > current.length ? max : current.length}
          data.each {|key, value| stream.puts( key.rjust(width) + ": " + value.to_s ) }
       end

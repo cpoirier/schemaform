@@ -32,6 +32,8 @@ class Entity
       @parent = parent
       @fields = {}
       @keys   = {}
+      @enumeration = nil
+      
       instance_eval(&block) if block_given?
    end
    
@@ -54,12 +56,20 @@ class Entity
       return false
    end
    
+   #
+   # If true, this entity is enumerated.
+   
+   def enumerated?()
+      @enumeration.exists?
+   end
+   
    
    #
    # Defines a field within the entity.  If a block is given, the field is calculated,
    # and the type will be determined for you.  Otherwise, you must supply at least a type.
    
    def field( name, *data, &block )
+      assert( name.is_a?(Symbol)                   , "please use only Ruby symbols for field names"     )
       assert( !@fields.member?(name)               , "duplicate field name #{name}"                     )
       assert( @parent.nil? || !@parent.field?(name), "field name conflicts with field in parent entity" )
       
@@ -111,6 +121,74 @@ class Entity
             
       @keys[key_name] = Key.new( self, key_name, names )
    end
+   
+   
+   #
+   # Enumerates named values within a code table.  Most entities won't need this, but for
+   # those few that do, it makes a lot of things more convenient.  The enumeration code
+   # will automatically create the necessary fields in an empty entity, or can use any
+   # pair of appropriately typed fields (specified with enumerate_into).  
+   #
+   # Examples:
+   #   entity :Codes do
+   #     enumerate :first, :second, :fourth, 4, :fifth
+   #   end
+   #
+   #   entity :Codes do
+   #     field :a_name , identifier_type()
+   #     field :a_value, integer_type()   
+   #     
+   #     enumerate_into :a_name, :a_value
+   #     enumerate :first, :second, :fourth, 4, :fifth
+   #   end
+   #
+   #   entity :Codes do
+   #     field :a_name , identifier_type()
+   #     field :a_value, integer_type()   
+   #     field :public , boolean_type()
+   #
+   #     enumerate do
+   #       define :first , 1, true
+   #       define :second, 2, false
+   #     end
+   #   end
+
+   def enumerate( *data, &block )
+      assert( @parent.nil?     , "enumerated entities cannot have a parent" )
+      assert( @enumeration.nil?, "entity is already enumerated"             )
+      
+      if @fields.empty? then
+         field :name , @schema.identifier_type()
+         field :value, @schema.integer_type()
+      else
+         assert( @fields.length >= 2, "an enumerated entity needs at least name and value fields" )
+         # TODO type check the first two fields, once you figure out how best to do it
+      end
+      
+      @enumeration = Enumeration.new( self )
+            
+      if block then
+         @enumeration.fill(block)
+      else
+         assert( @fields.count == 2, "to use the simple enumeration form, the entity must have only two fields" )
+         @enumeration.fill do
+            value = 1
+            until data.empty?
+               name  = data.shift
+               value = data.shift if data.first.is_an?(Integer)
+               
+               assert( name.is_a?(Symbol), "expected a symbol or value, found #{name.class.name}" )
+               
+               define name, value
+               value += 1
+            end
+         end
+      end
+   end
+   
+   
+   
+
 
 protected
 
@@ -130,3 +208,4 @@ end # SchemaForm
 
 require $schemaform.local_path("field.rb")
 require $schemaform.local_path("key.rb")
+require $schemaform.local_path("enumeration.rb")

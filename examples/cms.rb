@@ -86,6 +86,7 @@ def example_cms_schema()
       define :AuthenticationResult do
          enumerate :valid, :invalid
       end
+      
    end
 
 end

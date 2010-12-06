@@ -4,7 +4,6 @@
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
-# [Contact]   Chris Poirier (cpoirier at gmail dt com)
 # [Copyright] Copyright 2004-2010 Chris Poirier
 # [License]   Licensed under the Apache License, Version 2.0 (the "License");
 #             you may not use this file except in compliance with the License.
@@ -77,21 +76,21 @@ class Relation
    #
    # Returns a relation containing all records from this and another relation (union).
    
-   def +( lhs )
+   def +( rhs )
    end
    
    
    #
    # Returns a relation containing all records from this relation not in another (difference).
    
-   def -( lhs )
+   def -( rhs )
    end
    
    
    #
    # Returns a relation contain all records from this relation also in another (intersection).
    
-   def &( lhs )
+   def &( rhs )
    end
    
    
@@ -99,7 +98,7 @@ class Relation
    # Returns a relation containing the join of this relation and another along all common
    # fields.
    
-   def join( lhs )
+   def join( rhs )
    end
    
    

@@ -35,11 +35,16 @@ class Object
    def specialize_method_name( name )
       return "#{name}#{(is_a?(Class) ? self : self.class).name.split("::")[-1].gsub(/[A-Z]/){|s| "_#{s.downcase}"}}".intern
    end
-   
-   def send_specialized( name, default_specialization, determinant, *parameters )
-      specialized = determinant.specialize_method_name(name)
-      specialized = name + (default_specialization ? "_" + default_specialization : "") if !self.responds_to?(specialized)
       
+   def send_specialized( name, default_specialization, determinant, *parameters )
+      current_class = determinant.is_a?(Class) ? determinant : determinant.class
+      while current_class
+         specialized = current_class.specialize_method_name(name)
+         return self.send( specialized, determinant, *parameters ) if self.responds_to?(specialized)
+         current_class = current_class.superclass
+      end
+         
+      specialized = name + (default_specialization ? "_" + default_specialization : "")
       return self.send( specialized, determinant, *parameters )
    end
    

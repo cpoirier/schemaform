@@ -4,7 +4,6 @@
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
-# [Contact]   Chris Poirier (cpoirier at gmail dt com)
 # [Copyright] Copyright 2004-2010 Chris Poirier
 # [License]   Licensed under the Apache License, Version 2.0 (the "License");
 #             you may not use this file except in compliance with the License.
@@ -69,8 +68,8 @@ class Schema
    # and :read (SchemaForm => Ruby) procs.
    #
    # Example (assumes hypothetical Ruby SHA1 class):
-   #   map SHA1 => text(40), :write => :to_s, :read => lambda {|v| SHA1.new(v)}
-   #   map SHA1 => text(40), :write => :to_s, :read => lambda {|v| SHA1.new(v)}
+   #   map SHA1 => text_type(40), :write => :to_s, :read => lambda {|v| SHA1.new(v)}
+   #   map SHA1 => text_type(40), :write => :to_s, :read => lambda {|v| SHA1.new(v)}
       
    def map( data )
       ruby_type = sf_type = writer = reader = nil
@@ -88,41 +87,41 @@ class Schema
          end
       end
       
-      mapping = TypeMapping.new( ruby_type, schemaform_type, writer, reader )
+      mapping = TypeMapping.new( ruby_type, sf_type, writer, reader )
       
-      @mappings_by_ruby_type = [] unless @mappings_by_ruby_type.member?(ruby_type)
-      @mappings_by_sf_type   = [] unless @mappings_by_sf_type.member?(sf_type)
+      @mappings_by_ruby_type[ruby_type] = {} unless @mappings_by_ruby_type.member?(ruby_type)
+      @mappings_by_sf_type[sf_type]     = {} unless @mappings_by_sf_type.member?(sf_type)
       
-      assert( !@mappings_by_ruby_types[ruby_type].member?(sf_type), "type mapping from Ruby type #{ruby_type} to Schema type #{schema_type} already defined" )
-      assert( !@mappngs_by_sf_type[sf_type].member?(ruby_type)    , "type mapping from Schema type #{schema_type} to Ruby type #{ruby_type} already defined" )
+      assert( !@mappings_by_ruby_type[ruby_type].member?(sf_type), "type mapping from Ruby type #{ruby_type} to Schema type #{sf_type} already defined" )
+      assert( !@mappings_by_sf_type[sf_type].member?(ruby_type)  , "type mapping from Schema type #{sf_type} to Ruby type #{ruby_type} already defined" )
 
       @mappings_by_ruby_type[ruby_type][sf_type] = mapping
       @mappings_by_sf_type[sf_type][ruby_type]   = mapping
    end
 
    
-   def text_type( character_limit = INFINITY )
-      TextType.new(character_limit)
+   def text_type( character_limit = 0 )
+      Types::TextType.new(character_limit)
    end
    
    def binary_type( byte_limit = INFINITY )
-      BinaryType.new(byte_limit)
+      Types::BinaryType.new(byte_limit)
    end
    
    def integer_type( byte_width = 4 )
-      IntegerType.new(byte_width)
+      Types::IntegerType.new(byte_width)
    end
    
    def real_type( byte_width = 8 )
-      RealType.new(byte_width)
+      Types::RealType.new(byte_width)
    end
    
    def boolean_type()
-      BooleanType.new()
+      Types::BooleanType.new()
    end
    
    def datetime_type()
-      DatetimeType.new()
+      Types::DatetimeType.new()
    end
 
 
@@ -132,7 +131,8 @@ class Schema
    #
    # Returns a relation representing the entirety of a class.
    
-   def from( class_name )
+   def entity( name )
+      
    end
    
    def all( class_name )
@@ -154,19 +154,32 @@ class Schema
    
    attr_reader :source
    
+   
+
+
+
+   # ==========================================================================================
+   #                                       Support Routines
+   # ==========================================================================================
+   
+
    #
    # Returns the TypeMapping for the specified Ruby or SchemaForm type.
    
    def find_mapping( type )
-      if type.is_a?(SchemaForm::Types::Type) then
-         type.type_closure.reverse.each do |type|   # When mapping from a named SF type to a Ruby type, we want the most general mapping!
-            return @schema_types[type].first if @schema_types.member?(type)
+      case type
+      when Type
+         type.type_closure.reverse.each do |type|   # When mapping from a named SF type to a Ruby type, we want the most general mapping!            
+            return @mappings_by_sf_type[type].first if @mappings_by_sf_type.member?(type)
          end
-      else
+      when Class
          while type
-            return @ruby_types[type].first if @ruby_types.member?(type)
+            return @mappings_by_ruby_type[type].first if @mappings_by_ruby_type.member?(type)
             type = type.superclass
          end
+      else
+         warn_nyi( "deferred type mapping" )
+         return type
       end
       
       return nil
@@ -175,7 +188,7 @@ class Schema
    
 
 
-private
+protected
    
    @@monitor = Monitor.new()
    @@schemas = {}
@@ -187,12 +200,22 @@ private
       @mappings_by_ruby_type = {}
       @mappings_by_sf_type   = {}
       
-      register_native_types()
-
+      map String => text_type()
+      map Time   => datetime_type(), 
+                    :write => lambda {|t| utc = t.getutc; utc.strftime("%Y-%m-%d %H:%M:%S") + (utc.usec > 0 ? ".#{utc.usec}" : "") },
+                    :read  => lambda {|s| year, month, day, hour, minute, second, micros = *s.split(/[:\-\.] /); Time.utc(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i, micros.to_i)}
+      
+      # TODO: fill in the converters for datetime
+      # TODO: should converters really be here at this level?  or at the physical DB level?
+      # map Date   => datetime_type(),
+      #               :write => lambda {|d| },
+      #               :read  => lambda {|s| }
+                    
+                    
       instance_eval(&block) if block_given?
    end
    
-   
+
    def register_type( type )
       assert( !@all_types.member?(type.name), "duplicate type name #{type.name}" )
       
@@ -265,5 +288,5 @@ end # Model
 end # SchemaForm
 
 
-require $schemaform.relative_path("entity.rb"      )
-require $schemaform.relative_path("type_mapping.rb")
+require $schemaform.local_path("entity.rb"      )
+require $schemaform.local_path("type_mapping.rb")

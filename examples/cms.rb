@@ -4,7 +4,6 @@
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
-# [Contact]   Chris Poirier (cpoirier at gmail dt com)
 # [Copyright] Copyright 2004-2010 Chris Poirier
 # [License]   Licensed under the Apache License, Version 2.0 (the "License");
 #             you may not use this file except in compliance with the License.
@@ -19,6 +18,8 @@
 #             limitations under the License.
 # =============================================================================================
 
+require 'ipaddr'
+
 
 #
 # An example Schema definition: a schema for a content management system.
@@ -26,7 +27,10 @@
 def example_cms_schema()
    SchemaForm::Model::Schema.define :CMS do
       
-      #=== Access Control classes =============================================================
+      map IPAddr => text_type(40)
+      
+      
+      #=== Access Control =====================================================================
       
       #
       # Each Role has a set of direct capabilities, stored in RoleCapability.  Each Role can 
@@ -58,22 +62,22 @@ def example_cms_schema()
       end
 
 
-      #=== Accounts and related classes =======================================================
+      #=== Account management =================================================================
 
       define :Account do
          field :email_address  , text_type(50)
          field :display_name   , text_type(50)
          field :safe_name      , text_type(50)
-         field :hashed_password, SHA1
+         # TODO: field :hashed_password, SHA1 -- what to we want this to do; should it be excluded from retrieve?
          field :role           , :Role
-         field :lockedout_until, Time, :default => Time.past
+         field :lockedout_until, Time, :default => Time.at(0)
 
          key :safe_name
          key :email_address
       end
 
       define :AuthenticationAttempt do
-         owner :account, :Account
+         field :account, :Account
          field :time   , Time
          field :from   , IPAddr
          field :result , :AuthenticationResult
@@ -85,7 +89,6 @@ def example_cms_schema()
    end
 
 end
-
 
 
 #

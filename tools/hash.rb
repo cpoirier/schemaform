@@ -28,15 +28,17 @@ class Hash
    
    if RUBY_VERSION < "1.9" then
       alias ruby_set []=
+      alias ruby_keys keys
       
       def []=( key, value )
-         @key_order = [] if @key_order.nil?
+         @key_order = self.ruby_keys if @key_order.nil?
          @key_order << key unless member?(key)
          ruby_set( key, value )
       end
       
       def keys
-         @key_order
+         @key_order unless @key_order.nil?
+         ruby_keys
       end
       
       def each()
@@ -52,13 +54,17 @@ class Hash
    #  - given a list of keys, returns the value for the first found
    
    def first( *keys )
-      keys.each do |key|
-         if member?(key) then
-            return self[key]
+      if keys.empty? then
+         return self[self.keys.first]
+      else
+         keys.each do |key|
+            if member?(key) then
+               return self[key]
+            end
          end
-      end
       
-      return self.default
+         return self.default
+      end
    end
    
    

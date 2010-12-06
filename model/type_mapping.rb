@@ -4,7 +4,6 @@
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
-# [Contact]   Chris Poirier (cpoirier at gmail dt com)
 # [Copyright] Copyright 2004-2010 Chris Poirier
 # [License]   Licensed under the Apache License, Version 2.0 (the "License");
 #             you may not use this file except in compliance with the License.
@@ -19,7 +18,7 @@
 #             limitations under the License.
 # =============================================================================================
 
-require $schemaform.library_path("schemaform/types.rb")
+require $schemaform.local_path("type.rb")
 
 
 

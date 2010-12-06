@@ -66,7 +66,7 @@
    # assert()
    #  - raises an AssertionFailure if the condition is false
 
-   def assert( condition, message, *data )
+   def assert( condition, message, data = nil )
       unless condition
          data = yield() if block_given?
          raise AssertionFailure.new(message, data)
@@ -78,7 +78,7 @@
    # bug()
    #  - raises a Bug exception, indicating that something happened that shouldn't have
    
-   def bug( description, *data )
+   def bug( description, data = nil )
       raise Bug.new( description, data )
    end
    
@@ -87,7 +87,7 @@
    # nyi()
    #  - raises an NYI exception, indicating that something it Not Yet Implemented (but will be, one day)
    
-   def nyi( description = nil, *data )
+   def nyi( description = nil, data = nil )
       if description.nil? then
          description = caller()[0]
       end

@@ -19,9 +19,50 @@
 # =============================================================================================
 
 
+#
+# Base class for all SchemaForm types.  Unlike Ruby, databases are (necessarily) rather strongly 
+# typed, and the typing system provides a way to manage assignment and join compatibility,
+# among other things.  
 
 module SchemaForm
 module Model
+class Type
 
+   def initialize()      
+   end
+   
+   def simple_type?()
+      return false
+   end
+   
+   def tuple_type?()
+      return false
+   end
+   
+   def relation_type?
+      return false
+   end
+   
+   #
+   # Returns or iterates over the last of types this type can effectively be.  Useful for 
+   # isolating your code from some of the vagararies of type compatibility.
+   
+   def type_closure()
+      if block_given? then
+         yield self
+      else
+         return [self]
+      end
+   end
+   
+   def hash()
+      self.class.name
+   end
+   
+end # Type
 end # Model
 end # SchemaForm
+
+
+Dir[$schemaform.local_path("types/*.rb")].each {|path| require path}
+

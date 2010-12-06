@@ -118,7 +118,14 @@ class CommandProcessor
       rescue Errno::EPIPE
          rc = report_terminated()
       rescue Exception => e
-         rc = send_specialized( "report", "exception", e )
+         if ENV.member?("TM_LINE_NUMBER") then # If running inside TextMate, let it do pretty things.
+            @flags["disable-backtraces"] = true
+            rc = send_specialized( "report", "exception", e )
+            raise e
+         else
+            rc = send_specialized( "report", "exception", e )
+         end
+
       ensure
 
          #
@@ -146,6 +153,8 @@ class CommandProcessor
       return File.script_path(relative, 1)
    end
    
+   alias local_path relative_path
+   
    def relative_library_directory( absolute )
       return File.contract_path(absolute, @library_directory)
    end
@@ -160,26 +169,24 @@ class CommandProcessor
    # report_exception()
    #  - generates a default report for an otherwise unhandled exception
    
-   def report_exception( e, stream = $stderr, message = nil, display_exception_class = true )
+   def report_exception( e, stream = $stderr, message = nil, display_exception_class = true, data = {} )
       message = e.class.method_defined?("failsafe_message") ? e.failsafe_message : e.message if message.nil?
 
       stream.puts
-      stream.puts( "CAUGHT A BUG!" )
+      stream.puts( (display_exception_class ? e.class.name + ": " : "") + message )
+
+      print_data( data, stream )
       stream.indent do
-         stream.puts
-         stream.puts( (display_exception_class ? e.class.name + ": " : "") + message )
-         stream.indent do
-            if @flags.member?("enable-backtraces") then
-               print_backtrace( e.backtrace, stream )
-            else
-               print_backtrace( e.backtrace[0..14], stream )
-               if e.backtrace.length > 15 then
-                  stream.puts( " . . . #{e.backtrace.length-15} more entries" ) 
-               end
+         if @flags.member?("enable-backtraces") then
+            print_backtrace( e.backtrace, stream )
+         elsif !@flags.member?("disable-backtraces") then
+            print_backtrace( e.backtrace[0..14], stream )
+            if e.backtrace.length > 15 then
+               stream.puts( " . . . #{e.backtrace.length-15} more entries" ) 
             end
          end
-         stream.puts
       end
+      stream.puts
       
       return 2
    end
@@ -200,7 +207,7 @@ class CommandProcessor
    
    def report_bug( e, stream = $stderr )
       message = "BUG: " + (e.class.method_defined?("failsafe_message") ? e.failsafe_message : e.message)
-      return report_exception( e, stream, message, false )
+      return report_exception( e, stream, message, false, e.data )
    end
    
    
@@ -219,6 +226,19 @@ class CommandProcessor
          stream.puts( "• " + relative_install_directory(line) )
       end
    end
+   
+   
+   #
+   # print_data()
+   #  - prints the data collection from an exception
+   
+   def print_data( data, stream = $stderr )
+      unless data.empty?
+         width = data.keys.inject(0){|max, current| max > current.length ? max : current.length}
+         data.each {|key, value| stream.puts( key.rjust(width) + ": " + value.to_s ) }
+      end
+   end
+   
    
    
    

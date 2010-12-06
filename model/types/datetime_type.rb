@@ -19,9 +19,35 @@
 # =============================================================================================
 
 
+#
+# The SchemaForm datetime type.  Generally maps to Time or Date in Ruby and either dateime in 
+# the database.
 
 module SchemaForm
 module Model
+module Types
+class DatetimeType < Type
 
+   def initialize()
+   end
+   
+   def simple_type?()
+      return true
+   end
+   
+   def to_s()
+      "datetime()"
+   end
+   
+   def hash()
+      "DatetimeType".hash
+   end
+   
+   def eql?( rhs )
+      rhs.is_a?(DatetimeType)
+   end
+
+end # DatetimeType < Type
+end # Types
 end # Model
 end # SchemaForm

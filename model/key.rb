@@ -19,9 +19,19 @@
 # =============================================================================================
 
 
-
 module SchemaForm
 module Model
+class Key
+      
+   def initialize( entity, name, field_names )
+      @entity = entity
+      @name   = name
+      @field_names = field_names
+   end
+   
 
+   
+end # Key
 end # Model
 end # SchemaForm
+

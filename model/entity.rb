@@ -138,7 +138,6 @@ class Entity
    #     field :a_name , identifier_type()
    #     field :a_value, integer_type()   
    #     
-   #     enumerate_into :a_name, :a_value
    #     enumerate :first, :second, :fourth, 4, :fifth
    #   end
    #

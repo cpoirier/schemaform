@@ -49,6 +49,8 @@ class Schema
    # ==========================================================================================
    
       
+   attr_reader :name, :source
+   
    #
    # Defines an entity within the Schema.
    
@@ -67,27 +69,40 @@ class Schema
    # override the default conversion routines by providing :write (Ruby => SchemaForm)
    # and :read (SchemaForm => Ruby) procs.
    #
-   # Example (assumes hypothetical Ruby SHA1 class):
-   #   map SHA1 => text_type(40), :write => :to_s, :read => lambda {|v| SHA1.new(v)}
-   #   map SHA1 => text_type(40), :write => :to_s, :read => lambda {|v| SHA1.new(v)}
+   # Example:
+   #   map IPAddr => :text, :length => 40, :write => :to_s, :read => lambda {|v| SHA1.new(v)}
       
    def map( data )
+      
+      #
+      # Parse the parameter data.
+      
+      modifiers = {}
       ruby_type = sf_type = writer = reader = nil
       data.each do |key, value|
          case key
+         when Class
+            ruby_type = key
+            sf_type   = value
          when :read
             reader = value
          when :write
             writer = value
          else
-            assert( key.is_a?(Class) , "please map from Ruby class"      ) 
-            assert( value.is_a?(Type), "please map to a SchemaForm Type" )
-            ruby_type = key
-            sf_type   = value
+            modifiers[key] = value
          end
       end
       
-      mapping = TypeMapping.new( ruby_type, sf_type, writer, reader )
+      #
+      # Build a base SchemaForm type that contains all modifiers.
+      
+      assert( ruby_type.exists? && sf_type.is_a?(Symbol), "expected a mapping from a Ruby Class to a SchemaForm type" )
+      base_type = build_type( sf_type, data, modifiers )
+      
+      #
+      # Build a MappedType on the base type and save it.
+      
+      mapping = MappedType.new( self, ruby_type, base_type, writer, reader )
       
       @mappings_by_ruby_type[ruby_type] = {} unless @mappings_by_ruby_type.member?(ruby_type)
       @mappings_by_sf_type[sf_type]     = {} unless @mappings_by_sf_type.member?(sf_type)
@@ -97,190 +112,158 @@ class Schema
 
       @mappings_by_ruby_type[ruby_type][sf_type] = mapping
       @mappings_by_sf_type[sf_type][ruby_type]   = mapping
-   end
-
-   
-   def text_type( character_limit = 0 )
-      Types::TextType.new(character_limit)
-   end
-   
-   def binary_type( byte_limit = INFINITY )
-      Types::BinaryType.new(byte_limit)
-   end
-   
-   def integer_type( byte_width = 4 )
-      Types::IntegerType.new(byte_width)
-   end
-   
-   def real_type( byte_width = 8 )
-      Types::RealType.new(byte_width)
-   end
-   
-   def boolean_type()
-      Types::BooleanType.new()
-   end
-   
-   def datetime_type()
-      Types::DatetimeType.new()
-   end
-
-
-   
-   
-   
-   #
-   # Returns a relation representing the entirety of a class.
-   
-   def entity( name )
       
    end
    
-   def all( class_name )
-      return from( class_name )
-   end
-   
-
-   
-   
-   
    
    #
-   # Returns the schema name.
+   # Defines a simple (non-entity) type.  
    
-   attr_reader :name
-   
-   #
-   # Returns the source file and line of the Schema, for use in error reports.
-   
-   attr_reader :source
-   
-   
-
-
-
-   # ==========================================================================================
-   #                                       Support Routines
-   # ==========================================================================================
-   
-
-   #
-   # Returns the TypeMapping for the specified Ruby or SchemaForm type.
-   
-   def find_mapping( type )
-      case type
-      when Type
-         type.type_closure.reverse.each do |type|   # When mapping from a named SF type to a Ruby type, we want the most general mapping!            
-            return @mappings_by_sf_type[type].first if @mappings_by_sf_type.member?(type)
-         end
-      when Class
-         while type
-            return @mappings_by_ruby_type[type].first if @mappings_by_ruby_type.member?(type)
-            type = type.superclass
-         end
-      else
-         warn_nyi( "deferred type mapping" )
-         return type
-      end
+   def define_type( name, base_type = nil, *type_class_and_constraints )
       
-      return nil
-   end
+      type_class  = type_class_and_constraints.first.is_a?(Type) ? type_class_and_constraints.shift : Type
+      constraints = type_class_and_constraints.first.is_a?(Hash) ? type_class_and_constraints.shift : {}
 
+      type = build_type( base_type, constraints, name, type_class )
+
+      return type
+   end
    
+   
+   #
+   # Associates a type constraint with a trigger for use in declarations.
+   
+   def define_type_constraint( trigger, for_type, constraint_class )
+      @constraint_templates[trigger][for_type] = constraint_class
+   end
+   
+   
+   
+   
+
 
 
 protected
-   
+
+   # ==========================================================================================
+   #                                          Internals
+   # ==========================================================================================
+
    @@monitor = Monitor.new()
    @@schemas = {}
    
    def initialize( name, source, &block )
-      @name                  = name
-      @source                = source
-      @entities              = {}
+      @name     = name
+      @source   = source
+      @entities = {}
+      @types    = {}
+      
+      @constraint_templates  = {}
       @mappings_by_ruby_type = {}
       @mappings_by_sf_type   = {}
       
-      map String => text_type()
-      map Time   => datetime_type(), 
-                    :write => lambda {|t| utc = t.getutc; utc.strftime("%Y-%m-%d %H:%M:%S") + (utc.usec > 0 ? ".#{utc.usec}" : "") },
-                    :read  => lambda {|s| year, month, day, hour, minute, second, micros = *s.split(/[:\-\.] /); Time.utc(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i, micros.to_i)}
+      define_type_constraint :length, Types::TextType   , TypeConstraints::CharacterLengthConstraint
+      define_type_constraint :length, Types::BinaryType , TypeConstraints::ByteLengthConstraint
+      define_type_constraint :range , Types::NumericType, TypeConstraints::RangeConstraint
+      define_type_constraint :check , Types::Type       , TypeConstraints::CheckConstraint
       
-      # TODO: fill in the converters for datetime
-      # TODO: should converters really be here at this level?  or at the physical DB level?
-      # map Date   => datetime_type(),
-      #               :write => lambda {|d| },
-      #               :read  => lambda {|s| }
-                    
-                    
+      define_type :all 
+      define_type :any     , :all
+      define_type :void    , :all
+
+      define_type :binary  , :any    , Types::BinaryType    
+      define_type :text    , :any    , Types::TextType    
+      define_type :real    , :any    , Types::NumericType    
+      define_type :integer , :real   , Types::IntegerType    
+      define_type :boolean , :integer, Types::IntegerType, :range => 0..1
+      define_type :datetime, :text   , Types::DateTimeType
+      
+      map String     => :text
+      map IPAddr     => :text, :length => 40
+      map TrueClass  => :boolean, :write => lambda { 1 }, :read => lambda {|v| v == 1 ? true : false}
+      map FalseClass => :boolean, :write => lambda { 0 }, :read => lambda {|v| v == 1 ? true : false}
+      map Time       => :datetime, 
+                        :write => lambda {|t| utc = t.getutc; utc.strftime("%Y-%m-%d %H:%M:%S") + (utc.usec > 0 ? ".#{utc.usec}" : "") },
+                        :read  => lambda {|s| year, month, day, hour, minute, second, micros = *s.split(/[:\-\.] /); Time.utc(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i, micros.to_i)}
+              
       instance_eval(&block) if block_given?
    end
    
 
-   def register_type( type )
-      assert( !@all_types.member?(type.name), "duplicate type name #{type.name}" )
+   #
+   # Creates or returns a type based on your description.  If you pass a new_name, you are 
+   # guaranteed to get a new type object, and it will be registered for you.  Raises an 
+   # exception if the base type is not found, or if the new_name is already taken.  Removes
+   # Removes any used modifiers.
+   
+   def build_type( from, modifiers, as_name = nil, type_class = Type )
+      type_check( from, [Symbol, Class, Type] )
       
-      @all_types[type.name]    = type
-      @scalar_types[type.name] = type unless type.is_an?(InternalType)
+      #
+      # First, figure out the base Type.
+
+      base_type = nil
+
+      if from.is_a?(Symbol) then
+         assert( @types.member?(from), "unrecognized type [#{from}]" )
+         base_type = @types[from]
+      elsif from.is_a?(Class) then
+         from.ancestors.each do |current|
+            if @mappings_by_ruby_type.member?(current) then
+               base_type = @mappings_by_ruby_type[current].first
+               break
+            end
+         end
+         assert( base_type.exists?, "no type mapping for class [#{from.name}]" )
+      else
+         base_type = from
+      end
+      
+      type = base_type
+      
+      #
+      # Process any constraints from the modifiers list.
+      
+      constraints = []
+      modifiers.each do |name, value|
+         if constraint = build_constraint( name, value, base_type ) then
+            constraints << constraint
+            modifiers.delete(name)
+         end
+      end
+
+      #
+      # Build and name a new type, if necessary, and return.
+      
+      if constraints.exist? or as_name.exists? then
+         type = type_class.new( self, as_name, base_type, constraints )
+      end
+         
+      if as_name.exists? then
+         assert( !@types.member?(as_name), "new type name [#{as_name}] is already defined" )
+         @types[as_name] = type 
+      end
+
+      return type
    end
    
+   
+   #
+   # Builds a contraint from pieces.
+
+   def build_constraint( trigger, value, type )
+      @constraint_templates[trigger].each do |trigger_class, constraint_class|
+         type.each_effective_type do |current|
+            if current.class.ancestors.member?(trigger_class) then
+               return constraint_class.new(value) 
+            end
+         end
+      end
       
-   def register_native_types()      
-      
-      # all_type  = register_type( InternalType.new(self, "all" , nil     ) )
-      # void_type = register_type( InternalType.new(self, "void", all_type) )
-      # fail_type = register_type( InternalType.new(self, "fail", all_type) )
-      # any_type  = register_type( InternalType.new(self, "any" , all_type) )
-      # 
-      # @root_type = all_type
-      # @any_type  = any_type
-      # 
-      # #
-      # # Intermediate, non-storable types.
-      # 
-      # number_type    = register_type( InternalType.new(self, "number", any_type) )
-      # object_type    = register_type( InternalType.new(self, "object", any_type) )
-      # 
-      # @object_type = object_type
-      # 
-      # opaque_type    = register_type( InternalType.new(self, "opaque"   , any_type   ) )
-      # recordset_type = register_type( InternalType.new(self, "recordset", opaque_type) )   # SQL recordset object
-      # command_type   = register_type( InternalType.new(self, "command"  , opaque_type) )   # SQL command object
-      # node_type      = register_type( InternalType.new(self, "node"     , opaque_type) )   # XML node
-      # 
-      # #
-      # # Basic storable types.
-      # 
-      # integer_type    = register_type( InternalType.new(self, "integer",   number_type , true, 0) )
-      # boolean_type    = register_type( InternalType.new(self, "boolean",   integer_type, true, 0) )
-      # id_type         = register_type( InternalType.new(self, "id",        integer_type, true, 0) )
-      # datetime_type   = register_type( InternalType.new(self, "datetime",  any_type    , true, P("now")  ) )
-      #                 
-      # binary_type     = register_type( UndimensionedStringType.new(self, "binary", any_type   , true, "") )
-      # text_type       = register_type( UndimensionedStringType.new(self, "text"  , binary_type, true, "") )
-      # identifier_type = register_type( InternalType.new(self, "identifier", text_type.dimension(30), true, "") )
-      # 
-      # @boolean_type   = boolean_type
-      # @false_type     = register_type( InternalType.new(self, "false", boolean_type, true) )
-      # @true_type      = register_type( InternalType.new(self, "true" , boolean_type, true, Scanner::Token.atom("1")) )
-      # 
-      # #
-      # # Basic parameterized types.
-      # 
-      # list_type      = tm.register_type(  GenericType.new(tm, "list"    , any_type     ) )
-      # relation_type  = tm.register_type( InternalType.new(tm, "relation", any_type     ) )
-      # class_type     = tm.register_type( InternalType.new(tm, "class"   , relation_type) )
-      # 
-      # tm.relation_type = relation_type
-      # 
-      # 
-      # # @arglist_type  = register_type( ListType.new(self, "arglist", @list_type, @any_type)          )
-      # 
-      # #
-      # # Configure the Token system for simplified type resolution.
-      # 
-      # $debug.warn( "removed Token.missing.datatype set -- is it being used?" ) if $debug
-      # # Token.missing.datatype = void_type
+      return nil
    end
+   
+   
    
    
 end # Schema
@@ -288,5 +271,6 @@ end # Model
 end # SchemaForm
 
 
-require $schemaform.local_path("entity.rb"      )
-require $schemaform.local_path("type_mapping.rb")
+require $schemaform.local_path("type.rb"  )
+require $schemaform.local_path("entity.rb")
+

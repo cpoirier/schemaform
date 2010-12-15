@@ -37,8 +37,10 @@ class Hash
       end
       
       def keys
-         @key_order unless @key_order.nil?
-         ruby_keys
+         return ruby_keys if @key_order.nil?
+         
+         @key_order.delete_if {|key| !member?(key)}
+         return @key_order
       end
       
       def each()

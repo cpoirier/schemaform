@@ -27,8 +27,6 @@ require 'ipaddr'
 def example_cms_schema()
    SchemaForm::Model::Schema.define :CMS do
       
-      map IPAddr => text_type(40)
-      
       
       #=== Access Control =====================================================================
       
@@ -39,7 +37,7 @@ def example_cms_schema()
       # set of direct and inherited capabilities.
       
       define :Role do
-         field :name                  , text_type(40)
+         field :name                  , String, :length => 40
          field :parents               , lambda {|role| role.find_matching(:RoleInheritance).return_only(:parent => :role)}
          field :ancestors             , lambda {|role| role.find_matching(:RoleInheritance).follow(:RoleInheritance, :role, :parent).return_only(:parent => :role)}
          field :closure               , lambda {|role| relation(:role => role.id) + role.ancestors}
@@ -48,7 +46,7 @@ def example_cms_schema()
       end
 
       define :Capability do
-         field :name, text_type(40)
+         field :name, String, :length => 40
       end
 
       define :RoleInheritance do
@@ -65,9 +63,9 @@ def example_cms_schema()
       #=== Account management =================================================================
 
       define :Account do
-         field :email_address  , text_type(50)
-         field :display_name   , text_type(50)
-         field :safe_name      , text_type(50)
+         field :email_address  , String, :length => 50
+         field :display_name   , String, :length => 50
+         field :safe_name      , String, :length => 50
          # TODO: field :hashed_password, SHA1 -- what to we want this to do; should it be excluded from retrieve?
          field :role           , :Role
          field :lockedout_until, Time, :default => Time.at(0)

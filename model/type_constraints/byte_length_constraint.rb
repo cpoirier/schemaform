@@ -19,49 +19,20 @@
 # =============================================================================================
 
 
-#
-# The SchemaForm text type.  Generally maps to String in Ruby and either varchar or text in 
-# the database.
-
 module SchemaForm
 module Model
-module Types
-class TextType < Type
+module TypeConstraints
+class ByteLengthConstraint
 
-   attr_reader :length
-   
-   def initialize( maximum_characters )
-      @length = maximum_characters
+   def initialize( length )
+      @length = length
    end
    
-   def simple_type?()
-      return true
+   def accepts?( value )
+      return value.bytesize <= @length
    end
-   
-   def type_closure()
-      if block_given? then
-         yield self
-         yield @@unbounded
-      else
-         return [self, @@unbounded]
-      end
-   end
-   
-   def to_s()
-      return @length > 0 ? "text_type(#{@length})" : "text_type()"
-   end
-   
-   def hash()
-      "TextType:#{@length}".hash
-   end
-   
-   def eql?( rhs )
-      rhs.is_a?(TextType) && rhs.length == @length
-   end
-   
-   @@unbounded = self.new(0)
 
-end # TextType < Type
-end # Types
+end # ByteLengthConstraint
+end # TypeConstraints
 end # Model
 end # SchemaForm

@@ -14,6 +14,11 @@
 
 class Array
    
+   def exist?()
+      !empty?
+   end
+   
+   
    #
    # inject()
    #  - calls the block for each element, passing in the last value generated to each next item

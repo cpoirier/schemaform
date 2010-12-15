@@ -77,7 +77,7 @@ class Entity
       block = data.shift if data.first.is_a?(Proc) 
       if block.exists? then
          field = Fields::DerivedField.new(self, name, block)
-      else
+      else         
          type, additional = *data
          type_mapping = @schema.find_mapping( type )
          

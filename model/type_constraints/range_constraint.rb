@@ -19,17 +19,20 @@
 # =============================================================================================
 
 
-#
-# The base class for all SchemaForm internally-defined types.
-
 module SchemaForm
 module Model
-module Types
+module TypeConstraints
+class RangeConstraint
 
-class InternalType < Type
-end
+   def initialize( range )
+      @range = range
+   end
+   
+   def accepts?( value )
+      return @range === value
+   end
 
-
-end # Types
+end # RangeConstraint
+end # TypeConstraints
 end # Model
 end # SchemaForm

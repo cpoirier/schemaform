@@ -31,8 +31,6 @@ class Type
    attr_reader :name, :base_type, :constraints
    
    def initialize( schema, name, base_type, constraints = [] )
-      assert( self.class != Type, "never instantiate Type directly, please" )
-   
       @schema      = schema
       @name        = name
       @base_type   = base_type  
@@ -118,7 +116,7 @@ class Type
       current = self
       while current
          yield( current )
-         current = current.base_class
+         current = current.base_type
       end
    end
    

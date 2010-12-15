@@ -97,12 +97,12 @@ class Schema
       # Build a base SchemaForm type that contains all modifiers.
       
       assert( ruby_type.exists? && sf_type.is_a?(Symbol), "expected a mapping from a Ruby Class to a SchemaForm type" )
-      base_type = build_type( sf_type, data, modifiers )
+      base_type = build_type( sf_type, modifiers )
       
       #
       # Build a MappedType on the base type and save it.
       
-      mapping = MappedType.new( self, ruby_type, base_type, writer, reader )
+      mapping = Types::MappedType.new( self, ruby_type, base_type, writer, reader )
       
       @mappings_by_ruby_type[ruby_type] = {} unless @mappings_by_ruby_type.member?(ruby_type)
       @mappings_by_sf_type[sf_type]     = {} unless @mappings_by_sf_type.member?(sf_type)
@@ -134,6 +134,7 @@ class Schema
    # Associates a type constraint with a trigger for use in declarations.
    
    def define_type_constraint( trigger, for_type, constraint_class )
+      @constraint_templates[trigger] = {} unless @constraint_templates.member?(trigger)
       @constraint_templates[trigger][for_type] = constraint_class
    end
    
@@ -156,7 +157,7 @@ protected
       @name     = name
       @source   = source
       @entities = {}
-      @types    = {}
+      @types    = { :all => Type.new(self, :all, nil) }
       
       @constraint_templates  = {}
       @mappings_by_ruby_type = {}
@@ -165,9 +166,9 @@ protected
       define_type_constraint :length, Types::TextType   , TypeConstraints::CharacterLengthConstraint
       define_type_constraint :length, Types::BinaryType , TypeConstraints::ByteLengthConstraint
       define_type_constraint :range , Types::NumericType, TypeConstraints::RangeConstraint
-      define_type_constraint :check , Types::Type       , TypeConstraints::CheckConstraint
+      define_type_constraint :check , Type              , TypeConstraints::CheckConstraint
       
-      define_type :all 
+
       define_type :any     , :all
       define_type :void    , :all
 
@@ -271,6 +272,7 @@ end # Model
 end # SchemaForm
 
 
-require $schemaform.local_path("type.rb"  )
-require $schemaform.local_path("entity.rb")
+require $schemaform.local_path("type.rb"           ) 
+require $schemaform.local_path("type_constraint.rb")
+require $schemaform.local_path("entity.rb"         )
 

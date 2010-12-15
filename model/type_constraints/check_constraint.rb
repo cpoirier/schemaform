@@ -24,6 +24,7 @@
 
 module SchemaForm
 module Model
+module TypeConstraints
 class CheckConstraint
 
    def initialize( proc )
@@ -35,5 +36,6 @@ class CheckConstraint
    end
 
 end # CheckConstraint
+end # TypeConstraints
 end # Model
 end # SchemaForm

@@ -79,14 +79,10 @@ class Entity
          field = Fields::DerivedField.new(self, name, block)
       else         
          base_type, modifiers = *data
-         assert( modifiers.nil? || modifiers.is_a?(Hash), "expected Proc, type, or type and hash of modifiers to follow field name [#{name}]" )
+         assert( base_type.is_a?(Class) || base_type.is_a?(Symbol), "expected Proc or type (Symbol or Class) to follow field name [#{name}]" )
+         assert( modifiers.nil? || modifiers.is_a?(Hash), "expected hash of modifiers to follow field type" )
 
-         type = @schema.build_type( base_type, modifiers )
-         
-         assert( type.exists?  , "unable to determine field type for [#{name}]"  )
-         assert( type.storable?, "non-derived fields must be of a storable type", :type => type )
-
-         field = Fields::StoredField.new(self, name, type, modifiers.exists? ? modifiers.fetch(:default, nil) : nil)
+         field = Fields::StoredField.new(self, name, [base_type, modifiers] )
       end
 
       @fields[name] = field
@@ -159,8 +155,8 @@ class Entity
       assert( @enumeration.nil?, "entity is already enumerated"             )
       
       if @fields.empty? then
-         field :name , @schema.identifier_type()
-         field :value, @schema.integer_type()
+         field :name , :identifier
+         field :value, :integer
       else
          assert( @fields.length >= 2, "an enumerated entity needs at least name and value fields" )
          # TODO type check the first two fields, once you figure out how best to do it

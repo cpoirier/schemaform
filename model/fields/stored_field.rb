@@ -25,9 +25,8 @@ module Model
 module Fields
 
 class StoredField < Field
-   def initialize( entity, name, type, default )
-      super( entity, name, type )
-      @default = default
+   def initialize( entity, name, type_info )
+      super( entity, name, type_info )
    end
    
 end

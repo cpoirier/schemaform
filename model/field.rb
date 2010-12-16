@@ -29,16 +29,8 @@ class Field
       @name   = name
       @type   = type
    end
-   
-   
-   # def initialize( schema)
-   # 
-   # def >=( rhs )
-   #    assert()
-   #    return FieldIsGTE.new( self, rhs )
-   # end
-   # 
 
+   
 
 end # Field
 end # Model

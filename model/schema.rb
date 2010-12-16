@@ -136,7 +136,7 @@ class Schema
       # Build and name a new type, if necessary, and return.
       
       if as_name.is_a?(Class) then
-         type = Types::MappedType.new( self, as_name, base_type, modifiers.fetch(:writer, nil), modifiers.fetch(:reader, nil) )
+         type = Types::MappedType.new( self, as_name, base_type, modifiers.fetch(:store, nil), modifiers.fetch(:load, nil) )
       elsif constraints.exist? or as_name.exists? then
          type = type_class.new( self, as_name, base_type, constraints )
       end
@@ -192,23 +192,25 @@ protected
       define_type_constraint :check , Type              , TypeConstraints::CheckConstraint
       
 
-      define_type :any     , :all
-      define_type :void    , :all
-
-      define_type :binary  , :any    , Types::BinaryType    
-      define_type :text    , :any    , Types::TextType    
-      define_type :real    , :any    , Types::NumericType    
-      define_type :integer , :real   , Types::IntegerType    
-      define_type :boolean , :integer, Types::IntegerType, :range => 0..1
-      define_type :datetime, :text   , Types::DateTimeType
+      define_type :any       , :all
+      define_type :void      , :all
+                             
+      define_type :binary    , :any    , Types::BinaryType    
+      define_type :text      , :any    , Types::TextType    
+      define_type :real      , :any    , Types::NumericType    
+      define_type :integer   , :real   , Types::IntegerType    
+      define_type :boolean   , :integer, Types::IntegerType, :range => 0..1
+      define_type :datetime  , :text   , Types::DateTimeType
+      define_type :identifier, :text   , :check => lambda {|i| !!i.to_sym && i.to_sym.inspect !~ /"/}
       
       define_type String    , :text
+      define_type Symbol    , :identifier, :load => lambda {|s| s.intern}
       define_type IPAddr    , :text, :length => 40
-      define_type TrueClass , :boolean, :write => 1, :read => lambda {|v| !!v }
-      define_type FalseClass, :boolean, :write => 0, :read => lambda {|v| !!v }
+      define_type TrueClass , :boolean, :store => 1, :load => lambda {|v| !!v }
+      define_type FalseClass, :boolean, :store => 0, :load => lambda {|v| !!v }
       define_type Time      , :datetime,
-                              :write => lambda {|t| utc = t.getutc; utc.strftime("%Y-%m-%d %H:%M:%S") + (utc.usec > 0 ? ".#{utc.usec}" : "") },
-                              :read  => lambda {|s| year, month, day, hour, minute, second, micros = *s.split(/[:\-\.] /); Time.utc(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i, micros.to_i)}
+                              :store => lambda {|t| utc = t.getutc; utc.strftime("%Y-%m-%d %H:%M:%S") + (utc.usec > 0 ? ".#{utc.usec}" : "") },
+                              :load  => lambda {|s| year, month, day, hour, minute, second, micros = *s.split(/[:\-\.] /); Time.utc(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i, micros.to_i)}
               
       instance_eval(&block) if block_given?
    end

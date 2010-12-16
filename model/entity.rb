@@ -78,13 +78,15 @@ class Entity
       if block.exists? then
          field = Fields::DerivedField.new(self, name, block)
       else         
-         type, additional = *data
-         type_mapping = @schema.find_mapping( type )
-         
-         assert( type.exists?        , "please specify a type or a formula for this field" )
-         assert( type_mapping.exists?, "unable to find mapping for type", {"type" => type} )
+         base_type, modifiers = *data
+         assert( modifiers.nil? || modifiers.is_a?(Hash), "expected Proc, type, or type and hash of modifiers to follow field name [#{name}]" )
 
-         field = Fields::StoredField.new(self, name, type_mapping, additional.exists? ? additional.fetch(:default, nil) : nil)
+         type = @schema.build_type( base_type, modifiers )
+         
+         assert( type.exists?  , "unable to determine field type for [#{name}]"  )
+         assert( type.storable?, "non-derived fields must be of a storable type", :type => type )
+
+         field = Fields::StoredField.new(self, name, type, modifiers.exists? ? modifiers.fetch(:default, nil) : nil)
       end
 
       @fields[name] = field

@@ -62,71 +62,15 @@ class Schema
    
    
    #
-   # Defines a mapping from Ruby to SchemaForm types, and how to convert from one to 
-   # the other.  When defining fields, you may use either expression, and the mappings
-   # will be used to determine the other type.  All parameters are supplied as pairs.  
-   # The only required one is from Ruby class to SchemaForm type.  You can additionally
-   # override the default conversion routines by providing :write (Ruby => SchemaForm)
-   # and :read (SchemaForm => Ruby) procs.
-   #
-   # Example:
-   #   map IPAddr => :text, :length => 40, :write => :to_s, :read => lambda {|v| SHA1.new(v)}
-      
-   def map( data )
-      
-      #
-      # Parse the parameter data.
-      
-      modifiers = {}
-      ruby_type = sf_type = writer = reader = nil
-      data.each do |key, value|
-         case key
-         when Class
-            ruby_type = key
-            sf_type   = value
-         when :read
-            reader = value
-         when :write
-            writer = value
-         else
-            modifiers[key] = value
-         end
-      end
-      
-      #
-      # Build a base SchemaForm type that contains all modifiers.
-      
-      assert( ruby_type.exists? && sf_type.is_a?(Symbol), "expected a mapping from a Ruby Class to a SchemaForm type" )
-      base_type = build_type( sf_type, modifiers )
-      
-      #
-      # Build a MappedType on the base type and save it.
-      
-      mapping = Types::MappedType.new( self, ruby_type, base_type, writer, reader )
-      
-      @mappings_by_ruby_type[ruby_type] = {} unless @mappings_by_ruby_type.member?(ruby_type)
-      @mappings_by_sf_type[sf_type]     = {} unless @mappings_by_sf_type.member?(sf_type)
-      
-      assert( !@mappings_by_ruby_type[ruby_type].member?(sf_type), "type mapping from Ruby type #{ruby_type} to Schema type #{sf_type} already defined" )
-      assert( !@mappings_by_sf_type[sf_type].member?(ruby_type)  , "type mapping from Schema type #{sf_type} to Ruby type #{ruby_type} already defined" )
-
-      @mappings_by_ruby_type[ruby_type][sf_type] = mapping
-      @mappings_by_sf_type[sf_type][ruby_type]   = mapping
-      
-   end
-   
-   
-   #
    # Defines a simple (non-entity) type.  
    
    def define_type( name, base_type = nil, *type_class_and_constraints )
+      type_check( name, [Symbol, Class] )
       
-      type_class  = type_class_and_constraints.first.is_a?(Type) ? type_class_and_constraints.shift : Type
-      constraints = type_class_and_constraints.first.is_a?(Hash) ? type_class_and_constraints.shift : {}
+      type_class  = type_class_and_constraints.first.is_a?(Class) ? type_class_and_constraints.shift : Type
+      constraints = type_class_and_constraints.first.is_a?(Hash)  ? type_class_and_constraints.shift : {}
 
-      type = build_type( base_type, constraints, name, type_class )
-
-      return type
+      return build_type( base_type, constraints, name, type_class )
    end
    
    
@@ -141,56 +85,10 @@ class Schema
    
    
    
-
-
-
-protected
-
-   # ==========================================================================================
-   #                                          Internals
-   # ==========================================================================================
-
-   @@monitor = Monitor.new()
-   @@schemas = {}
    
-   def initialize( name, source, &block )
-      @name     = name
-      @source   = source
-      @entities = {}
-      @types    = { :all => Type.new(self, :all, nil) }
-      
-      @constraint_templates  = {}
-      @mappings_by_ruby_type = {}
-      @mappings_by_sf_type   = {}
-      
-      define_type_constraint :length, Types::TextType   , TypeConstraints::CharacterLengthConstraint
-      define_type_constraint :length, Types::BinaryType , TypeConstraints::ByteLengthConstraint
-      define_type_constraint :range , Types::NumericType, TypeConstraints::RangeConstraint
-      define_type_constraint :check , Type              , TypeConstraints::CheckConstraint
-      
-
-      define_type :any     , :all
-      define_type :void    , :all
-
-      define_type :binary  , :any    , Types::BinaryType    
-      define_type :text    , :any    , Types::TextType    
-      define_type :real    , :any    , Types::NumericType    
-      define_type :integer , :real   , Types::IntegerType    
-      define_type :boolean , :integer, Types::IntegerType, :range => 0..1
-      define_type :datetime, :text   , Types::DateTimeType
-      
-      map String     => :text
-      map IPAddr     => :text, :length => 40
-      map TrueClass  => :boolean, :write => lambda { 1 }, :read => lambda {|v| v == 1 ? true : false}
-      map FalseClass => :boolean, :write => lambda { 0 }, :read => lambda {|v| v == 1 ? true : false}
-      map Time       => :datetime, 
-                        :write => lambda {|t| utc = t.getutc; utc.strftime("%Y-%m-%d %H:%M:%S") + (utc.usec > 0 ? ".#{utc.usec}" : "") },
-                        :read  => lambda {|s| year, month, day, hour, minute, second, micros = *s.split(/[:\-\.] /); Time.utc(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i, micros.to_i)}
-              
-      instance_eval(&block) if block_given?
-   end
    
-
+   
+   
    #
    # Creates or returns a type based on your description.  If you pass a new_name, you are 
    # guaranteed to get a new type object, and it will be registered for you.  Raises an 
@@ -199,6 +97,7 @@ protected
    
    def build_type( from, modifiers, as_name = nil, type_class = Type )
       type_check( from, [Symbol, Class, Type] )
+      type_check( as_name, [Symbol, Class], true )
       
       #
       # First, figure out the base Type.
@@ -210,8 +109,8 @@ protected
          base_type = @types[from]
       elsif from.is_a?(Class) then
          from.ancestors.each do |current|
-            if @mappings_by_ruby_type.member?(current) then
-               base_type = @mappings_by_ruby_type[current].first
+            if @types.member?(current) then
+               base_type = @types[current]
                break
             end
          end
@@ -236,7 +135,9 @@ protected
       #
       # Build and name a new type, if necessary, and return.
       
-      if constraints.exist? or as_name.exists? then
+      if as_name.is_a?(Class) then
+         type = Types::MappedType.new( self, as_name, base_type, modifiers.fetch(:writer, nil), modifiers.fetch(:reader, nil) )
+      elsif constraints.exist? or as_name.exists? then
          type = type_class.new( self, as_name, base_type, constraints )
       end
          
@@ -264,6 +165,55 @@ protected
       return nil
    end
    
+   
+
+
+
+protected
+
+   # ==========================================================================================
+   #                                          Internals
+   # ==========================================================================================
+
+   @@monitor = Monitor.new()
+   @@schemas = {}
+   
+   def initialize( name, source, &block )
+      @name     = name
+      @source   = source
+      @entities = {}
+      @types    = { :all => Type.new(self, :all, nil) }
+      
+      @constraint_templates  = {}
+      
+      define_type_constraint :length, Types::TextType   , TypeConstraints::CharacterLengthConstraint
+      define_type_constraint :length, Types::BinaryType , TypeConstraints::ByteLengthConstraint
+      define_type_constraint :range , Types::NumericType, TypeConstraints::RangeConstraint
+      define_type_constraint :check , Type              , TypeConstraints::CheckConstraint
+      
+
+      define_type :any     , :all
+      define_type :void    , :all
+
+      define_type :binary  , :any    , Types::BinaryType    
+      define_type :text    , :any    , Types::TextType    
+      define_type :real    , :any    , Types::NumericType    
+      define_type :integer , :real   , Types::IntegerType    
+      define_type :boolean , :integer, Types::IntegerType, :range => 0..1
+      define_type :datetime, :text   , Types::DateTimeType
+      
+      define_type String    , :text
+      define_type IPAddr    , :text, :length => 40
+      define_type TrueClass , :boolean, :write => 1, :read => lambda {|v| !!v }
+      define_type FalseClass, :boolean, :write => 0, :read => lambda {|v| !!v }
+      define_type Time      , :datetime,
+                              :write => lambda {|t| utc = t.getutc; utc.strftime("%Y-%m-%d %H:%M:%S") + (utc.usec > 0 ? ".#{utc.usec}" : "") },
+                              :read  => lambda {|s| year, month, day, hour, minute, second, micros = *s.split(/[:\-\.] /); Time.utc(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i, micros.to_i)}
+              
+      instance_eval(&block) if block_given?
+   end
+   
+
    
    
    

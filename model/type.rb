@@ -49,6 +49,18 @@ class Type
    end
    
    #
+   # Returns the underlying MappedType for this Type, or nil.
+   
+   def mapped_type()
+      if !defined?(@mapped_type) then
+         @mapped_type = @base_type.nil? ? nil : @base_type.mapped_type
+      end
+   
+      return @mapped_type
+   end
+   
+   
+   #
    # Returns the complete set of constraints, collected from this an and all base types.
    
    def all_constraints()
@@ -75,7 +87,7 @@ class Type
    # Returns true if this type can be stored in a typical database.
    
    def storable?()
-      storage_type().exists?
+      storage_type().exists? && mapped_type().exists?
    end
    
    

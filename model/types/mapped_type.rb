@@ -32,6 +32,10 @@ class MappedType < Type
       @writer = writer
       @reader = reader
    end
+   
+   def mapped_type()
+      return self 
+   end
 
    
 end # MappedType < Type

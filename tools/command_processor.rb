@@ -234,8 +234,8 @@ class CommandProcessor
    
    def print_data( data, stream = $stderr )
       unless data.nil? || data.empty?
-         width = data.keys.inject(0){|max, current| max > current.length ? max : current.length}
-         data.each {|key, value| stream.puts( key.rjust(width) + ": " + value.to_s ) }
+         width = data.keys.inject(0){|max, current| s = current.to_s ; max > s.length ? max : s.length}
+         data.each {|key, value| stream.puts( key.to_s.rjust(width) + ": " + value.to_s ) }
       end
    end
    

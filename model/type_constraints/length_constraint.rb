@@ -22,17 +22,17 @@
 module SchemaForm
 module Model
 module TypeConstraints
-class ByteLengthConstraint
+class LengthConstraint
 
    def initialize( length )
       @length = length
    end
    
    def accepts?( value )
-      return value.bytesize <= @length
+      return value.length <= @length
    end
 
-end # ByteLengthConstraint
+end # LengthConstraint
 end # TypeConstraints
 end # Model
 end # SchemaForm

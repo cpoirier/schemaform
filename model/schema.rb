@@ -186,8 +186,8 @@ protected
       
       @constraint_templates  = {}
       
-      define_type_constraint :length, Types::TextType   , TypeConstraints::CharacterLengthConstraint
-      define_type_constraint :length, Types::BinaryType , TypeConstraints::ByteLengthConstraint
+      define_type_constraint :length, Types::TextType   , TypeConstraints::LengthConstraint
+      define_type_constraint :length, Types::BinaryType , TypeConstraints::LengthConstraint
       define_type_constraint :range , Types::NumericType, TypeConstraints::RangeConstraint
       define_type_constraint :check , Type              , TypeConstraints::CheckConstraint
       

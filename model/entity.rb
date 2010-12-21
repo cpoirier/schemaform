@@ -65,29 +65,43 @@ class Entity
    
    
    #
-   # Defines a field within the entity.  If a block is given, the field is calculated,
-   # and the type will be determined for you.  Otherwise, you must supply at least a type.
+   # Defines a required field or subtuple within the entity.  To define a subtuple, supply a 
+   # block instead of a type.
    
-   def field( name, *data, &block )
-      assert( name.is_a?(Symbol)                   , "please use only Ruby symbols for field names"     )
-      assert( !@fields.member?(name)               , "duplicate field name #{name}"                     )
-      assert( @parent.nil? || !@parent.field?(name), "field name conflicts with field in parent entity" )
-      
-      field = nil
-      block = data.shift if data.first.is_a?(Proc) 
-      if block.exists? then
-         field = Fields::DerivedField.new(self, name, block)
-      else         
-         base_type, modifiers = *data
-         assert( base_type.is_a?(Class) || base_type.is_a?(Symbol), "expected Proc or type (Symbol or Class) to follow field name [#{name}]" )
-         assert( modifiers.nil? || modifiers.is_a?(Hash), "expected hash of modifiers to follow field type" )
-
-         field = Fields::StoredField.new(self, name, [base_type, modifiers] )
+   def required( name, base_type = nil, modifiers = {} )
+      modifiers[:optional] = false
+      if block_given? then
+         assert( base_type.nil?, "specify either a type or a block, not both" )
+         stored( name, base_type, modifiers ) { yield }
+      else
+         stored( name, base_type, modifiers )
       end
-
-      @fields[name] = field
+   end
+   
+   
+   #
+   # Defines an optional field or subtuple within the entity.  To define a subtuple, supply a 
+   # block instead of a type.
+   
+   def optional( name, base_type = nil, modifiers = {} )
+      modifiers[:optional] = true
+      if block_given? then
+         assert( base_type.nil?, "specify either a type or a block, not both" )
+         stored( name, base_type, modifiers ) { yield }
+      else
+         stored( name, base_type, modifiers )
+      end
    end
 
+
+   #
+   # Defines a derived field within the entity.  Supply a Proc via lambda, not a block!  
+   
+   def derived( name, proc )
+      field = Fields::DerivedField.new(self, name, proc)
+      add_field( field )
+   end
+   
    
    #
    # Defines a candidate key on the entity -- a subset of fields that can uniquely identify
@@ -155,8 +169,8 @@ class Entity
       assert( @enumeration.nil?, "entity is already enumerated"             )
       
       if @fields.empty? then
-         field :name , :identifier
-         field :value, :integer
+         required :name , :identifier
+         required :value, :integer
       else
          assert( @fields.length >= 2, "an enumerated entity needs at least name and value fields" )
          # TODO type check the first two fields, once you figure out how best to do it
@@ -196,6 +210,31 @@ protected
          super
       end
    end
+   
+   def stored( name, base_type = nil, modifiers = {} )
+      if block_given? then
+         nyi( "subtuple support" )
+      else
+         assert( base_type.is_a?(Class) || base_type.is_a?(Symbol), "expected type (Symbol or Class) to follow field name [#{name}]" )
+         assert( modifiers.nil? || modifiers.is_a?(Hash), "expected hash of modifiers to follow field type" )
+
+         field = Fields::StoredField.new(self, name, [base_type, modifiers] )
+      end
+
+      add_field( field )
+   end
+   
+   def add_field( field )
+      name = field.name
+      
+      assert( name.is_a?(Symbol)                   , "please use only Ruby symbols for field names"     )
+      assert( !@fields.member?(name)               , "duplicate field name #{name}"                     )
+      assert( @parent.nil? || !@parent.field?(name), "field name conflicts with field in parent entity" )
+      
+      @fields[name] = field
+   end
+   
+   
 
    
 end # Entity

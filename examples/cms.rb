@@ -37,48 +37,48 @@ def example_cms_schema()
       # set of direct and inherited capabilities.
       
       define :Role do
-         field :name                  , String, :length => 40
-         field :parents               , lambda {|role| role.find_matching(:RoleInheritance).return_only(:parent => :role)}
-         field :ancestors             , lambda {|role| role.find_matching(:RoleInheritance).follow(:RoleInheritance, :role, :parent).return_only(:parent => :role)}
-         field :closure               , lambda {|role| relation(:role => role.id) + role.ancestors}
-         field :capabilities          , lambda {|role| role.closure.join(:RoleCapability).return_only(:capability)}
-         field :inherited_capabilities, lambda {|role| role.ancestors.join(:RoleCapability).return_only(:capability)}
+         required :name                  , String, :length => 40
+         derived  :parents               , lambda {|role| role.find_matching(:RoleInheritance).return_only(:parent => :role)}
+         derived  :ancestors             , lambda {|role| role.find_matching(:RoleInheritance).follow(:RoleInheritance, :role, :parent).return_only(:parent => :role)}
+         derived  :closure               , lambda {|role| relation(:role => role.id) + role.ancestors}
+         derived  :capabilities          , lambda {|role| role.closure.join(:RoleCapability).return_only(:capability)}
+         derived  :inherited_capabilities, lambda {|role| role.ancestors.join(:RoleCapability).return_only(:capability)}
       end
 
       define :Capability do
-         field :name, String, :length => 40
+         required :name, String, :length => 40
       end
 
       define :RoleInheritance do
-         field :role  , :Role
-         field :parent, :Role
+         required :role  , :Role
+         required :parent, :Role
       end
 
       define :RoleCapability do
-         field :role      , :Role
-         field :capability, :Capability
+         required :role      , :Role
+         required :capability, :Capability
       end
 
 
       #=== Account management =================================================================
 
       define :Account do
-         field :email_address  , String, :length => 50
-         field :display_name   , String, :length => 50
-         field :safe_name      , String, :length => 50
+         required :email_address  , String, :length => 50
+         required :display_name   , String, :length => 50
+         required :safe_name      , String, :length => 50
          # TODO: field :hashed_password, SHA1 -- what to we want this to do; should it be excluded from retrieve?
-         field :role           , :Role
-         field :lockedout_until, Time, :default => Time.at(0)
+         required :role           , :Role
+         required :lockedout_until, Time, :default => Time.at(0)
 
          key :safe_name
          key :email_address
       end
 
       define :AuthenticationAttempt do
-         field :account, :Account
-         field :time   , Time
-         field :from   , IPAddr
-         field :result , :AuthenticationResult
+         required :account, :Account
+         required :time   , Time
+         required :from   , IPAddr
+         required :result , :AuthenticationResult
       end
 
       define :AuthenticationResult do

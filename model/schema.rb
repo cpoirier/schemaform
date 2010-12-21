@@ -191,7 +191,6 @@ protected
       define_type_constraint :range , Types::NumericType, TypeConstraints::RangeConstraint
       define_type_constraint :check , Type              , TypeConstraints::CheckConstraint
       
-
       define_type :any       , :all
       define_type :void      , :all
                              
@@ -201,7 +200,7 @@ protected
       define_type :integer   , :real   , Types::IntegerType    
       define_type :boolean   , :integer, Types::IntegerType, :range => 0..1
       define_type :datetime  , :text   , Types::DateTimeType
-      define_type :identifier, :text   , :check => lambda {|i| !!i.to_sym && i.to_sym.inspect !~ /"/}
+      define_type :identifier, :text   , :length => 80, :check => lambda {|i| !!i.to_sym && i.to_sym.inspect !~ /"/}
       
       define_type String    , :text
       define_type Symbol    , :identifier, :load => lambda {|s| s.intern}

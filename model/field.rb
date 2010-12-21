@@ -30,7 +30,7 @@ class Field
       @type   = type
    end
 
-   
+   attr_reader :name
 
 end # Field
 end # Model

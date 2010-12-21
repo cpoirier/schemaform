@@ -68,13 +68,19 @@ class Entity
    # Defines a required field or subtuple within the entity.  To define a subtuple, supply a 
    # block instead of a type.
    
-   def required( name, base_type = nil, modifiers = {} )
+   def required( name, *data )
+      modifiers = data.last.is_a?(Hash) ? data.pop : {}
       modifiers[:optional] = false
+      
       if block_given? then
-         assert( base_type.nil?, "specify either a type or a block, not both" )
-         stored( name, base_type, modifiers ) { yield }
+         assert( data.empty?, "specify either a type or a block, not both" )
+         subtuple( name, modifiers ) { yield }
       else
-         stored( name, base_type, modifiers )
+         base_type = data.shift
+         type_check( base_type, [Class, Symbol] )
+         assert( data.empty?, "expected type and modifiers" )
+         
+         field( name, base_type, modifiers )
       end
    end
    
@@ -83,13 +89,19 @@ class Entity
    # Defines an optional field or subtuple within the entity.  To define a subtuple, supply a 
    # block instead of a type.
    
-   def optional( name, base_type = nil, modifiers = {} )
+   def optional( name, *data )
+      modifiers = data.last.is_a?(Hash) ? data.pop : {}
       modifiers[:optional] = true
+      
       if block_given? then
-         assert( base_type.nil?, "specify either a type or a block, not both" )
-         stored( name, base_type, modifiers ) { yield }
+         assert( data.empty?, "specify either a type or a block, not both" )
+         subtuple( name, modifiers ) { yield }
       else
-         stored( name, base_type, modifiers )
+         base_type = data.shift
+         type_check( base_type, [Class, Symbol] )
+         assert( data.empty?, "expected type and modifiers" )
+         
+         field( name, base_type, modifiers )
       end
    end
 
@@ -99,7 +111,7 @@ class Entity
    
    def derived( name, proc )
       field = Fields::DerivedField.new(self, name, proc)
-      add_field( field )
+      self << field
    end
    
    
@@ -211,20 +223,16 @@ protected
       end
    end
    
-   def stored( name, base_type = nil, modifiers = {} )
-      if block_given? then
-         nyi( "subtuple support" )
-      else
-         assert( base_type.is_a?(Class) || base_type.is_a?(Symbol), "expected type (Symbol or Class) to follow field name [#{name}]" )
-         assert( modifiers.nil? || modifiers.is_a?(Hash), "expected hash of modifiers to follow field type" )
-
-         field = Fields::StoredField.new(self, name, [base_type, modifiers] )
-      end
-
-      add_field( field )
+   def field( name, base_type = nil, modifiers = {} )
+      type_check( base_type, [Class, Symbol] )
+      self << Fields::StoredField.new(self, name, [base_type, modifiers])
    end
    
-   def add_field( field )
+   def subtuple( name, modifiers )
+      warn_nyi( "subtuple support" )
+   end
+   
+   def <<( field )
       name = field.name
       
       assert( name.is_a?(Symbol)                   , "please use only Ruby symbols for field names"     )
@@ -232,6 +240,7 @@ protected
       assert( @parent.nil? || !@parent.field?(name), "field name conflicts with field in parent entity" )
       
       @fields[name] = field
+      self
    end
    
    

@@ -48,47 +48,56 @@ class Schema
    #                                     Definition Language
    # ==========================================================================================
    
+   
+   class DefinitionLanguage
       
-   attr_reader :name, :source
-   
-   #
-   # Defines an entity within the Schema.
-   
-   def define( name, parent = nil, &block )
-      assert( !@entities.member?(name), "duplicate entity name", {"name" => name} )
-      assert( parent.nil? || @entities.member?(parent), "parent not defined", {"name" => parent} )
-      @entities[name] = Entity.new( self, name, parent.nil? ? nil : @entities[parent], &block )      
-   end
-   
-   
-   #
-   # Defines a simple (non-entity) type.  
-   
-   def define_type( name, base_type = nil, *type_class_and_constraints )
-      type_check( name, [Symbol, Class] )
+      def initialize( schema )
+         @schema = schema 
+      end
       
-      type_class  = type_class_and_constraints.first.is_a?(Class) ? type_class_and_constraints.shift : Type
-      constraints = type_class_and_constraints.first.is_a?(Hash)  ? type_class_and_constraints.shift : {}
 
-      return build_type( base_type, constraints, name, type_class )
+      #
+      # Defines an entity within the Schema.
+   
+      def define( name, parent = nil, &block )
+         assert( !@schema.entities.member?(name), "duplicate entity name", {"name" => name} )
+         assert( parent.nil? || @schema.entities.member?(parent), "parent not defined", {"name" => parent} )
+         @schema.entities[name] = Entity.new( self, name, parent.nil? ? nil : @schema.entities[parent], &block )      
+      end
+   
+   
+      #
+      # Defines a simple (non-entity) type.  
+   
+      def define_type( name, base_type = nil, *type_class_and_constraints )
+         type_check( name, [Symbol, Class] )
+      
+         type_class  = type_class_and_constraints.first.is_a?(Class) ? type_class_and_constraints.shift : Type
+         constraints = type_class_and_constraints.first.is_a?(Hash)  ? type_class_and_constraints.shift : {}
+
+         return @schema.build_type( base_type, constraints, name, type_class )
+      end
+   
+   
+      #
+      # Associates a type constraint with a trigger for use in declarations.
+   
+      def define_type_constraint( trigger, for_type, constraint_class )
+         @schema.constraint_templates[trigger] = {} unless @schema.constraint_templates.member?(trigger)
+         @schema.constraint_templates[trigger][for_type] = constraint_class
+      end
    end
    
    
-   #
-   # Associates a type constraint with a trigger for use in declarations.
    
-   def define_type_constraint( trigger, for_type, constraint_class )
-      @constraint_templates[trigger] = {} unless @constraint_templates.member?(trigger)
-      @constraint_templates[trigger][for_type] = constraint_class
-   end
+   # ==========================================================================================
+   #                                      Public Interface
+   # ==========================================================================================
    
    
+   attr_reader :name, :source, :entities, :constraint_templates
    
-   
-   
-   
-   
-   
+
    #
    # Creates or returns a type based on your description.  If you pass a new_name, you are 
    # guaranteed to get a new type object, and it will be registered for you.  Raises an 
@@ -166,6 +175,14 @@ class Schema
    end
    
    
+   #
+   # Returns a fully qualified name within the schema.
+   
+   def fqn( *tail )
+      return tail.empty? ? @name : (@name + "." + tail.join("."))
+   end
+   
+   
 
 
 
@@ -183,36 +200,51 @@ protected
       @source   = source
       @entities = {}
       @types    = { :all => Type.new(self, :all, nil) }
+      @dsl      = DefinitionLanguage.new( self )
       
       @constraint_templates  = {}
+
+      @dsl.instance_eval do
+         define_type_constraint :length, Types::TextType   , TypeConstraints::LengthConstraint
+         define_type_constraint :length, Types::BinaryType , TypeConstraints::LengthConstraint
+         define_type_constraint :range , Types::NumericType, TypeConstraints::RangeConstraint
+         define_type_constraint :check , Type              , TypeConstraints::CheckConstraint
       
-      define_type_constraint :length, Types::TextType   , TypeConstraints::LengthConstraint
-      define_type_constraint :length, Types::BinaryType , TypeConstraints::LengthConstraint
-      define_type_constraint :range , Types::NumericType, TypeConstraints::RangeConstraint
-      define_type_constraint :check , Type              , TypeConstraints::CheckConstraint
-      
-      define_type :any       , :all
-      define_type :void      , :all
+         define_type :any       , :all
+         define_type :void      , :all
                              
-      define_type :binary    , :any    , Types::BinaryType    
-      define_type :text      , :any    , Types::TextType    
-      define_type :real      , :any    , Types::NumericType    
-      define_type :integer   , :real   , Types::IntegerType    
-      define_type :boolean   , :integer, Types::IntegerType, :range => 0..1
-      define_type :datetime  , :text   , Types::DateTimeType
-      define_type :identifier, :text   , :length => 80, :check => lambda {|i| !!i.to_sym && i.to_sym.inspect !~ /"/}
+         define_type :binary    , :any    , Types::BinaryType    
+         define_type :text      , :any    , Types::TextType    
+         define_type :real      , :any    , Types::NumericType    
+         define_type :integer   , :real   , Types::IntegerType    
+         define_type :boolean   , :integer, Types::IntegerType, :range => 0..1
+         define_type :datetime  , :text   , Types::DateTimeType
+         define_type :identifier, :text   , :length => 80, :check => lambda {|i| !!i.to_sym && i.to_sym.inspect !~ /"/}
       
-      define_type String    , :text
-      define_type Symbol    , :identifier, :load => lambda {|s| s.intern}
-      define_type IPAddr    , :text, :length => 40
-      define_type TrueClass , :boolean, :store => 1, :load => lambda {|v| !!v }
-      define_type FalseClass, :boolean, :store => 0, :load => lambda {|v| !!v }
-      define_type Time      , :datetime,
-                              :store => lambda {|t| utc = t.getutc; utc.strftime("%Y-%m-%d %H:%M:%S") + (utc.usec > 0 ? ".#{utc.usec}" : "") },
-                              :load  => lambda {|s| year, month, day, hour, minute, second, micros = *s.split(/[:\-\.] /); Time.utc(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i, micros.to_i)}
-              
-      instance_eval(&block) if block_given?
+         define_type String    , :text
+         define_type Symbol    , :identifier, :load => lambda {|s| s.intern}
+         define_type IPAddr    , :text, :length => 40
+         define_type TrueClass , :boolean, :store => 1, :load => lambda {|v| !!v }
+         define_type FalseClass, :boolean, :store => 0, :load => lambda {|v| !!v }
+         define_type Time      , :datetime,
+                                 :store => lambda {|t| utc = t.getutc; utc.strftime("%Y-%m-%d %H:%M:%S") + (utc.usec > 0 ? ".#{utc.usec}" : "") },
+                                 :load  => lambda {|s| year, month, day, hour, minute, second, micros = *s.split(/[:\-\.] /); Time.utc(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i, micros.to_i)}  
+      end
+      
+      @dsl.instance_eval(&block) if block_given?
+      # resolve()
    end
+   
+   
+   #
+   # Resolves types for all members of all entities.  
+   
+   def resolve()
+      @entities.each do |entity|
+         entity.resolve()
+      end
+   end
+   
    
 
    

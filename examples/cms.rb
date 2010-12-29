@@ -97,8 +97,16 @@ if $0 == __FILE__ then
    
    require "#{File.dirname(File.expand_path(__FILE__))}/../tools/command_processor.rb"
    CommandProcessor.process(ARGV, :exit => true) do |$schemaform, flags, files|
+      
+      #
+      # Build the Schema.
+      
       require $schemaform.library_path("model/schema.rb")
       schema = example_cms_schema()
+      schema.connect( files.empty? ? "sqlite:///tmp/example_cms.db" : files.first )
+      
    end
+   
+   
 
 end

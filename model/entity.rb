@@ -41,10 +41,6 @@ class Entity
    attr_reader :schema, :name, :parent, :fields, :keys
    attr_accessor :enumeration
    
-   def fqn( *tail )
-      return @schema.fqn(@name, *tail)
-   end
-   
    
    #
    # Returns true if the named field is defined in this or any parent entity.
@@ -244,12 +240,6 @@ class Entity
       self
    end
    
-   def resolve_types( loop_detection = [] )
-      @fields.each do |name, field|
-         field.resolve_type( loop_detection )
-      end
-   end
-
    
 end # Entity
 end # Model

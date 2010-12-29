@@ -302,25 +302,15 @@ class Array
 
    alias ruby_each each
 
-   def each( &proc )
-      if proc.arity == 2 then
-         index = 0
-         ruby_each do |element|
-            begin
-               proc.call( index, element ) 
-            rescue LocalJumpError
-               break
-            end
-            index += 1
+   def each_with_index( &proc )
+      index = 0
+      each do |element|
+         begin
+            proc.call( index, element ) 
+         rescue LocalJumpError
+            break
          end
-      else
-         ruby_each do |element|
-            begin
-               proc.call( element ) 
-            rescue LocalJumpError
-               break
-            end
-         end
+         index += 1
       end
    end
 
@@ -399,25 +389,9 @@ class Array
    end
 
 
-   #
-   # I never liked the perl names for these routines.  They are even 
-   # worse in Ruby...
-
-   alias append  push
-   alias prepend unshift
-
-   alias remove_head shift
-   alias remove_tail pop
-
-   alias add_head unshift
-   alias add_tail push
-
    def top()
       return self[-1]
    end
 
-   alias each_object each
-   
-   
    
 end

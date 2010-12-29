@@ -43,6 +43,15 @@ class Schema
       end
    end
    
+   #
+   # Connects to a database via the Sequel library.  Parameters should match the
+   # Sequel.connect() method.
+   
+   def connect( *parameters )
+      @connection = Sequel.connect( *parameters )
+      update_database_structures
+   end
+   
    
    # ==========================================================================================
    #                                     Definition Language
@@ -176,10 +185,11 @@ class Schema
    
    
    #
-   # Returns a fully qualified name within the schema.
+   # Register a named object with the schema.
    
-   def fqn( *tail )
-      return tail.empty? ? @name : (@name + "." + tail.join("."))
+   def register( object )
+      assert( !@object.member?(object.fqn), "object [#{object.fqn}] already registered" )
+      @objects[object.fqn] = object
    end
    
    
@@ -196,11 +206,13 @@ protected
    @@schemas = {}
    
    def initialize( name, source, &block )
-      @name     = name
-      @source   = source
-      @entities = {}
-      @types    = { :all => Type.new(self, :all, nil) }
-      @dsl      = DefinitionLanguage.new( self )
+      @name       = name
+      @source     = source
+      @objects    = {}
+      @entities   = {}
+      @types      = { :all => Type.new(self, :all, nil) }
+      @dsl        = DefinitionLanguage.new( self )
+      @connection = nil
       
       @constraint_templates  = {}
 
@@ -232,21 +244,19 @@ protected
       end
       
       @dsl.instance_eval(&block) if block_given?
-      # resolve()
    end
-   
-   
+
+
    #
-   # Resolves types for all members of all entities.  
+   # Brings the database structures up to match the current schema.
    
-   def resolve()
-      @entities.each do |entity|
-         entity.resolve()
+   def update_database_structures()
+      @@monitor.synchronize do
+         if @connection.tables.exists? then
+            if @connection.tables.member?()
+         end
       end
    end
-   
-   
-
    
    
    
@@ -258,4 +268,7 @@ end # SchemaForm
 require $schemaform.local_path("type.rb"           ) 
 require $schemaform.local_path("type_constraint.rb")
 require $schemaform.local_path("entity.rb"         )
+
+require 'rubygems'
+require 'sequel'
 

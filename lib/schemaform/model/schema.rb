@@ -28,8 +28,8 @@ require 'monitor'
 module Schemaform
 module Model
 class Schema
-   self.extend Quality
-   include Quality
+   self.extend QualityAssurance
+   include QualityAssurance
    
    #
    # Defines a schema and calls your block to fill it in.  With this method, your
@@ -61,7 +61,7 @@ class Schema
    
    
    class DefinitionLanguage
-      include Quality
+      include QualityAssurance
       
       def initialize( schema )
          @schema = schema 

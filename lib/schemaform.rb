@@ -19,7 +19,7 @@
 # =============================================================================================
 
 
-require File.expand_path(File.dirname(__FILE__)) + "/schemaform/quality.rb"
+require File.expand_path(File.dirname(__FILE__)) + "/schemaform/quality_assurance.rb"
 
 #
 # Provides the master entry points for the Schemaform system, allowing you to define schemas,
@@ -27,18 +27,16 @@ require File.expand_path(File.dirname(__FILE__)) + "/schemaform/quality.rb"
 # inner workings (or namespaces) of the library.
 
 module Schemaform
-   self.extend Schemaform::Quality
+   self.extend QualityAssurance
    
    
    #
    # Defines a schema and calls your block to fill it in.  With this method, your
-   # block can treat the Schema interface as a DSL.
+   # block can treat the Schema::DefinitionLanguage as a DSL.
 
    def self.define( name, &block )
       Model::Schema.define( name, &block )
    end
-   
-   
    
    
    #
@@ -75,5 +73,5 @@ module Schemaform
 end # Schemaform
 
 
-require Schemaform.locate("schemaform/ruby_extensions")
-require Schemaform.locate("schemaform/model/schema")
+require Schemaform.locate("schemaform/ruby_extensions.rb")
+require Schemaform.locate("schemaform/model/schema.rb")

@@ -25,7 +25,7 @@
 module Schemaform
 module Model
 class Enumeration
-   include Quality
+   include QualityAssurance
 
    attr_reader :entity, :definitions
    

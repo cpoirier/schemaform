@@ -22,28 +22,9 @@
 module Schemaform
 
    #
-   # A base exception class for detected bugs.
-   
-   class Bug < ScriptError
-      attr_reader :data
-
-      def initialize( message, data = nil )
-         super( message )
-         @data = data
-      end
-   end
-
-   class TerminatedForCause < Bug; end
-   class AssertionFailure   < Bug; end
-   class TypeCheckFailure   < Bug; end
-
-
-
-   
-   #
    # A mixin for Schemaform classes that provides a variety of quality-related routines.
    
-   module Quality
+   module QualityAssurance
       
       #
       # Raises an AssertionFailure if the condition is false.
@@ -146,7 +127,26 @@ module Schemaform
          return object
       end
 
-   end # Quality
+   end # QualityAssurance
+   
+   
+   #
+   # A base exception class for detected bugs.
+   
+   class Bug < ScriptError
+      attr_reader :data
+
+      def initialize( message, data = nil )
+         super( message )
+         @data = data
+      end
+   end
+
+   class TerminatedForCause < Bug; end
+   class AssertionFailure   < Bug; end
+   class TypeCheckFailure   < Bug; end
+
+
 end # Schemaform
 
 

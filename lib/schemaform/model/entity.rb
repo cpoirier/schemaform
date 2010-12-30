@@ -25,7 +25,7 @@
 module Schemaform
 module Model
 class Entity
-   include Quality
+   include QualityAssurance
       
    def initialize( schema, name, parent = nil, &block )
       @schema      = schema
@@ -75,7 +75,7 @@ class Entity
    
    
    class DefinitionLanguage
-      include Quality
+      include QualityAssurance
       
       def initialize( entity )
          @entity = entity

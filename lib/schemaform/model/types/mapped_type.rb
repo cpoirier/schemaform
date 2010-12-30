@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby -KU
 # =============================================================================================
-# SchemaForm
+# Schemaform
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
@@ -20,9 +20,9 @@
 
 
 #
-# A type that maps a Ruby type into the SchemaForm typing system.
+# A type that maps a Ruby type into the Schemaform typing system.
 
-module SchemaForm
+module Schemaform
 module Model
 module Types
 class MappedType < Type
@@ -41,4 +41,4 @@ class MappedType < Type
 end # MappedType < Type
 end # Types
 end # Model
-end # SchemaForm
+end # Schemaform

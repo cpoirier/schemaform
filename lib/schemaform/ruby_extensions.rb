@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby -KU
 # =============================================================================================
-# SchemaForm
+# Schemaform
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
@@ -19,9 +19,6 @@
 # =============================================================================================
 
 
-if $0 == 
-
-Dir[$product.relative_path("types/*.rb")].each do |path|
+Dir[Schemaform.locate("ruby_extensions/*.rb")].each do |path|
    require path
 end
-

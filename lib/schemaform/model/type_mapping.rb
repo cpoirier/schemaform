@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby -KU
 # =============================================================================================
-# SchemaForm
+# Schemaform
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
@@ -25,7 +25,7 @@ require $schemaform.local_path("type.rb")
 #
 # Maps a Ruby type to a database-field-compatible type and back again.
 
-module SchemaForm
+module Schemaform
 module Model
 class TypeMapping
    
@@ -41,4 +41,4 @@ class TypeMapping
 
 end # TypeMapping
 end # Model
-end # SchemaForm
+end # Schemaform

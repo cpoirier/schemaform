@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby -KU
 # =============================================================================================
-# SchemaForm
+# Schemaform
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
@@ -20,11 +20,11 @@
 
 
 #
-# Base class for all SchemaForm types.  Unlike Ruby, databases are (necessarily) rather strongly 
+# Base class for all Schemaform types.  Unlike Ruby, databases are (necessarily) rather strongly 
 # typed, and the typing system provides a way to manage assignment and join compatibility,
 # among other things.
 
-module SchemaForm
+module Schemaform
 module Model
 class Type
 
@@ -135,8 +135,8 @@ class Type
 
 end # Type
 end # Model
-end # SchemaForm
+end # Schemaform
 
 
-Dir[$schemaform.local_path("types/*.rb")].each {|path| require path}
+Dir[Schemaform.locate("types/*.rb")].each {|path| require path}
 

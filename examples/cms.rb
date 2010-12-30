@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby -KU
 # =============================================================================================
-# SchemaForm
+# Schemaform
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
@@ -25,7 +25,7 @@ require 'ipaddr'
 # An example Schema definition: a schema for a content management system.
 
 def example_cms_schema()
-   SchemaForm::Model::Schema.define :CMS do
+   Schemaform.define :CMS do
       
       
       #=== Access Control =====================================================================
@@ -95,18 +95,8 @@ end
 
 if $0 == __FILE__ then
    
-   require "#{File.dirname(File.expand_path(__FILE__))}/../tools/command_processor.rb"
-   CommandProcessor.process(ARGV, :exit => true) do |$schemaform, flags, files|
-      
-      #
-      # Build the Schema.
-      
-      require $schemaform.library_path("model/schema.rb")
-      schema = example_cms_schema()
-      schema.connect( files.empty? ? "sqlite:///tmp/example_cms.db" : files.first )
-      
-   end
-   
-   
+   require "../lib/schemaform.rb"
+   schema     = example_cms_schema()
+   connection = schema.connect( ARGV.empty? ? "sqlite:///tmp/example_cms.db" : ARGV.shift )
 
 end

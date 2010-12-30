@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby -KU
 #================================================================================================================================
-# Copyright 2004-2010 Chris Poirier (cpoirier@gmail.com)
+# Copyright 2007-2008 Chris Poirier (cpoirier@gmail.com)
 # 
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the 
 # License.  You may obtain a copy of the License at
@@ -11,35 +11,29 @@
 # governing permissions and limitations under the License.
 #================================================================================================================================
 
+require 'set'
 
+class Set
 
-class IO
+   #
+   # Returns a list of all possible subsets of the elements in this set.  By way of definitions,
+   # sets have no intended order and no duplicate elements
 
-   def get_char()
-      c = getc()
-      return chr(c)
-   end
-
-   def unget_char( c )
-      i = asc(c)
-      ungetc(i)
-   end
-
-   def lookahead_char()
-      c = get_char()
-      unget_char(c)
-      return c
-   end
-
-   def each_char()
-      while c = get_char()
-         yield( c )
+   def subsets( pretty = true )
+      set     = self.dup
+      subsets = [ Set.new() ]
+      until set.empty?
+         work_point = [set.shift]
+         work_queue = subsets.dup
+         until work_queue.empty?
+            subsets.unshift work_queue.shift + work_point
+         end
+      
       end
-   end
+   
+      subsets.sort!{|lhs, rhs| rhs.length == lhs.length ? lhs <=> rhs : rhs.length <=> lhs.length } if pretty
 
-   def skip()
-      puts "\n"
+      return subsets
    end
 
 end
-

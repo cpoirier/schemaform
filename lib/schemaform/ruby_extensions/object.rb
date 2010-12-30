@@ -28,14 +28,21 @@ class Object
 
    
    #
-   # specialize_method_name( name )
-   #  - returns a specialized Symbol version of the supplied name, based on this object's class name
-   #  - example: <object:SomeClass>.specialize("process") => :process_some_class
+   # Returns a specialized Symbol version of the supplied name, base on this object's class name.
+   #
+   # Example:
+   #    <object:SomeClass>.specialize("process") => :process_some_class
    
    def specialize_method_name( name )
       return "#{name}#{(is_a?(Class) ? self : self.class).name.split("::")[-1].gsub(/[A-Z]/){|s| "_#{s.downcase}"}}".intern
    end
-      
+   
+   
+   #
+   # Sends a specialized method to this object.  Will follow the class hierarchy for the
+   # determinant object, searching for a specialization this object supports.  Failing that, 
+   # the default_specialization will be used, if supplied.
+
    def send_specialized( name, default_specialization, determinant, *parameters )
       current_class = determinant.is_a?(Class) ? determinant : determinant.class
       while current_class
@@ -49,21 +56,9 @@ class Object
    end
    
    
-   def as( klass, default = nil )
-      return self if self.is_a?(klass)
-      
-      specialized = klass.specialize_method_name( "as" )
-      if self.responds_to?(specialized) then
-         return self.send( specialized )
-      else
-         return default
-      end
-   end
-
-   def as_array()
-      return [self]
-   end
-
+   #
+   # Returns this object in an array.
+   
    def to_a()
       return [self]
    end

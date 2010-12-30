@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby -KU
 # =============================================================================================
-# SchemaForm
+# Schemaform
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
@@ -22,7 +22,7 @@
 #
 # Base class for all type constraints.
 
-module SchemaForm
+module Schemaform
 module Model
 class TypeConstraint
 
@@ -31,7 +31,7 @@ class TypeConstraint
 
 end # TypeConstraint
 end # Model
-end # SchemaForm
+end # Schemaform
 
 
-Dir[$schemaform.local_path("type_constraints/*.rb")].each {|path| require path}
+Dir[Schemaform.locate("type_constraints/*.rb")].each {|path| require path}

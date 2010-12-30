@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby -KU
 # =============================================================================================
-# SchemaForm
+# Schemaform
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
@@ -19,7 +19,7 @@
 # =============================================================================================
 
 
-module SchemaForm
+module Schemaform
 module Model
 module TypeConstraints
 class RangeConstraint
@@ -35,4 +35,4 @@ class RangeConstraint
 end # RangeConstraint
 end # TypeConstraints
 end # Model
-end # SchemaForm
+end # Schemaform

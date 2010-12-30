@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby -KU
 # =============================================================================================
-# SchemaForm
+# Schemaform
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
@@ -20,7 +20,7 @@
 
 
 
-module SchemaForm
+module Schemaform
 module Model
 class Field
    
@@ -34,7 +34,7 @@ class Field
 
 end # Field
 end # Model
-end # SchemaForm
+end # Schemaform
 
 
-Dir[$schemaform.local_path("fields/*.rb")].each {|path| require path}
+Dir[Schemaform.locate("fields/*.rb")].each {|path| require path}

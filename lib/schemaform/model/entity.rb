@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby -KU
 # =============================================================================================
-# SchemaForm
+# Schemaform
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
@@ -22,9 +22,10 @@
 #
 # A single entity within the schema.
 
-module SchemaForm
+module Schemaform
 module Model
 class Entity
+   include Quality
       
    def initialize( schema, name, parent = nil, &block )
       @schema      = schema
@@ -74,6 +75,7 @@ class Entity
    
    
    class DefinitionLanguage
+      include Quality
       
       def initialize( entity )
          @entity = entity
@@ -243,9 +245,9 @@ class Entity
    
 end # Entity
 end # Model
-end # SchemaForm
+end # Schemaform
 
 
-require $schemaform.local_path("field.rb")
-require $schemaform.local_path("key.rb")
-require $schemaform.local_path("enumeration.rb")
+require Schemaform.locate("field.rb")
+require Schemaform.locate("key.rb")
+require Schemaform.locate("enumeration.rb")

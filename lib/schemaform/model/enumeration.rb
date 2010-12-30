@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby -KU
 # =============================================================================================
-# SchemaForm
+# Schemaform
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
@@ -22,9 +22,10 @@
 #
 # Manages enumeration data on behalf of an enumerated entity.
 
-module SchemaForm
+module Schemaform
 module Model
 class Enumeration
+   include Quality
 
    attr_reader :entity, :definitions
    
@@ -41,10 +42,10 @@ class Enumeration
    # Defines a single record for the enumeration.  Fields must match the entity.
    
    def define( *fields )
-      warn_nyi( "type check and count the enumeration values" )
+      warn_once( "TODO: type check and count the enumeration values" )
       @definitions << fields
    end
 
 end # Enumeration
 end # Model
-end # SchemaForm
+end # Schemaform

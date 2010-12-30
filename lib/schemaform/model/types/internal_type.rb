@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby -KU
 # =============================================================================================
-# SchemaForm
+# Schemaform
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
@@ -20,9 +20,9 @@
 
 
 #
-# The base class for all SchemaForm internally-defined types.
+# The base class for all Schemaform internally-defined types.
 
-module SchemaForm
+module Schemaform
 module Model
 module Types
 
@@ -32,4 +32,4 @@ end
 
 end # Types
 end # Model
-end # SchemaForm
+end # Schemaform

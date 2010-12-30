@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby -KU
 # =============================================================================================
-# SchemaForm
+# Schemaform
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
@@ -22,12 +22,14 @@ require 'monitor'
 
 
 #
-# Provides a naming context and a unit of storage within the SchemaForm system.  Multiple
+# Provides a naming context and a unit of storage within the Schemaform system.  Multiple
 # Schemas can coexist within one physical database, but names are unique.
 
-module SchemaForm
+module Schemaform
 module Model
 class Schema
+   self.extend Quality
+   include Quality
    
    #
    # Defines a schema and calls your block to fill it in.  With this method, your
@@ -59,6 +61,7 @@ class Schema
    
    
    class DefinitionLanguage
+      include Quality
       
       def initialize( schema )
          @schema = schema 
@@ -251,23 +254,23 @@ protected
    # Brings the database structures up to match the current schema.
    
    def update_database_structures()
-      @@monitor.synchronize do
-         if @connection.tables.exists? then
-            if @connection.tables.member?()
-         end
-      end
+      # @@monitor.synchronize do
+      #    if @connection.tables.exists? then
+      #       if @connection.tables.member?()
+      #    end
+      # end
    end
    
    
    
 end # Schema
 end # Model
-end # SchemaForm
+end # Schemaform
 
 
-require $schemaform.local_path("type.rb"           ) 
-require $schemaform.local_path("type_constraint.rb")
-require $schemaform.local_path("entity.rb"         )
+require Schemaform.locate("type.rb"           ) 
+require Schemaform.locate("type_constraint.rb")
+require Schemaform.locate("entity.rb"         )
 
 require 'rubygems'
 require 'sequel'

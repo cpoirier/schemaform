@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby -KU
 # =============================================================================================
-# SchemaForm
+# Schemaform
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
@@ -22,7 +22,7 @@
 #
 # Runs arbitrary Ruby code as a constraint on a type.
 
-module SchemaForm
+module Schemaform
 module Model
 module TypeConstraints
 class CheckConstraint
@@ -38,4 +38,4 @@ class CheckConstraint
 end # CheckConstraint
 end # TypeConstraints
 end # Model
-end # SchemaForm
+end # Schemaform

@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby -KU
 # =============================================================================================
-# SchemaForm
+# Schemaform
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
@@ -21,10 +21,10 @@
 
 #
 # Defines a si
-# Provides a naming context and a unit of storage within the SchemaForm system.  Multiple
+# Provides a naming context and a unit of storage within the Schemaform system.  Multiple
 # Schemas can coexist within one physical database, but names are unique.
 
-module SchemaForm
+module Schemaform
 module Model
 class Section
       
@@ -36,4 +36,4 @@ class Section
    
 end # Section
 end # Model
-end # SchemaForm
+end # Schemaform

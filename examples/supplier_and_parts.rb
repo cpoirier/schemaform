@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby -KU
 # =============================================================================================
-# SchemaForm
+# Schemaform
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
@@ -23,7 +23,7 @@
 # An example Schema definition: the classic Suppliers and Parts database.
 
 def example_supplier_and_parts_schema()
-   SchemaForm::Model::Schema.define :SuppliersAndParts do
+   Schemaform.define :SuppliersAndParts do
    end
 end
 
@@ -34,11 +34,9 @@ end
 
 if $0 == __FILE__ then
    
-   require "#{File.dirname(File.expand_path(__FILE__))}/../tools/command_processor.rb"
-   CommandProcessor.process(ARGV, :exit => true) do |$schemaform, flags, files|
-      require $schemaform.library_path("model/schema.rb")
-      schema = example_supplier_and_parts_schema()
-   end
+   require "../lib/schemaform.rb"
+   schema     = example_supplier_and_parts_schema()
+   connection = schema.connect( ARGV.empty? ? "sqlite:///tmp/example_supplier_and_parts.db" : ARGV.shift )
 
 
 end

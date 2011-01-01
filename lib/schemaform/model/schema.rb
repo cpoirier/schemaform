@@ -43,7 +43,7 @@ class Schema
       
       @constraint_templates  = {}
 
-      if @context.exists? then
+      if @context.nil? then
          @types[:all] = Type.new(self, :all, nil)
          @dsl.instance_eval do
             define_type_constraint :length, Types::TextType   , TypeConstraints::LengthConstraint

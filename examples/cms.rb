@@ -24,8 +24,8 @@ require 'ipaddr'
 #
 # An example Schema definition: a schema for a content management system.
 
-def example_cms_schema()
-   Schemaform.define :CMS do
+def example_cms_schema( context_schema = nil )
+   Schemaform.define :CMS, context_schema do
       
       
       #=== Access Control =====================================================================
@@ -97,6 +97,6 @@ if $0 == __FILE__ then
    
    require "../lib/schemaform.rb"
    schema     = example_cms_schema()
-   connection = schema.connect( ARGV.empty? ? "sqlite:///tmp/example_cms.db" : ARGV.shift )
+   # connection = schema.connect( ARGV.empty? ? "sqlite:///tmp/example_cms.db" : ARGV.shift )
 
 end

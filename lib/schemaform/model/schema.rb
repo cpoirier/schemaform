@@ -28,30 +28,52 @@ require 'monitor'
 module Schemaform
 module Model
 class Schema
-   self.extend QualityAssurance
    include QualityAssurance
+   extend  QualityAssurance
    
-   #
-   # Defines a schema and calls your block to fill it in.  With this method, your
-   # block can treat the Schema interface as a DSL.
    
-   def self.define( name, &block )
-      @@monitor.synchronize do
-         if @@schemas.member?(name) then
-            raise AssertionFailure.new("duplicate schema name", {"name" => name, "existing" => @@schemas[name].source})
+   def initialize( name, context_schema = nil, &block )
+      @name       = name
+      @context    = context_schema
+      @objects    = {}
+      @entities   = {}
+      @dsl        = DefinitionLanguage.new( self )
+      @connection = nil
+      @types      = {}
+      
+      @constraint_templates  = {}
+
+      if @context.exists? then
+         @types[:all] = Type.new(self, :all, nil)
+         @dsl.instance_eval do
+            define_type_constraint :length, Types::TextType   , TypeConstraints::LengthConstraint
+            define_type_constraint :length, Types::BinaryType , TypeConstraints::LengthConstraint
+            define_type_constraint :range , Types::NumericType, TypeConstraints::RangeConstraint
+            define_type_constraint :check , Type              , TypeConstraints::CheckConstraint
+      
+            define_type :any       , :all
+            define_type :void      , :all
+                             
+            define_type :binary    , :any    , Types::BinaryType    
+            define_type :text      , :any    , Types::TextType    
+            define_type :real      , :any    , Types::NumericType    
+            define_type :integer   , :real   , Types::IntegerType    
+            define_type :boolean   , :integer, Types::IntegerType, :range => 0..1
+            define_type :datetime  , :text   , Types::DateTimeType
+            define_type :identifier, :text   , :length => 80, :check => lambda {|i| !!i.to_sym && i.to_sym.inspect !~ /"/}
+      
+            define_type String    , :text
+            define_type Symbol    , :identifier, :load => lambda {|s| s.intern}
+            define_type IPAddr    , :text, :length => 40
+            define_type TrueClass , :boolean, :store => 1, :load => lambda {|v| !!v }
+            define_type FalseClass, :boolean, :store => 0, :load => lambda {|v| !!v }
+            define_type Time      , :datetime,
+                                    :store => lambda {|t| utc = t.getutc; utc.strftime("%Y-%m-%d %H:%M:%S") + (utc.usec > 0 ? ".#{utc.usec}" : "") },
+                                    :load  => lambda {|s| year, month, day, hour, minute, second, micros = *s.split(/[:\-\.] /); Time.utc(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i, micros.to_i)}  
          end
-         
-         @@schemas[name] = self.new( name, caller()[0], &block )
       end
-   end
-   
-   #
-   # Connects to a database via the Sequel library.  Parameters should match the
-   # Sequel.connect() method.
-   
-   def connect( *parameters )
-      @connection = Sequel.connect( *parameters )
-      update_database_structures
+      
+      @dsl.instance_eval(&block) if block_given?
    end
    
    
@@ -119,28 +141,8 @@ class Schema
    def build_type( from, modifiers, as_name = nil, type_class = Type )
       type_check( from, [Symbol, Class, Type] )
       type_check( as_name, [Symbol, Class], true )
-      
-      #
-      # First, figure out the base Type.
 
-      base_type = nil
-
-      if from.is_a?(Symbol) then
-         assert( @types.member?(from), "unrecognized type [#{from}]" )
-         base_type = @types[from]
-      elsif from.is_a?(Class) then
-         from.ancestors.each do |current|
-            if @types.member?(current) then
-               base_type = @types[current]
-               break
-            end
-         end
-         assert( base_type.exists?, "no type mapping for class [#{from.name}]" )
-      else
-         base_type = from
-      end
-      
-      type = base_type
+      base_type = find_type(from)
       
       #
       # Process any constraints from the modifiers list.
@@ -196,6 +198,42 @@ class Schema
    end
    
    
+   #
+   # Returns the Type for a name (Symbol or Class), or nil.
+   
+   def find_type( name, fail_if_missing = true, simple_check = false )
+      return name if name.is_a?(Type)
+      type_check( name, [Symbol, Class] )
+      
+      
+      #
+      # If attempting to resolve a Class, we will try for the requested Class or any of its
+      # base classes.  Otherwise, we are doing a simple check of just the specified name in 
+      # this or a context Schema.
+      
+      type = nil
+      if name.is_a?(Class) and !simple_check then
+         name.ancestors.each do |current|
+            break if type = type(current, false, true)
+         end
+      else
+         if @types.member?(name) then
+            type = @types[name]
+         elsif @context.exists? then
+            type = @context.type(name, false, true)
+         end
+      end   
+
+      if fail_if_missing then
+         assert( type.exists?, name.is_a?(Symbol) ? "unrecognized type [#{name}]" : "no type mapping for class [#{from.name}]" )
+      end
+      
+      return type
+   end
+   
+   
+   
+   
 
 
 
@@ -205,49 +243,8 @@ protected
    #                                          Internals
    # ==========================================================================================
 
-   @@monitor = Monitor.new()
-   @@schemas = {}
-   
-   def initialize( name, source, &block )
-      @name       = name
-      @source     = source
-      @objects    = {}
-      @entities   = {}
-      @types      = { :all => Type.new(self, :all, nil) }
-      @dsl        = DefinitionLanguage.new( self )
-      @connection = nil
-      
-      @constraint_templates  = {}
 
-      @dsl.instance_eval do
-         define_type_constraint :length, Types::TextType   , TypeConstraints::LengthConstraint
-         define_type_constraint :length, Types::BinaryType , TypeConstraints::LengthConstraint
-         define_type_constraint :range , Types::NumericType, TypeConstraints::RangeConstraint
-         define_type_constraint :check , Type              , TypeConstraints::CheckConstraint
-      
-         define_type :any       , :all
-         define_type :void      , :all
-                             
-         define_type :binary    , :any    , Types::BinaryType    
-         define_type :text      , :any    , Types::TextType    
-         define_type :real      , :any    , Types::NumericType    
-         define_type :integer   , :real   , Types::IntegerType    
-         define_type :boolean   , :integer, Types::IntegerType, :range => 0..1
-         define_type :datetime  , :text   , Types::DateTimeType
-         define_type :identifier, :text   , :length => 80, :check => lambda {|i| !!i.to_sym && i.to_sym.inspect !~ /"/}
-      
-         define_type String    , :text
-         define_type Symbol    , :identifier, :load => lambda {|s| s.intern}
-         define_type IPAddr    , :text, :length => 40
-         define_type TrueClass , :boolean, :store => 1, :load => lambda {|v| !!v }
-         define_type FalseClass, :boolean, :store => 0, :load => lambda {|v| !!v }
-         define_type Time      , :datetime,
-                                 :store => lambda {|t| utc = t.getutc; utc.strftime("%Y-%m-%d %H:%M:%S") + (utc.usec > 0 ? ".#{utc.usec}" : "") },
-                                 :load  => lambda {|s| year, month, day, hour, minute, second, micros = *s.split(/[:\-\.] /); Time.utc(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i, micros.to_i)}  
-      end
-      
-      @dsl.instance_eval(&block) if block_given?
-   end
+   
 
 
    #

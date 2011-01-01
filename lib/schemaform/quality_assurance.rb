@@ -29,11 +29,17 @@ module Schemaform
       #
       # Raises an AssertionFailure if the condition is false.
 
-      def assert( condition, message, data = nil )
-         unless condition
-            data = yield() if block_given?
-            raise AssertionFailure.new(message, data)
-         end
+      def assert( condition, message, data = nil, &block )
+         fail( message, data, block ) unless condition
+      end
+      
+      
+      #
+      # Raises an AssertionFailure outright.
+      
+      def fail( message, data = nil, &block )
+         data = block.call() if block
+         raise AssertionFailure.new(message, data)
       end
       
 

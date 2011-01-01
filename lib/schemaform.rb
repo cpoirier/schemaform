@@ -27,15 +27,17 @@ require File.expand_path(File.dirname(__FILE__)) + "/schemaform/quality_assuranc
 # inner workings (or namespaces) of the library.
 
 module Schemaform
-   self.extend QualityAssurance
+   extend  QualityAssurance
+   include QualityAssurance
    
    
    #
-   # Defines a schema and calls your block to fill it in.  With this method, your
-   # block can treat the Schema::DefinitionLanguage as a DSL.
+   # Creates a Schema and Package in one step, and calls your block to fill in the Package.
+   # You can define additional packages using the returned schema, if you need to.
+   # With this method, your block can treat the Package::DefinitionLanguage as a DSL.
 
-   def self.define( name, &block )
-      Model::Schema.define( name, &block )
+   def self.define( name, context_schema = nil, &block )
+      Model::Schema.new( name, context_schema, &block )
    end
    
    
@@ -74,4 +76,4 @@ end # Schemaform
 
 
 require Schemaform.locate("schemaform/ruby_extensions.rb")
-require Schemaform.locate("schemaform/model/schema.rb")
+require Schemaform.locate("schemaform/model/schema.rb"   )

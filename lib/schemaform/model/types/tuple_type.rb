@@ -19,39 +19,22 @@
 # =============================================================================================
 
 
-require Schemaform.locate("scalar_type.rb")
-
-
 #
-# Schemaform storable types.
+# A dimension 1 type, in which there is a set of name/type pairs.
 
 module Schemaform
 module Model
 module Types
+class TupleType < Type
 
-class StorableType < ScalarType
-   def storage_type()
-      return self
+   def initialize( schema )
+      super( schema )
    end
-end
+   
+   def dimensionality() ; 1 ; end
 
 
-class BinaryType < StorableType
-end
-
-class TextType < StorableType
-end
-
-class NumericType < StorableType
-end
-
-class IntegerType < NumericType
-end
-
-class DateTimeType < StorableType
-end
-
-
+end # TupleType
 end # Types
 end # Model
 end # Schemaform

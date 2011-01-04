@@ -27,112 +27,54 @@
 module Schemaform
 module Model
 class Type
+   include QualityAssurance
 
-   attr_reader :name, :base_type, :constraints
+   attr_accessor :schema, :name
    
-   def initialize( schema, name, base_type, constraints = [] )
-      @schema      = schema
-      @name        = name
-      @base_type   = base_type  
-      @constraints = constraints
-   end 
-   
-   #
-   # Returns the underlying StorableType for this Type, or nil.
-   
-   def storage_type()
-      if !defined?(@storage_type) then
-         @storage_type = @base_type.nil? ? nil : @base_type.storage_type
-      end
-      
-      return @storage_type
+   def initialize( schema )
+      type_check( schema, Model::Schema )
+      @schema = schema
+      @name   = nil
    end
    
-   #
-   # Returns the underlying MappedType for this Type, or nil.
-   
-   def mapped_type()
-      if !defined?(@mapped_type) then
-         @mapped_type = @base_type.nil? ? nil : @base_type.mapped_type
-      end
-   
-      return @mapped_type
+   def named?()
+      @name.exists?
    end
    
-   
-   #
-   # Returns the complete set of constraints, collected from this an and all base types.
-   
-   def all_constraints()
-      return @constraints if @base_type.nil?
-      return @constraints + @base_type.all_constraints
-   end
-   
-   
-   # 
-   # Returns true IFF the specified value is an instance of this Type.
-   
-   def accepts?( value )
-      return false if @base_class.nil?
-      return false unless @base_class.accepts?(value)
-      @constraints.each do |constraint|
-         return false unless constraint.accepts?( value )
-      end
-      
-      return true
-   end
-   
-   
-   #
-   # Returns true if this type can be stored in a typical database.
-   
-   def storable?()
-      storage_type().exists? && mapped_type().exists?
-   end
-   
-   
-   #
-   # Returns true if a value of this type can be compared to a value of the other.
-   
-   def comparable_to?( other )
-      return true if storage_type.exists? && storage_type == other.storage_type
-      return true if assignable_from?( other )
-      return other.assignable_from?( self )
-   end
-   
-   #
-   # Returns true if a variable of this type can accept a value of the other.
-   
-   def assignable_from?( source )
-      return source.typeof?(self)
-   end
-   
-   #
-   # Returns true if this type is a direct descendent of the other type.
-   
-   def typeof?( other )
-      return true if other == self
 
-      current = self
-      while current = current.base_type
-         return true if other == current
-      end
-      
-      return false
+   #
+   # Returns a human-readable summary of the type, for inclusion in diagnostic output.
+   
+   def description()
+      return name.to_s if named?
+      return "<unnamed type of dimensionality #{dimensionality}>"
    end
+
    
    #
-   # Iterates over this class and every base type.
+   # Returns the "dimensionality" or order of this type: 0 for scalar, 1 for tuple, 2 for relation.
+   
+   def dimensionality()
+      fail_unless_overridden
+   end
+
+   
+   #
+   # Resolves any deferred typing information within the Type.
+   
+   def resolve( resolution_path = [] )
+      fail_unless_overridden
+   end
+
+   
+   #
+   # Iterates over this and any Type this one is built with.
    
    def each_effective_type()
-      current = self
-      while current
-         yield( current )
-         current = current.base_type
-      end
+      yield( self )
    end
-   
 
+   
 end # Type
 end # Model
 end # Schemaform

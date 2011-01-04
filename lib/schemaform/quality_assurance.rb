@@ -30,7 +30,7 @@ module Schemaform
       # Raises an AssertionFailure if the condition is false.
 
       def assert( condition, message, data = nil, &block )
-         fail( message, data, block ) unless condition
+         fail( message, data, &block ) unless condition
       end
       
       
@@ -42,17 +42,12 @@ module Schemaform
          raise AssertionFailure.new(message, data)
       end
       
-
-
+      
       #
-      # Raises a TerminatedForCause exception indicating something happened that shouldn't have.
+      # Raises an AssertionFailure indicating a method should have been overrided.
 
-      def terminate( description = nil, data = nil )
-         if description.nil? then
-            description = "Incomplete: " + caller()[0]
-         end
-
-         raise TerminatedForCause.new( description, data )
+      def fail_unless_overridden()
+         fail( "You must override: " + caller()[0] )
       end
 
 
@@ -77,6 +72,15 @@ module Schemaform
       end
       
 
+      #
+      # Asserts that condition is true, but still outputs the message.
+      
+      def assert_and_warn_once( condition, message, data = nil, &block )
+         assert( condition, message, data, &block )
+         warn_once( message )
+      end
+      
+      
       #
       # Catches any exceptions raised in your block and returns error_return instead.  Returns
       # your block's return value otherwise.
@@ -148,9 +152,8 @@ module Schemaform
       end
    end
 
-   class TerminatedForCause < Bug; end
-   class AssertionFailure   < Bug; end
-   class TypeCheckFailure   < Bug; end
+   class AssertionFailure < Bug; end
+   class TypeCheckFailure < Bug; end
 
 
 end # Schemaform

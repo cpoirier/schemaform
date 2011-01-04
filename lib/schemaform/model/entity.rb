@@ -28,6 +28,8 @@ class Entity
    include QualityAssurance
       
    def initialize( schema, name, parent = nil, &block )
+      type_check( schema, Model::Schema )
+      
       @schema      = schema
       @name        = name
       @parent      = parent
@@ -36,12 +38,18 @@ class Entity
       @enumeration = nil
       @dsl         = DefinitionLanguage.new( self )
       
+      @reference_type = Types::ReferenceType.new( self )
+      # @tuple_type     = Types::EntityBackedTupleType.new( self )
+      
       @dsl.instance_eval(&block) if block_given?
    end
    
-   attr_reader :schema, :name, :parent, :fields, :keys
+   attr_reader :schema, :name, :parent, :fields, :keys, :reference_type
    attr_accessor :enumeration
-   
+
+   def has_parent?()
+      @parent.exists?
+   end
    
    #
    # Returns true if the named field is defined in this or any parent entity.
@@ -95,9 +103,8 @@ class Entity
             warn_nyi( "subtuple support" )
          else
             base_type = data.shift
-            type_check( base_type, [Class, Symbol] )
-            assert( data.empty?, "expected type and modifiers" )
-            @entity << Fields::StoredField.new(self, name, [base_type, modifiers])
+            assert( data.empty?, "expected type and modifiers only" )
+            @entity << Fields::StoredField.new(@entity, name, Types::ScalarType.new(@entity.schema, base_type, modifiers))
          end
       end
    
@@ -117,7 +124,7 @@ class Entity
             base_type = data.shift
             type_check( base_type, [Class, Symbol] )
             assert( data.empty?, "expected type and modifiers" )
-            @entity << Fields::StoredField.new(self, name, [base_type, modifiers])
+            @entity << Fields::StoredField.new(self, name, Types::ScalarType.new(@entity.schema, base_type, modifiers))
          end
       end
 
@@ -243,6 +250,13 @@ class Entity
    end
    
    
+   def resolve_field_types( resolution_path = [] )
+      @fields.each do |name, field|
+         field.resolve_type( resolution_path )
+         puts "#{@name}.#{name}: #{field.type.description}" if field.type.exists?
+      end
+   end
+   
 end # Entity
 end # Model
 end # Schemaform
@@ -251,3 +265,4 @@ end # Schemaform
 require Schemaform.locate("field.rb")
 require Schemaform.locate("key.rb")
 require Schemaform.locate("enumeration.rb")
+

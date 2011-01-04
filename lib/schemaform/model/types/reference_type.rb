@@ -20,16 +20,24 @@
 
 
 #
-# The base class for all Schemaform internally-defined types.
+# A type that represents a reference to an entity.
 
 module Schemaform
 module Model
 module Types
+class ReferenceType < ScalarType
 
-class InternalType < Type
-end
+   def initialize( entity )
+      super( entity.schema, entity.has_parent? ? entity.parent.reference_type : entity.schema.any_type )
+      self.name = entity.name
+   end
+   
+   def description()
+      return name.to_s + " reference"
+   end
+   
 
-
-end # Types
+end # ReferenceType
+end # Tyeps
 end # Model
 end # Schemaform

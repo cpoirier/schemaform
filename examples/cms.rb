@@ -60,6 +60,8 @@ def example_cms_schema( context_schema = nil )
       end
 
 
+         
+
       #=== Account management =================================================================
 
       define :Account do
@@ -84,6 +86,8 @@ def example_cms_schema( context_schema = nil )
       define :AuthenticationResult do
          enumerate :valid, :invalid
       end
+      
+      
       
    end
 

@@ -29,6 +29,10 @@ class DerivedField < Field
       super( entity, name, nil )
       @block = block
    end
+   
+   def resolve_type( resolution_path = [] )
+      warn_once( "TODO: DerivedField.resolve_type() is unfinished" )
+   end
 end
 
 

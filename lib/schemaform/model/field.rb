@@ -23,6 +23,7 @@
 module Schemaform
 module Model
 class Field
+   include QualityAssurance
    
    def initialize( entity, name, type )
       @entity = entity
@@ -30,8 +31,13 @@ class Field
       @type   = type
    end
 
-   attr_reader :name
+   attr_reader :name, :type
 
+   def resolve_type( resolution_path = [] )
+      fail_unless_overridden
+   end
+   
+   
 end # Field
 end # Model
 end # Schemaform

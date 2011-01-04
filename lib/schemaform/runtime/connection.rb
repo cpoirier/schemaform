@@ -18,27 +18,36 @@
 #             limitations under the License.
 # =============================================================================================
 
-require $schemaform.local_path("type.rb")
-
+require 'rubygems'
+require 'sequel'
 
 
 #
-# Maps a Ruby type to a database-field-compatible type and back again.
+# Provides the primary bridge between a Schema and the physical storage in which is lives.  
 
 module Schemaform
-module Model
-class TypeMapping
-   
-   def initialize( ruby_type, schema_type, ruby_to_schema_mapper = nil, schema_to_ruby_mapper = nil )
-      @ruby_type             = ruby_type
-      @schema_type           = schema_type
-      @ruby_to_schema_mapper = ruby_to_schema_mapper
-      @schema_to_ruby_mapper = schema_to_ruby_mapper      
+module Runtime
+class Connection
+
+   def initialize( schema, connection_string, properties = {} )
+      assert( !properties.member?(:server), "in order to maintain proper transaction protection, the Sequel :servers parameter cannot be used with Schemaform" )
+
+      @schema    = schema.top
+      @read_only = !!properties.delete(:read_only)
+      @prefix    = properties.delete(:prefix)
+      @sequel    = Sequel.connect( connection_string, properties )
+      
+      update_database_structures
    end
    
    
+   
+   
+   def update_database_structures()
+      @sequel[]
+   end
+   
 
-
-end # TypeMapping
-end # Model
+end # Runtime
+end # Connection
 end # Schemaform

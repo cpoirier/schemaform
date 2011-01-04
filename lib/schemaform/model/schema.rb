@@ -31,35 +31,31 @@ class Schema
    include QualityAssurance
    extend  QualityAssurance
    
-   
    def initialize( name, context_schema = nil, &block )
-      @name       = name
-      @context    = context_schema
-      @objects    = {}
-      @entities   = {}
-      @dsl        = DefinitionLanguage.new( self )
-      @connection = nil
-      @types      = {}
-      
-      @constraint_templates  = {}
+      @name        = name
+      @context     = context_schema
+      @objects     = {}
+      @entities    = {}
+      @dsl         = DefinitionLanguage.new( self )
+      @connection  = nil
+      @types       = {}
+      @subschemas  = {}
+         
+      @types_are_resolved = false
 
       if @context.nil? then
-         @types[:all] = Type.new(self, :all, nil)
+         register_type :all     , Types::ScalarType.new(self, nil         )
+         register_type :any     , Types::ScalarType.new(self, @types[:all])
+         register_type :void    , Types::ScalarType.new(self, @types[:all])
+         
+         register_type :binary  , Types::BinaryType.new(   self, @types[:any ] )   
+         register_type :text    , Types::TextType.new(     self, @types[:any ] ) 
+         register_type :datetime, Types::DateTimeType.new( self, @types[:text] ) 
+         register_type :real    , Types::NumericType.new(  self, @types[:any ] )    
+         register_type :integer , Types::IntegerType.new(  self, @types[:real] )    
+
          @dsl.instance_eval do
-            define_type_constraint :length, Types::TextType   , TypeConstraints::LengthConstraint
-            define_type_constraint :length, Types::BinaryType , TypeConstraints::LengthConstraint
-            define_type_constraint :range , Types::NumericType, TypeConstraints::RangeConstraint
-            define_type_constraint :check , Type              , TypeConstraints::CheckConstraint
-      
-            define_type :any       , :all
-            define_type :void      , :all
-                             
-            define_type :binary    , :any    , Types::BinaryType    
-            define_type :text      , :any    , Types::TextType    
-            define_type :real      , :any    , Types::NumericType    
-            define_type :integer   , :real   , Types::IntegerType    
-            define_type :boolean   , :integer, Types::IntegerType, :range => 0..1
-            define_type :datetime  , :text   , Types::DateTimeType
+            define_type :boolean   , :integer, :range  => 0..1
             define_type :identifier, :text   , :length => 80, :check => lambda {|i| !!i.to_sym && i.to_sym.inspect !~ /"/}
       
             define_type String    , :text
@@ -71,10 +67,20 @@ class Schema
                                     :store => lambda {|t| utc = t.getutc; utc.strftime("%Y-%m-%d %H:%M:%S") + (utc.usec > 0 ? ".#{utc.usec}" : "") },
                                     :load  => lambda {|s| year, month, day, hour, minute, second, micros = *s.split(/[:\-\.] /); Time.utc(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i, micros.to_i)}  
          end
+      else
+         @context.register_subschema( self )
       end
       
       @dsl.instance_eval(&block) if block_given?
+      resolve_types() if @context.nil? || @context.types_are_resolved?
    end
+   
+   def any_type()
+      return @context.exists? ? @context.any_type : @types[:any]
+   end
+      
+      
+   
    
    
    # ==========================================================================================
@@ -94,31 +100,23 @@ class Schema
       # Defines an entity within the Schema.
    
       def define( name, parent = nil, &block )
-         assert( !@schema.entities.member?(name), "duplicate entity name", {"name" => name} )
-         assert( parent.nil? || @schema.entities.member?(parent), "parent not defined", {"name" => parent} )
-         @schema.entities[name] = Entity.new( self, name, parent.nil? ? nil : @schema.entities[parent], &block )      
+         assert_and_warn_once( parent.nil?, "TODO: derived class support" )
+         @schema.register_entity Entity.new( @schema, name, parent, &block )
       end
    
    
       #
       # Defines a simple (non-entity) type.  
    
-      def define_type( name, base_type = nil, *type_class_and_constraints )
+      def define_type( name, base_type = nil, modifiers = {} )
          type_check( name, [Symbol, Class] )
-      
-         type_class  = type_class_and_constraints.first.is_a?(Class) ? type_class_and_constraints.shift : Type
-         constraints = type_class_and_constraints.first.is_a?(Hash)  ? type_class_and_constraints.shift : {}
-
-         return @schema.build_type( base_type, constraints, name, type_class )
-      end
-   
-   
-      #
-      # Associates a type constraint with a trigger for use in declarations.
-   
-      def define_type_constraint( trigger, for_type, constraint_class )
-         @schema.constraint_templates[trigger] = {} unless @schema.constraint_templates.member?(trigger)
-         @schema.constraint_templates[trigger][for_type] = constraint_class
+         type_check( modifiers, Hash )
+         
+         if name.is_a?(Class) then
+            @schema.register_type name, Types::MappedType.new(@schema, name, base_type, modifiers, modifiers.delete(:store), modifiers.delete(:load))
+         else
+            @schema.register_type name, Types::ScalarType.new(@schema, base_type, modifiers)
+         end
       end
    end
    
@@ -129,47 +127,20 @@ class Schema
    # ==========================================================================================
    
    
-   attr_reader :name, :source, :entities, :constraint_templates
-   
+   attr_reader :name, :context
 
-   #
-   # Creates or returns a type based on your description.  If you pass a new_name, you are 
-   # guaranteed to get a new type object, and it will be registered for you.  Raises an 
-   # exception if the base type is not found, or if the new_name is already taken.  Removes
-   # Removes any used modifiers.
-   
-   def build_type( from, modifiers, as_name = nil, type_class = Type )
-      type_check( from, [Symbol, Class, Type] )
-      type_check( as_name, [Symbol, Class], true )
+   def top()
+      return self if @context.nil?
+      return @context.top
+   end
 
-      base_type = find_type(from)
-      
-      #
-      # Process any constraints from the modifiers list.
-      
-      constraints = []
-      modifiers.each do |name, value|
-         if constraint = build_constraint( name, value, base_type ) then
-            constraints << constraint
-            modifiers.delete(name)
-         end
-      end
+   def full_name()
+      @full_name = ((@context.exists? ? @context.full_name + "." : "") + @name.to_s) if @full_name.nil?
+      @full_name
+   end
 
-      #
-      # Build and name a new type, if necessary, and return.
-      
-      if as_name.is_a?(Class) then
-         type = Types::MappedType.new( self, as_name, base_type, modifiers.fetch(:store, nil), modifiers.fetch(:load, nil) )
-      elsif constraints.exist? or as_name.exists? then
-         type = type_class.new( self, as_name, base_type, constraints )
-      end
-         
-      if as_name.exists? then
-         assert( !@types.member?(as_name), "new type name [#{as_name}] is already defined" )
-         @types[as_name] = type 
-      end
-
-      return type
+   def types_are_resolved?()
+      @types_are_resolved
    end
    
    
@@ -177,9 +148,9 @@ class Schema
    # Builds a contraint from pieces.
 
    def build_constraint( trigger, value, type )
-      @constraint_templates[trigger].each do |trigger_class, constraint_class|
+      @@type_constraint_registry[trigger].each do |trigger_class, constraint_class|
          type.each_effective_type do |current|
-            if current.class.ancestors.member?(trigger_class) then
+            if current.is_a?(trigger_class) then # if current.class.ancestors.member?(trigger_class) then
                return constraint_class.new(value) 
             end
          end
@@ -190,21 +161,11 @@ class Schema
    
    
    #
-   # Register a named object with the schema.
-   
-   def register( object )
-      assert( !@object.member?(object.fqn), "object [#{object.fqn}] already registered" )
-      @objects[object.fqn] = object
-   end
-   
-   
-   #
    # Returns the Type for a name (Symbol or Class), or nil.
    
    def find_type( name, fail_if_missing = true, simple_check = false )
       return name if name.is_a?(Type)
       type_check( name, [Symbol, Class] )
-      
       
       #
       # If attempting to resolve a Class, we will try for the requested Class or any of its
@@ -214,7 +175,7 @@ class Schema
       type = nil
       if name.is_a?(Class) and !simple_check then
          name.ancestors.each do |current|
-            break if type = type(current, false, true)
+            break if type = find_type(current, false, true)
          end
       else
          if @types.member?(name) then
@@ -225,12 +186,48 @@ class Schema
       end   
 
       if fail_if_missing then
-         assert( type.exists?, name.is_a?(Symbol) ? "unrecognized type [#{name}]" : "no type mapping for class [#{from.name}]" )
+         assert( type.exists?, name.is_a?(Symbol) ? "unrecognized type [#{name}]" : "no type mapping for class [#{name.name}]" )
       end
       
       return type
    end
+
+
+   #
+   # Registers a named type with the schema.
    
+   def register_type( name, named_type )
+      assert( !@types.member?(name), "schema [#{full_name()}] already has a type named [#{name}]" )
+      named_type.name = name
+      @types[name] = named_type
+      named_type
+   end
+   
+   #
+   # Registers an entity with the schema.
+   
+   def register_entity( entity )
+      assert( !@entities.member?(entity.name), "schema [#{full_name()}] already has an entity named [#{entity.name}]" )
+      register_type( entity.name, entity.reference_type )
+      @entities[entity.name] = entity      
+      entity
+   end
+   
+   
+   
+   # ==========================================================================================
+   #                                  Type Constraint Registry
+   # ==========================================================================================
+
+   #
+   # Associates a TypeConstraint with a StorableType for use when defining types.  The constraint
+   # must be registered before you attempt to use it in a Schema definition.  
+   
+   def self.define_type_constraint( trigger, type_class, constraint_class )
+      @@type_constraint_registry = {} if !defined?(@@type_constraint_registry) || @@type_constraint_registry.nil?
+      @@type_constraint_registry[trigger] = {} unless @@type_constraint_registry.member?(trigger)
+      @@type_constraint_registry[trigger][type_class] = constraint_class
+   end
    
    
    
@@ -243,21 +240,46 @@ protected
    #                                          Internals
    # ==========================================================================================
 
-
-   
-
-
-   #
-   # Brings the database structures up to match the current schema.
-   
-   def update_database_structures()
-      # @@monitor.synchronize do
-      #    if @connection.tables.exists? then
-      #       if @connection.tables.member?()
-      #    end
-      # end
+   def register_subschema( schema )
+      assert( !@subschemas.member?(schema.name), "schema [#{full_name()}] already has a subschema named [#{schema.name}]" )
+      @subschemas[schema.name] = schema
+      schema
    end
    
+   
+   #
+   # Resolves types for all fields within the Schema.
+   
+   def resolve_types()
+      return if @types_are_resolved
+      
+      #
+      # Resolve types for all entity fields.
+      
+      @entities.each do |name, entity|
+         entity.resolve_field_types()
+      end
+
+      #
+      # Resolve any unresolved defined types.
+      
+      @types.each do |name, type|
+         type.resolve()
+      end
+      
+      
+      #
+      # Pass the call down the chain.
+      
+      @subschemas.each do |subschema|
+         subschema.resolve_types()
+      end
+      
+      @types_are_resolved = true
+   end
+   
+
+
    
    
 end # Schema
@@ -269,6 +291,16 @@ require Schemaform.locate("type.rb"           )
 require Schemaform.locate("type_constraint.rb")
 require Schemaform.locate("entity.rb"         )
 
-require 'rubygems'
-require 'sequel'
+#
+# Define the core type constraints.
 
+module Schemaform
+module Model
+
+Schema.define_type_constraint :length, Types::TextType   , TypeConstraints::LengthConstraint
+Schema.define_type_constraint :length, Types::BinaryType , TypeConstraints::LengthConstraint
+Schema.define_type_constraint :range , Types::NumericType, TypeConstraints::RangeConstraint
+Schema.define_type_constraint :check , Type              , TypeConstraints::CheckConstraint
+
+end
+end

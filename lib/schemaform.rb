@@ -42,6 +42,17 @@ module Schemaform
    
    
    #
+   # Connects a Schema to a physical database.  Schemaform uses the Sequel library for database
+   # connectivity, and the connection_string and properties are passed through to Sequel.  An 
+   # additional property, :prefix, may be supplied if you need to use multiple Schemas in the 
+   # same physical database.  The prefix will be used to ensure table names from this Schema 
+   # don't collide with table names from other Schemas.
+   
+   def self.connect( schema, connection_string, properties )
+   end
+   
+   
+   #
    # Calculates the absolute path to a file within the Schemaform system.  For paths beginning
    # "schemaform/", calculation is relative to the schemaform home directory, unless 
    # allow_from_root is cleared.  Otherwise, the path is calculated relative the caller's directory.
@@ -72,8 +83,29 @@ module Schemaform
       return path
    end
    
+   
+   #
+   # Associates a TypeConstraint with a StorableType for use when defining types.  The constraint
+   # must be registered before you attempt to use it in a Schema definition.  
+   
+   def self.define_type_constraint( name, type_class, constraint_class )
+      Model::Schema.define_type_constraint( name, type_class, constraint_class )
+   end
+
+   
+   #
+   # Returns the time at which the system was started.
+   
+   def self.epoch()
+      @@epoch
+   end
+   
+   @@epoch = Time.now()
+      
+   
 end # Schemaform
 
 
-require Schemaform.locate("schemaform/ruby_extensions.rb")
-require Schemaform.locate("schemaform/model/schema.rb"   )
+require Schemaform.locate("schemaform/ruby_extensions.rb"   )
+require Schemaform.locate("schemaform/model/schema.rb"      )
+require Schemaform.locate("schemaform/runtime/connection.rb")

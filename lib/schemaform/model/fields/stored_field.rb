@@ -25,11 +25,16 @@ module Model
 module Fields
 
 class StoredField < Field
-   def initialize( entity, name, type_info )
-      super( entity, name, type_info )
+   def initialize( entity, name, type )
+      super( entity, name, type )
+   end
+      
+   def resolve_type( resolution_path = [] )
+      type.resolve( resolution_path + [self] )
    end
    
 end
+
 
 
 

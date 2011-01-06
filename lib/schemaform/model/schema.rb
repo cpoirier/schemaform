@@ -34,25 +34,25 @@ class Schema
    def initialize( name, context_schema = nil, &block )
       @name        = name
       @context     = context_schema
-      @objects     = {}
-      @entities    = {}
       @dsl         = DefinitionLanguage.new( self )
       @connection  = nil
       @types       = {}
       @subschemas  = {}
+      @relations   = {}
+      @entities    = {}
          
       @types_are_resolved = false
 
       if @context.nil? then
-         register_type :all     , Types::ScalarType.new(self, nil         )
-         register_type :any     , Types::ScalarType.new(self, @types[:all])
-         register_type :void    , Types::ScalarType.new(self, @types[:all])
+         register_type :all     , Types::ScalarType.new(   nil, [], self )
+         register_type :any     , Types::ScalarType.new(   @types[:all]  )
+         register_type :void    , Types::ScalarType.new(   @types[:all]  )
          
-         register_type :binary  , Types::BinaryType.new(   self, @types[:any ] )   
-         register_type :text    , Types::TextType.new(     self, @types[:any ] ) 
-         register_type :datetime, Types::DateTimeType.new( self, @types[:text] ) 
-         register_type :real    , Types::NumericType.new(  self, @types[:any ] )    
-         register_type :integer , Types::IntegerType.new(  self, @types[:real] )    
+         register_type :binary  , Types::BinaryType.new(   @types[:any ] )   
+         register_type :text    , Types::TextType.new(     @types[:any ] ) 
+         register_type :datetime, Types::DateTimeType.new( @types[:text] ) 
+         register_type :real    , Types::NumericType.new(  @types[:any ] )    
+         register_type :integer , Types::IntegerType.new(  @types[:real] )    
 
          @dsl.instance_eval do
             define_type :boolean   , :integer, :range  => 0..1
@@ -89,8 +89,6 @@ class Schema
    
    
    class DefinitionLanguage
-      include QualityAssurance
-      
       def initialize( schema )
          @schema = schema 
       end
@@ -100,8 +98,10 @@ class Schema
       # Defines an entity within the Schema.
    
       def define( name, parent = nil, &block )
-         assert_and_warn_once( parent.nil?, "TODO: derived class support" )
-         @schema.register_entity Entity.new( @schema, name, parent, &block )
+         @schema.instance_eval do
+            assert_and_warn_once( parent.nil?, "TODO: derived class support" )
+            register_entity Entity.new( self, name, parent, &block )
+         end
       end
    
    
@@ -109,13 +109,15 @@ class Schema
       # Defines a simple (non-entity) type.  
    
       def define_type( name, base_type = nil, modifiers = {} )
-         type_check( name, [Symbol, Class] )
-         type_check( modifiers, Hash )
+         @schema.instance_eval do
+            type_check( name, [Symbol, Class] )
+            type_check( modifiers, Hash )
          
-         if name.is_a?(Class) then
-            @schema.register_type name, Types::MappedType.new(@schema, name, base_type, modifiers, modifiers.delete(:store), modifiers.delete(:load))
-         else
-            @schema.register_type name, Types::ScalarType.new(@schema, base_type, modifiers)
+            if name.is_a?(Class) then
+               register_type name, Types::MappedType.new(name, base_type, modifiers, modifiers.delete(:store), modifiers.delete(:load), self)
+            else
+               register_type name, Types::ScalarType.new(base_type, modifiers, self)
+            end
          end
       end
    end
@@ -145,25 +147,9 @@ class Schema
    
    
    #
-   # Builds a contraint from pieces.
-
-   def build_constraint( trigger, value, type )
-      @@type_constraint_registry[trigger].each do |trigger_class, constraint_class|
-         type.each_effective_type do |current|
-            if current.is_a?(trigger_class) then # if current.class.ancestors.member?(trigger_class) then
-               return constraint_class.new(value) 
-            end
-         end
-      end
-      
-      return nil
-   end
-   
-   
-   #
    # Returns the Type for a name (Symbol or Class), or nil.
    
-   def find_type( name, fail_if_missing = true, simple_check = false )
+   def type( name, fail_if_missing = true, simple_check = false )
       return name if name.is_a?(Type)
       type_check( name, [Symbol, Class] )
       
@@ -175,7 +161,7 @@ class Schema
       type = nil
       if name.is_a?(Class) and !simple_check then
          name.ancestors.each do |current|
-            break if type = find_type(current, false, true)
+            break if type = type(current, false, true)
          end
       else
          if @types.member?(name) then
@@ -191,62 +177,31 @@ class Schema
       
       return type
    end
-
-
-   #
-   # Registers a named type with the schema.
    
-   def register_type( name, named_type )
-      assert( !@types.member?(name), "schema [#{full_name()}] already has a type named [#{name}]" )
-      named_type.name = name
-      @types[name] = named_type
-      named_type
-   end
    
    #
-   # Registers an entity with the schema.
+   # Returns an Entity or other named Relation for a name (Symbol), or nil.
    
-   def register_entity( entity )
-      assert( !@entities.member?(entity.name), "schema [#{full_name()}] already has an entity named [#{entity.name}]" )
-      register_type( entity.name, entity.reference_type )
-      @entities[entity.name] = entity      
-      entity
+   def relation( name, fail_if_missing = true )
+      return name if name.is_a?(Relation)
+      type_check( name, Symbol )
+      
+      return @relations[name] if @relations.member?(name)
+      return @context.relation(name, fail_if_messing) if @context
+      return nil unless fail_if_missing
+      fail( "unrecognized relation [#{name}]" )
    end
    
    
    
-   # ==========================================================================================
-   #                                  Type Constraint Registry
-   # ==========================================================================================
-
-   #
-   # Associates a TypeConstraint with a StorableType for use when defining types.  The constraint
-   # must be registered before you attempt to use it in a Schema definition.  
-   
-   def self.define_type_constraint( trigger, type_class, constraint_class )
-      @@type_constraint_registry = {} if !defined?(@@type_constraint_registry) || @@type_constraint_registry.nil?
-      @@type_constraint_registry[trigger] = {} unless @@type_constraint_registry.member?(trigger)
-      @@type_constraint_registry[trigger][type_class] = constraint_class
-   end
-   
-   
    
 
-
-
-protected
 
    # ==========================================================================================
-   #                                          Internals
+   #                                      Type Resolution
    # ==========================================================================================
 
-   def register_subschema( schema )
-      assert( !@subschemas.member?(schema.name), "schema [#{full_name()}] already has a subschema named [#{schema.name}]" )
-      @subschemas[schema.name] = schema
-      schema
-   end
-   
-   
+
    #
    # Resolves types for all fields within the Schema.
    
@@ -279,6 +234,94 @@ protected
    end
    
 
+   
+   
+   
+   # ==========================================================================================
+   #                                       Type Constraints
+   # ==========================================================================================
+
+
+   #
+   # Builds a contraint from pieces.
+
+   def build_constraint( trigger, value, type )
+      @@type_constraint_registry[trigger].each do |trigger_class, constraint_class|
+         type.each_effective_type do |current|
+            if current.is_a?(trigger_class) then # if current.class.ancestors.member?(trigger_class) then
+               return constraint_class.new(value) 
+            end
+         end
+      end
+      
+      return nil
+   end
+   
+
+   #
+   # Associates a TypeConstraint with a StorableType for use when defining types.  The constraint
+   # must be registered before you attempt to use it in a Schema definition.  
+   
+   def self.define_type_constraint( trigger, type_class, constraint_class )
+      @@type_constraint_registry = {} if !defined?(@@type_constraint_registry) || @@type_constraint_registry.nil?
+      @@type_constraint_registry[trigger] = {} unless @@type_constraint_registry.member?(trigger)
+      @@type_constraint_registry[trigger][type_class] = constraint_class
+   end
+   
+   
+   
+
+
+
+protected
+
+   # ==========================================================================================
+   #                                          Internals
+   # ==========================================================================================
+
+   def register_subschema( schema )
+      assert( !@subschemas.member?(schema.name), "schema [#{full_name()}] already has a subschema named [#{schema.name}]" )
+      @subschemas[schema.name] = schema
+      return schema
+   end
+   
+
+   #
+   # Registers a named type with the schema.
+   
+   def register_type( name, named_type )
+      assert( !@types.member?(name), "schema [#{full_name()}] already has a type named [#{name}]" )
+      named_type.name = name
+      @types[name] = named_type
+      return named_type
+   end
+   
+   
+   #
+   # Registers a named relation with the schema.
+   
+   def register_relation( relation )
+      assert( !@relations.member?(relation.name), "schema [#{full_name()}] already has a relation named [#{relation.name}]" )
+      @relations[relation.name] = relation      
+      return relation
+   end
+
+   
+   #
+   # Registers an entity with the schema.
+   
+   def register_entity( entity )
+      assert( !@entities.member?(entity.name), "schema [#{full_name()}] already has an entity named [#{entity.name}]" )
+      register_type( entity.name, entity.reference_type )
+      register_relation( entity )
+      @entities[entity.name] = entity      
+      return entity
+   end
+   
+   
+   
+   
+   
 
    
    
@@ -287,6 +330,7 @@ end # Model
 end # Schemaform
 
 
+require Schemaform.locate("base.rb"           )
 require Schemaform.locate("type.rb"           ) 
 require Schemaform.locate("type_constraint.rb")
 require Schemaform.locate("entity.rb"         )

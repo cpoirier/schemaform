@@ -23,7 +23,20 @@ module Schemaform
 module Model
 class FieldIsEqual
    
+   class TupleExpression
+      def initialize( type, source = nil )
+         @type   = type
+         @source = source
+      end
+      
+      
+   end
+
+
    def initialize( field, value )
    
 end # Model
 end # Schemaform
+
+
+   

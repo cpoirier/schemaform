@@ -29,8 +29,12 @@ module Model
 module Types
 class ScalarType < Type
 
-   def initialize( schema, base_type = nil, constraints = [] )
-      super( schema )
+   #
+   # If you specify a Schema, it will be used.  If not, it will be pulled from the base Type.
+   
+   def initialize( base_type = nil, constraints = [], schema = nil )
+      super( base_type.is_a?(Type) ? base_type.schema : schema )
+      
       @base_type = base_type
       @resolved  = base_type.nil? || base_type.is_a?(ScalarType)
       
@@ -49,7 +53,7 @@ class ScalarType < Type
    
    def description()
       return name.to_s if named?
-      return @base_type.name.to_s if @base_type.exists? && @base_type.is_a?(Type)
+      return @base_type.description if @base_type.exists? && @base_type.is_a?(Type)
       return super
    end
 
@@ -77,7 +81,7 @@ class ScalarType < Type
       if !@resolved then
          assert( !resolution_path.member?(self), "type [#{description()}] in [#{@schema.full_name}] is directly or indirectly defined in terms of itself" )
          
-         @base_type = @schema.find_type( @base_type )
+         @base_type = @schema.type( @base_type )
          @base_type.resolve( resolution_path + [self] )
       
          if @constraints.nil? && @modifiers.exists? then

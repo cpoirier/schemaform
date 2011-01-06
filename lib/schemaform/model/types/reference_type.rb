@@ -28,7 +28,7 @@ module Types
 class ReferenceType < ScalarType
 
    def initialize( entity )
-      super( entity.schema, entity.has_parent? ? entity.parent.reference_type : entity.schema.any_type )
+      super( entity.has_parent? ? entity.parent.reference_type : entity.schema.any_type )
       self.name = entity.name
    end
    

@@ -19,19 +19,21 @@
 # =============================================================================================
 
 
+#
+# A base class for everything that fits into a Schema.
+
 module Schemaform
 module Model
-class Expression
-   
-   def initialize( type )
-      type_check( type, Type )
-      @type   = type
-      @schema = type.schema
+class Base
+   include QualityAssurance
+
+   def initialize( schema )
+      type_check( schema, Schema )
+      @schema = schema
    end
 
-end # Expression
+   attr_reader :schema
+
+end # Base
 end # Model
 end # Schemaform
-
-
-Dir[Schemaform.locate("expressions/*.rb")].each {|path| require path}

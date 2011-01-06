@@ -30,8 +30,8 @@ module Model
 module Types
 class MappedType < ScalarType
 
-   def initialize( schema, ruby_type, base_type, constraints = [], storer = nil, loader = nil )
-      super( schema, base_type, constraints )
+   def initialize( ruby_type, base_type, constraints = [], storer = nil, loader = nil, schema = nil )
+      super( base_type, constraints, schema )
       @ruby_type = ruby_type
       @storer    = storer
       @loader    = loader

@@ -19,6 +19,9 @@
 # =============================================================================================
 
 
+require Schemaform.locate("base.rb")
+
+
 #
 # Base class for all Schemaform types.  Unlike Ruby, databases are (necessarily) rather strongly 
 # typed, and the typing system provides a way to manage assignment and join compatibility,
@@ -26,16 +29,14 @@
 
 module Schemaform
 module Model
-class Type
-   include QualityAssurance
+class Type < Base
 
-   attr_accessor :schema, :name
-   
    def initialize( schema )
-      type_check( schema, Model::Schema )
-      @schema = schema
-      @name   = nil
+      super( schema )
+      @name = nil
    end
+   
+   attr_accessor :name
    
    def named?()
       @name.exists?

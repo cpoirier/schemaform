@@ -18,14 +18,15 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("relation.rb")
+
 
 #
 # A single entity within the schema.
 
 module Schemaform
 module Model
-class Entity
-   include QualityAssurance
+class Entity < Relation
       
    def initialize( schema, name, parent = nil, &block )
       type_check( schema, Model::Schema )
@@ -76,6 +77,13 @@ class Entity
       @enumeration.exists?
    end
    
+   def resolve_field_types( resolution_path = [] )
+      @fields.each do |name, field|
+         field.resolve_type( resolution_path )
+         puts "#{@name}.#{name}: #{field.type.description}" if field.type.exists?
+      end
+   end
+   
 
    # ==========================================================================================
    #                                     Definition Language
@@ -83,8 +91,6 @@ class Entity
    
    
    class DefinitionLanguage
-      include QualityAssurance
-      
       def initialize( entity )
          @entity = entity
       end
@@ -95,16 +101,18 @@ class Entity
       # block instead of a type.
    
       def required( name, *data )
-         modifiers = data.last.is_a?(Hash) ? data.pop : {}
-         modifiers[:optional] = false
+         @entity.instance_eval do
+            modifiers = data.last.is_a?(Hash) ? data.pop : {}
+            modifiers[:optional] = false
       
-         if block_given? then
-            assert( data.empty?, "specify either a type or a block, not both" )
-            warn_nyi( "subtuple support" )
-         else
-            base_type = data.shift
-            assert( data.empty?, "expected type and modifiers only" )
-            @entity << Fields::StoredField.new(@entity, name, Types::ScalarType.new(@entity.schema, base_type, modifiers))
+            if block_given? then
+               assert( data.empty?, "specify either a type or a block, not both" )
+               warn_nyi( "subtuple support" )
+            else
+               base_type = data.shift
+               assert( data.empty?, "expected type and modifiers only" )
+               add_field Fields::StoredField.new(self, name, Types::ScalarType.new(base_type, modifiers, @schema))
+            end
          end
       end
    
@@ -114,17 +122,19 @@ class Entity
       # block instead of a type.
    
       def optional( name, *data )
-         modifiers = data.last.is_a?(Hash) ? data.pop : {}
-         modifiers[:optional] = true
+         @entity.instance_eval do
+            modifiers = data.last.is_a?(Hash) ? data.pop : {}
+            modifiers[:optional] = true
       
-         if block_given? then
-            assert( data.empty?, "specify either a type or a block, not both" )
-            warn_nyi( "subtuple support" )
-         else
-            base_type = data.shift
-            type_check( base_type, [Class, Symbol] )
-            assert( data.empty?, "expected type and modifiers" )
-            @entity << Fields::StoredField.new(self, name, Types::ScalarType.new(@entity.schema, base_type, modifiers))
+            if block_given? then
+               assert( data.empty?, "specify either a type or a block, not both" )
+               warn_nyi( "subtuple support" )
+            else
+               base_type = data.shift
+               type_check( base_type, [Class, Symbol] )
+               assert( data.empty?, "expected type and modifiers" )
+               add_field Fields::StoredField.new(self, name, Types::ScalarType.new(base_type, modifiers, @schema))
+            end
          end
       end
 
@@ -133,9 +143,10 @@ class Entity
       # Defines a derived field within the entity.  Supply a Proc or a block.  
    
       def derived( name, proc = nil, &block )
-         assert( proc.nil? ^ block.nil?, "expected a Proc or block" )
-         field = Fields::DerivedField.new(self, name, proc.nil? ? block : proc)
-         @entity << field
+         @entity.instance_eval do
+            assert( proc.nil? ^ block.nil?, "expected a Proc or block" )
+            add_field Fields::DerivedField.new(self, name, proc.nil? ? block : proc)
+         end
       end
    
    
@@ -154,20 +165,22 @@ class Entity
       #   key :key_name => [:field_name, :other_field_name]
    
       def key( *names )
-         key_name = nil
-         if names[0].is_a?(Hash) then
-            key_name = names[0].keys.first
-            names = names[0][key_name].as_array
-         end
+         @entity.instance_eval do 
+            key_name = nil
+            if names[0].is_a?(Hash) then
+               key_name = names[0].keys.first
+               names = names[0][key_name].as_array
+            end
       
-         key_name = names.collect{|name| name.to_s}.join("_and_") if key_name.nil?
+            key_name = names.collect{|name| name.to_s}.join("_and_") if key_name.nil?
       
-         assert( !@entity.key?(key_name), "key name #{key_name} already exists in entity #{@name}" )
-         names.each do |name|
-            assert( @entity.field?(name), "key field #{name} is not a member of entity #{@name}" )
-         end
+            assert( !key?(key_name), "key name #{key_name} already exists in entity #{@name}" )
+            names.each do |name|
+               assert( field?(name), "key field #{name} is not a member of entity #{@name}" )
+            end
             
-         @entity.keys[key_name] = Key.new( self, key_name, names )
+            @keys[key_name] = Key.new( self, key_name, names )
+         end
       end
    
    
@@ -201,34 +214,36 @@ class Entity
       #   end
 
       def enumerate( *data, &block )
-         assert( @entity.parent.nil?     , "enumerated entities cannot have a parent" )
-         assert( @entity.enumeration.nil?, "entity is already enumerated"             )
+         @entity.instance_eval do
+            assert( @parent.nil?     , "enumerated entities cannot have a parent" )
+            assert( @enumeration.nil?, "entity is already enumerated"             )
       
-         if @entity.fields.empty? then
-            required :name , :identifier
-            required :value, :integer
-         else
-            assert( @entity.fields.length >= 2, "an enumerated entity needs at least name and value fields" )
-            # TODO type check the first two fields, once you figure out how best to do it
-         end
+            if @fields.empty? then
+               @dsl.required :name , :identifier
+               @dsl.required :value, :integer
+            else
+               assert( @fields.length >= 2, "an enumerated entity needs at least name and value fields" )
+               # TODO type check the first two fields, once you figure out how best to do it
+            end
       
-         @entity.enumeration = Enumeration.new( self )
+            @enumeration = Enumeration.new( self )
             
-         if block then
-            @entity.enumeration.fill(block)
-         else
-            assert( @entity.fields.count == 2, "to use the simple enumeration form, the entity must have only two fields" )
+            if block then
+               @enumeration.fill(block)
+            else
+               assert( @fields.count == 2, "to use the simple enumeration form, the entity must have only two fields" )
 
-            @entity.enumeration.fill do
-               value = 1
-               until data.empty?
-                  name  = data.shift
-                  value = data.shift if data.first.is_an?(Integer)
+               @enumeration.fill do
+                  value = 1
+                  until data.empty?
+                     name  = data.shift
+                     value = data.shift if data.first.is_an?(Integer)
                
-                  assert( name.is_a?(Symbol), "expected a symbol or value, found #{name.class.name}" )
+                     assert( name.is_a?(Symbol), "expected a symbol or value, found #{name.class.name}" )
                
-                  define name, value
-                  value += 1
+                     define name, value
+                     value += 1
+                  end
                end
             end
          end
@@ -237,8 +252,9 @@ class Entity
    
    
 
+protected
 
-   def <<( field )
+   def add_field( field )
       name = field.name
       
       assert( name.is_a?(Symbol)                   , "please use only Ruby symbols for field names"     )
@@ -250,12 +266,6 @@ class Entity
    end
    
    
-   def resolve_field_types( resolution_path = [] )
-      @fields.each do |name, field|
-         field.resolve_type( resolution_path )
-         puts "#{@name}.#{name}: #{field.type.description}" if field.type.exists?
-      end
-   end
    
 end # Entity
 end # Model

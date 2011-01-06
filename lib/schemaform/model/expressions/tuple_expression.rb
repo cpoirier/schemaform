@@ -19,19 +19,53 @@
 # =============================================================================================
 
 
+#
+# A tuple, potentially linked to an entity record (if identifiable).
+
 module Schemaform
 module Model
-class Expression
-   
-   def initialize( type )
-      type_check( type, Type )
-      @type   = type
-      @schema = type.schema
-   end
+module Expressions
+class TupleExpression
 
-end # Expression
+   def initialize( type, source = nil )
+      super( type )
+      @source = source      
+   end
+   
+   #
+   # Returns the Schemaform record identifier expression for this tuple, if known.
+   
+   def id()
+      assert( @source.exists?, "source record not identifiable in this context" )
+      fail( "TODO: generate ID expression" )
+   end
+   
+   
+   #
+   # Returns a subset of some relation for which the first (or specified) reference
+   # field refers to this tuple (if identifiable).
+
+   def find_matching( relation, on_field = nil )
+      assert( @source.exists?, "source record not identifiable in this context" )
+      relation = RelationExpression.new( @schema.relation(relation) )
+      relation 
+      if
+         
+         
+   end
+   
+   
+   #
+   # Returns a FieldExpression for any of this tuple's fields.
+   
+   def method_missing(  )
+      if @type.member?()
+   end
+   
+   
+   
+
+end # TupleExpression
+end # Expressions
 end # Model
 end # Schemaform
-
-
-Dir[Schemaform.locate("expressions/*.rb")].each {|path| require path}

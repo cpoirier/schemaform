@@ -20,17 +20,17 @@
 
 
 module Schemaform
-class Schema
+module Expression
 class Expression
-   
+   include QualityAssurance
+
    def initialize( type )
       type_check( type, Type )
       @type   = type
       @schema = type.schema
    end
-
+end
 end # Expression
-end # Schema
 end # Schemaform
 
 

@@ -23,9 +23,8 @@
 # A tuple, potentially linked to an entity record (if identifiable).
 
 module Schemaform
-class Schema
 module Expressions
-class TupleExpression
+class Tuple < Expression
 
    def initialize( type, source = nil )
       super( type )
@@ -65,7 +64,6 @@ class TupleExpression
    
    
 
-end # TupleExpression
+end # Tuple
 end # Expressions
-end # Schema
 end # Schemaform

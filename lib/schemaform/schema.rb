@@ -22,8 +22,10 @@ require 'monitor'
 
 
 #
-# Provides a naming context and a unit of storage within the Schemaform system.  Multiple
-# Schemas can coexist within one physical database, but names are unique.
+# Provides a naming context and a unit of storage within the Schemaform system.  Individual Schemas
+# are separate from each other, with the exception that a nested Schema inherits the names defined
+# in its context.  Multiple separate Schemas can coexist within one physical database, provided 
+# either unique names or separate connection prefices.  
 
 module Schemaform
 class Schema
@@ -78,7 +80,23 @@ class Schema
       return @context.exists? ? @context.any_type : @types[:any]
    end
       
-      
+   
+   #
+   # A base class for elements of the Schema, providing a route back.
+   
+   class Base
+      include QualityAssurance
+
+      def initialize( schema )
+         type_check( schema, Schema )
+         @schema = schema
+      end
+
+      attr_reader :schema
+
+   end # Base
+
+   
    
    
    
@@ -321,14 +339,10 @@ protected
    
    
    
-
-   
-   
 end # Schema
 end # Schemaform
 
 
-require Schemaform.locate("schema/base.rb"           )
 require Schemaform.locate("schema/type.rb"           ) 
 require Schemaform.locate("schema/type_constraint.rb")
 require Schemaform.locate("schema/entity.rb"         )
@@ -338,9 +352,9 @@ require Schemaform.locate("schema/entity.rb"         )
 
 module Schemaform
 class Schema
-Schema.define_type_constraint :length, Types::TextType   , TypeConstraints::LengthConstraint
-Schema.define_type_constraint :length, Types::BinaryType , TypeConstraints::LengthConstraint
-Schema.define_type_constraint :range , Types::NumericType, TypeConstraints::RangeConstraint
-Schema.define_type_constraint :check , Type              , TypeConstraints::CheckConstraint
+   define_type_constraint :length, Types::TextType   , TypeConstraints::LengthConstraint
+   define_type_constraint :length, Types::BinaryType , TypeConstraints::LengthConstraint
+   define_type_constraint :range , Types::NumericType, TypeConstraints::RangeConstraint
+   define_type_constraint :check , Type              , TypeConstraints::CheckConstraint
 end
 end

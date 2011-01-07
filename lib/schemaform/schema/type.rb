@@ -19,8 +19,6 @@
 # =============================================================================================
 
 
-require Schemaform.locate("base.rb")
-
 
 #
 # Base class for all Schemaform types.  Unlike Ruby, databases are (necessarily) rather strongly 

@@ -18,8 +18,6 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("base.rb")
-
 
 #
 # A base class for all Relations within Schemaform (Entities, Subsets, etc.)

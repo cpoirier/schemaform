@@ -24,9 +24,8 @@
 # Base class for all Relation models.
 
 module Schemaform
-class Schema
 module Expressions
-class RelationExpression
+class Relation < Expression
    
    def initialize( tuple, keys = [] )
       @tuple = tuple
@@ -166,9 +165,5 @@ class RelationExpression
    
    
 end # Relation
-
-
-
 end # Expressions
-end # Schema
 end # Schemaform

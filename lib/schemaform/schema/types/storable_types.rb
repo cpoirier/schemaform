@@ -19,21 +19,39 @@
 # =============================================================================================
 
 
+require Schemaform.locate("scalar_type.rb")
+
 
 #
-# Defines a record template, in the form of a hash of [field name => field type].
+# Schemaform storable types.
 
 module Schemaform
-module Model
-class Tuple
-   
-   def initialize( fields )
-      @fields = fields
+class Schema
+module Types
+
+class StorableType < ScalarType
+   def storage_type()
+      return self
    end
-   
-   
-   
-   
-end # Tuple
-end # Model
+end
+
+
+class BinaryType < StorableType
+end
+
+class TextType < StorableType
+end
+
+class NumericType < StorableType
+end
+
+class IntegerType < NumericType
+end
+
+class DateTimeType < StorableType
+end
+
+
+end # Types
+end # Schema
 end # Schemaform

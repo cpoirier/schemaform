@@ -19,24 +19,32 @@
 # =============================================================================================
 
 
+require Schemaform.locate("scalar_type.rb")
+
+
 #
-# Runs arbitrary Ruby code as a constraint on a type.
+# A type that maps a Ruby type into the Schemaform typing system.
 
 module Schemaform
-module Model
-module TypeConstraints
-class CheckConstraint
+class Schema
+module Types
+class MappedType < ScalarType
 
-   def initialize( proc )
-      @proc == proc      
+   def initialize( ruby_type, base_type, constraints = [], storer = nil, loader = nil, schema = nil )
+      super( base_type, constraints, schema )
+      @ruby_type = ruby_type
+      @storer    = storer
+      @loader    = loader
+      
+      name = ruby_type
    end
    
-   def accepts?( value )
-      @proc.call( value )
+   def mapped_type()
+      return self 
    end
 
-end # CheckConstraint
-end # TypeConstraints
-end # Model
+   
+end # MappedType
+end # Types
+end # Schema
 end # Schemaform
-

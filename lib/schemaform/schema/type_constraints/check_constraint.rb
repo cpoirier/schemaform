@@ -20,20 +20,23 @@
 
 
 #
-# A base class for everything that fits into a Schema.
+# Runs arbitrary Ruby code as a constraint on a type.
 
 module Schemaform
-module Model
-class Base
-   include QualityAssurance
+class Schema
+module TypeConstraints
+class CheckConstraint
 
-   def initialize( schema )
-      type_check( schema, Schema )
-      @schema = schema
+   def initialize( proc )
+      @proc == proc      
+   end
+   
+   def accepts?( value )
+      @proc.call( value )
    end
 
-   attr_reader :schema
-
-end # Base
-end # Model
+end # CheckConstraint
+end # TypeConstraints
+end # Schema
 end # Schemaform
+

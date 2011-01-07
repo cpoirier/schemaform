@@ -19,19 +19,25 @@
 # =============================================================================================
 
 
+#
+# A type that represents a reference to an entity.
+
 module Schemaform
-module Model
-class Expression
-   
-   def initialize( type )
-      type_check( type, Type )
-      @type   = type
-      @schema = type.schema
+class Schema
+module Types
+class ReferenceType < ScalarType
+
+   def initialize( entity )
+      super( entity.has_parent? ? entity.parent.reference_type : entity.schema.any_type )
+      self.name = entity.name
    end
+   
+   def description()
+      return name.to_s + " reference"
+   end
+   
 
-end # Expression
-end # Model
+end # ReferenceType
+end # Tyeps
+end # Schema
 end # Schemaform
-
-
-Dir[Schemaform.locate("expressions/*.rb")].each {|path| require path}

@@ -19,20 +19,21 @@
 # =============================================================================================
 
 
-module Schemaform
-module Model
-module TypeConstraints
-class LengthConstraint
+#
+# Defines a si
+# Provides a naming context and a unit of storage within the Schemaform system.  Multiple
+# Schemas can coexist within one physical database, but names are unique.
 
-   def initialize( length )
-      @length = length
+module Schemaform
+class Schema
+class Section
+      
+   def initialize( name )
    end
    
-   def accepts?( value )
-      return value.length <= @length
-   end
 
-end # LengthConstraint
-end # TypeConstraints
-end # Model
+
+   
+end # Section
+end # Schema
 end # Schemaform

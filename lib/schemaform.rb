@@ -37,7 +37,7 @@ module Schemaform
    # With this method, your block can treat the Package::DefinitionLanguage as a DSL.
 
    def self.define( name, context_schema = nil, &block )
-      Model::Schema.new( name, context_schema, &block )
+      Schema.new( name, context_schema, &block )
    end
    
    
@@ -89,7 +89,7 @@ module Schemaform
    # must be registered before you attempt to use it in a Schema definition.  
    
    def self.define_type_constraint( name, type_class, constraint_class )
-      Model::Schema.define_type_constraint( name, type_class, constraint_class )
+      Schema.define_type_constraint( name, type_class, constraint_class )
    end
 
    
@@ -107,5 +107,5 @@ end # Schemaform
 
 
 require Schemaform.locate("schemaform/ruby_extensions.rb"   )
-require Schemaform.locate("schemaform/model/schema.rb"      )
+require Schemaform.locate("schemaform/schema.rb"            )
 require Schemaform.locate("schemaform/runtime/connection.rb")

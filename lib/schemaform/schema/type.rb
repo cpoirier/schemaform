@@ -28,7 +28,7 @@ require Schemaform.locate("base.rb")
 # among other things.
 
 module Schemaform
-module Model
+class Schema
 class Type < Base
 
    def initialize( schema )
@@ -77,7 +77,7 @@ class Type < Base
 
    
 end # Type
-end # Model
+end # Schema
 end # Schemaform
 
 

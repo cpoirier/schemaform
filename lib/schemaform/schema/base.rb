@@ -20,21 +20,20 @@
 
 
 #
-# A dimension 1 type, in which there is a set of name/type pairs.
+# A base class for everything that fits into a Schema.
 
 module Schemaform
-module Model
-module Types
-class TupleType < Type
+class Schema
+class Base
+   include QualityAssurance
 
    def initialize( schema )
-      super( schema )
+      type_check( schema, Schema )
+      @schema = schema
    end
-   
-   def dimensionality() ; 1 ; end
 
+   attr_reader :schema
 
-end # TupleType
-end # Types
-end # Model
+end # Base
+end # Schema
 end # Schemaform

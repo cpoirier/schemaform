@@ -19,9 +19,19 @@
 # =============================================================================================
 
 
-
 module Schemaform
-module Model
+class Schema
+class Expression
+   
+   def initialize( type )
+      type_check( type, Type )
+      @type   = type
+      @schema = type.schema
+   end
 
-end # Model
+end # Expression
+end # Schema
 end # Schemaform
+
+
+Dir[Schemaform.locate("expressions/*.rb")].each {|path| require path}

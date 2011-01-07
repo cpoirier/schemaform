@@ -19,39 +19,33 @@
 # =============================================================================================
 
 
-require Schemaform.locate("scalar_type.rb")
-
-
 #
-# Schemaform storable types.
+# Manages enumeration data on behalf of an enumerated entity.
 
 module Schemaform
-module Model
-module Types
+class Schema
+class Enumeration
+   include QualityAssurance
 
-class StorableType < ScalarType
-   def storage_type()
-      return self
+   attr_reader :entity, :definitions
+   
+   def initialize( entity )
+      @entity      = entity
+      @definitions = []
    end
-end
 
+   def fill( &block )
+      instance_eval(&block)
+   end
+   
+   #
+   # Defines a single record for the enumeration.  Fields must match the entity.
+   
+   def define( *fields )
+      warn_once( "TODO: type check and count the enumeration values" )
+      @definitions << fields
+   end
 
-class BinaryType < StorableType
-end
-
-class TextType < StorableType
-end
-
-class NumericType < StorableType
-end
-
-class IntegerType < NumericType
-end
-
-class DateTimeType < StorableType
-end
-
-
-end # Types
-end # Model
+end # Enumeration
+end # Schema
 end # Schemaform

@@ -20,7 +20,7 @@
 
 
 module Schemaform
-module Model
+class Schema
 class Key
       
    def initialize( entity, name, field_names )
@@ -32,6 +32,6 @@ class Key
 
    
 end # Key
-end # Model
+end # Schema
 end # Schemaform
 

@@ -19,25 +19,19 @@
 # =============================================================================================
 
 
+#
+# Base class for all type constraints.
 
 module Schemaform
-module Model
-module Fields
+class Schema
+class TypeConstraint
 
-class StoredField < Field
-   def initialize( entity, name, type )
-      super( entity, name, type )
+   def initialize()
    end
-      
-   def resolve_type( resolution_path = [] )
-      type.resolve( resolution_path + [self] )
-   end
-   
-end
 
-
-
-
-end # Fields
-end # Model
+end # TypeConstraint
+end # Schema
 end # Schemaform
+
+
+Dir[Schemaform.locate("type_constraints/*.rb")].each {|path| require path}

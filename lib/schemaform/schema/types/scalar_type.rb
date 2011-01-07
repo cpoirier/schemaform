@@ -25,7 +25,7 @@
 # underlying data type.
 
 module Schemaform
-module Model
+class Schema
 module Types
 class ScalarType < Type
 
@@ -185,5 +185,5 @@ class ScalarType < Type
 
 end # ScalarType
 end # Types
-end # Model
+end # Schema
 end # Schemaform

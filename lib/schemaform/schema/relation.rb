@@ -18,22 +18,20 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("base.rb")
+
 
 #
-# Defines a si
-# Provides a naming context and a unit of storage within the Schemaform system.  Multiple
-# Schemas can coexist within one physical database, but names are unique.
+# A base class for all Relations within Schemaform (Entities, Subsets, etc.)
 
 module Schemaform
-module Model
-class Section
-      
-   def initialize( name )
+class Schema
+class Relation < Base
+
+   def initialize( schema )
+      super( schema )
    end
-   
 
-
-   
-end # Section
-end # Model
+end # Relation
+end # Schema
 end # Schemaform

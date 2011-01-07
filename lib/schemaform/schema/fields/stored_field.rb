@@ -21,26 +21,23 @@
 
 
 module Schemaform
-module Model
-class Field
-   include QualityAssurance
-   
+class Schema
+module Fields
+
+class StoredField < Field
    def initialize( entity, name, type )
-      @entity = entity
-      @name   = name
-      @type   = type
+      super( entity, name, type )
    end
-
-   attr_reader :name, :type
-
+      
    def resolve_type( resolution_path = [] )
-      fail_unless_overridden
+      type.resolve( resolution_path + [self] )
    end
    
-   
-end # Field
-end # Model
+end
+
+
+
+
+end # Fields
+end # Schema
 end # Schemaform
-
-
-Dir[Schemaform.locate("fields/*.rb")].each {|path| require path}

@@ -18,20 +18,54 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("base.rb")
-
 
 #
-# A base class for all Relations within Schemaform (Entities, Subsets, etc.)
+# A tuple, potentially linked to an entity record (if identifiable).
 
 module Schemaform
-module Model
-class Relation < Base
+class Schema
+module Expressions
+class TupleExpression
 
-   def initialize( schema )
-      super( schema )
+   def initialize( type, source = nil )
+      super( type )
+      @source = source      
    end
+   
+   #
+   # Returns the Schemaform record identifier expression for this tuple, if known.
+   
+   def id()
+      assert( @source.exists?, "source record not identifiable in this context" )
+      fail( "TODO: generate ID expression" )
+   end
+   
+   
+   #
+   # Returns a subset of some relation for which the first (or specified) reference
+   # field refers to this tuple (if identifiable).
 
-end # Relation
-end # Model
+   def find_matching( relation, on_field = nil )
+      assert( @source.exists?, "source record not identifiable in this context" )
+      relation = RelationExpression.new( @schema.relation(relation) )
+      relation 
+      if
+         
+         
+   end
+   
+   
+   #
+   # Returns a FieldExpression for any of this tuple's fields.
+   
+   def method_missing(  )
+      if @type.member?()
+   end
+   
+   
+   
+
+end # TupleExpression
+end # Expressions
+end # Schema
 end # Schemaform

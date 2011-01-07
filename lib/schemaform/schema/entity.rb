@@ -25,11 +25,11 @@ require Schemaform.locate("relation.rb")
 # A single entity within the schema.
 
 module Schemaform
-module Model
+class Schema
 class Entity < Relation
       
    def initialize( schema, name, parent = nil, &block )
-      type_check( schema, Model::Schema )
+      type_check( schema, Schema )
       
       @schema      = schema
       @name        = name
@@ -268,7 +268,7 @@ protected
    
    
 end # Entity
-end # Model
+end # Schema
 end # Schemaform
 
 

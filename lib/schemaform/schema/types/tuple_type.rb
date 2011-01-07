@@ -19,20 +19,22 @@
 # =============================================================================================
 
 
-module Schemaform
-module Model
-module TypeConstraints
-class RangeConstraint
+#
+# A dimension 1 type, in which there is a set of name/type pairs.
 
-   def initialize( range )
-      @range = range
+module Schemaform
+class Schema
+module Types
+class TupleType < Type
+
+   def initialize( schema )
+      super( schema )
    end
    
-   def accepts?( value )
-      return @range === value
-   end
+   def dimensionality() ; 1 ; end
 
-end # RangeConstraint
-end # TypeConstraints
-end # Model
+
+end # TupleType
+end # Types
+end # Schema
 end # Schemaform

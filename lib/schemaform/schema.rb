@@ -26,7 +26,6 @@ require 'monitor'
 # Schemas can coexist within one physical database, but names are unique.
 
 module Schemaform
-module Model
 class Schema
    include QualityAssurance
    extend  QualityAssurance
@@ -326,25 +325,22 @@ protected
    
    
 end # Schema
-end # Model
 end # Schemaform
 
 
-require Schemaform.locate("base.rb"           )
-require Schemaform.locate("type.rb"           ) 
-require Schemaform.locate("type_constraint.rb")
-require Schemaform.locate("entity.rb"         )
+require Schemaform.locate("schema/base.rb"           )
+require Schemaform.locate("schema/type.rb"           ) 
+require Schemaform.locate("schema/type_constraint.rb")
+require Schemaform.locate("schema/entity.rb"         )
 
 #
 # Define the core type constraints.
 
 module Schemaform
-module Model
-
+class Schema
 Schema.define_type_constraint :length, Types::TextType   , TypeConstraints::LengthConstraint
 Schema.define_type_constraint :length, Types::BinaryType , TypeConstraints::LengthConstraint
 Schema.define_type_constraint :range , Types::NumericType, TypeConstraints::RangeConstraint
 Schema.define_type_constraint :check , Type              , TypeConstraints::CheckConstraint
-
 end
 end

@@ -19,25 +19,24 @@
 # =============================================================================================
 
 
-#
-# A type that represents a reference to an entity.
 
 module Schemaform
-module Model
-module Types
-class ReferenceType < ScalarType
+class Schema
+module Fields
 
-   def initialize( entity )
-      super( entity.has_parent? ? entity.parent.reference_type : entity.schema.any_type )
-      self.name = entity.name
+class DerivedField < Field
+   def initialize( entity, name, block )
+      super( entity, name, nil )
+      @block = block
    end
    
-   def description()
-      return name.to_s + " reference"
+   def resolve_type( resolution_path = [] )
+      warn_once( "TODO: DerivedField.resolve_type() is unfinished" )
    end
-   
+end
 
-end # ReferenceType
-end # Tyeps
-end # Model
+
+
+end # Fields
+end # Schema
 end # Schemaform

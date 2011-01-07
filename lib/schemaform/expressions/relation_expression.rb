@@ -24,7 +24,7 @@
 # Base class for all Relation models.
 
 module Schemaform
-module Model
+class Schema
 module Expressions
 class RelationExpression
    
@@ -170,5 +170,5 @@ end # Relation
 
 
 end # Expressions
-end # Model
+end # Schema
 end # Schemaform

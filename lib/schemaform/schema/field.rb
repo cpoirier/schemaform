@@ -19,24 +19,28 @@
 # =============================================================================================
 
 
+
 module Schemaform
-module Model
-class FieldIsEqual
+class Schema
+class Field
+   include QualityAssurance
    
-   class TupleExpression
-      def initialize( type, source = nil )
-         @type   = type
-         @source = source
-      end
-      
-      
+   def initialize( entity, name, type )
+      @entity = entity
+      @name   = name
+      @type   = type
    end
 
+   attr_reader :name, :type
 
-   def initialize( field, value )
+   def resolve_type( resolution_path = [] )
+      fail_unless_overridden
+   end
    
-end # Model
+   
+end # Field
+end # Schema
 end # Schemaform
 
 
-   
+Dir[Schemaform.locate("fields/*.rb")].each {|path| require path}

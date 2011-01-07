@@ -19,33 +19,20 @@
 # =============================================================================================
 
 
-#
-# Manages enumeration data on behalf of an enumerated entity.
-
 module Schemaform
-module Model
-class Enumeration
-   include QualityAssurance
+class Schema
+module TypeConstraints
+class LengthConstraint
 
-   attr_reader :entity, :definitions
-   
-   def initialize( entity )
-      @entity      = entity
-      @definitions = []
-   end
-
-   def fill( &block )
-      instance_eval(&block)
+   def initialize( length )
+      @length = length
    end
    
-   #
-   # Defines a single record for the enumeration.  Fields must match the entity.
-   
-   def define( *fields )
-      warn_once( "TODO: type check and count the enumeration values" )
-      @definitions << fields
+   def accepts?( value )
+      return value.length <= @length
    end
 
-end # Enumeration
-end # Model
+end # LengthConstraint
+end # TypeConstraints
+end # Schema
 end # Schemaform

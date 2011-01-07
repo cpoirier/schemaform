@@ -19,19 +19,21 @@
 # =============================================================================================
 
 
+
 #
-# Base class for all type constraints.
+# Defines a record template, in the form of a hash of [field name => field type].
 
 module Schemaform
-module Model
-class TypeConstraint
-
-   def initialize()
+class Schema
+class Tuple
+   
+   def initialize( fields )
+      @fields = fields
    end
-
-end # TypeConstraint
-end # Model
+   
+   
+   
+   
+end # Tuple
+end # Schema
 end # Schemaform
-
-
-Dir[Schemaform.locate("type_constraints/*.rb")].each {|path| require path}

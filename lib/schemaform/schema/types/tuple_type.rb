@@ -20,21 +20,38 @@
 
 
 #
-# A dimension 1 type, in which there is a set of name/type pairs.
+# A dimension 1 type, in which there is a set of name/type pairs (the attributes).
 
 module Schemaform
 class Schema
 module Types
 class TupleType < Type
-
-   def initialize( schema )
+   
+   def initialize( schema, attributes = {}, closed = false )
       super( schema )
+      @attributes = attributes 
+      @closed     = closed
    end
    
-   def dimensionality() ; 1 ; end
+   def dimensionality() 
+      1
+   end
 
+   #
+   # Adds an attribute to the tuple.
+
+   pre do |name, type|
+      type_check( name, Symbol )
+      assert( !@closed                  , "tuple type must not be closed to new attributes"          )
+      assert( !@attributes.member?(name), "tuple type cannot have two attributes with the same name" )
+   end
+   def add( name, type )
+      @attributes[name] = type
+   end
+   
 
 end # TupleType
 end # Types
 end # Schema
 end # Schemaform
+

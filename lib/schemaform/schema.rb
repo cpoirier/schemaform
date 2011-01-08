@@ -263,10 +263,12 @@ class Schema
    # Builds a contraint from pieces.
 
    def build_constraint( trigger, value, type )
-      @@type_constraint_registry[trigger].each do |trigger_class, constraint_class|
-         type.each_effective_type do |current|
-            if current.is_a?(trigger_class) then # if current.class.ancestors.member?(trigger_class) then
-               return constraint_class.new(value) 
+      if defined?(@@type_constraint_registry) then
+         @@type_constraint_registry[trigger].each do |trigger_class, constraint_class|
+            type.each_effective_type do |current|
+               if current.is_a?(trigger_class) then # if current.class.ancestors.member?(trigger_class) then
+                  return constraint_class.new(value) 
+               end
             end
          end
       end

@@ -30,6 +30,9 @@ module Schemaform
    extend  QualityAssurance
    include QualityAssurance
    
+   #
+   # 
+   
    
    #
    # Creates a Schema and Package in one step, and calls your block to fill in the Package.
@@ -37,6 +40,7 @@ module Schemaform
    # With this method, your block can treat the Package::DefinitionLanguage as a DSL.
 
    def self.define( name, context_schema = nil, &block )
+      load_all()
       Schema.new( name, context_schema, &block )
    end
    
@@ -51,7 +55,38 @@ module Schemaform
    def self.connect( schema, connection_string, properties )
    end
    
+
    
+   # ==========================================================================================
+   #                                    Environment Configuration
+   # ==========================================================================================
+
+   #
+   # Disables interface contract enforcement for the entire Schemaform environment.  This is
+   # generally a good idea for production code, as the interface checks can be quite expensive.
+   # Note that this is a global setting, and can't be re-enabled once disabled.  For maximum
+   # cost savings, call this before you use any other Schemaform APIs (or require any other
+   # Schemaform files).
+
+   def self.disable_interface_contract_enforcement()
+      QualityAssurance::InterfaceContracts.disable_enforcement()
+   end
+
+
+   #
+   # Disables the warning output when interface contract enforcement is in force.
+
+   def self.disable_interface_contract_enforcement_warning()
+      QualityAssurance::InterfaceContracts.disable_enforcement_warning()
+   end
+
+
+
+
+   # ==========================================================================================
+   #                                      Operational Support
+   # ==========================================================================================
+
    #
    # Calculates the absolute path to a file within the Schemaform system.  For paths beginning
    # "schemaform/", calculation is relative to the schemaform home directory, unless 
@@ -89,6 +124,7 @@ module Schemaform
    # must be registered before you attempt to use it in a Schema definition.  
    
    def self.define_type_constraint( name, type_class, constraint_class )
+      load_all()
       Schema.define_type_constraint( name, type_class, constraint_class )
    end
 
@@ -102,10 +138,19 @@ module Schemaform
    
    @@epoch = Time.now()
       
+      
+private
+      
+   #
+   # Loads all Schemaform code into memory.
+   
+   def self.load_all()
+      require locate("schemaform/ruby_extensions.rb"   )
+      require locate("schemaform/schema.rb"            )
+      require locate("schemaform/runtime/connection.rb")
+   end
+   
    
 end # Schemaform
 
 
-require Schemaform.locate("schemaform/ruby_extensions.rb"   )
-require Schemaform.locate("schemaform/schema.rb"            )
-require Schemaform.locate("schemaform/runtime/connection.rb")

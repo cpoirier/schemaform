@@ -20,7 +20,7 @@
 
 
 module Schemaform
-module Expression
+module Expressions
 class Expression
    include QualityAssurance
 
@@ -30,7 +30,7 @@ class Expression
       @schema = type.schema
    end
 end
-end # Expression
+end # Expressions
 end # Schemaform
 
 

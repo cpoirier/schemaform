@@ -18,6 +18,7 @@
 #             limitations under the License.
 # =============================================================================================
 
+require File.expand_path(File.dirname(__FILE__) + "/quality_assurance/interface_contracts.rb")
 
 module Schemaform
 
@@ -25,12 +26,21 @@ module Schemaform
    # A mixin for Schemaform classes that provides a variety of quality-related routines.
    
    module QualityAssurance
+      def self.included( calling_class )
+         unless calling_class.name == "Schemaform"
+            calling_class.instance_eval do
+               include InterfaceContracts
+            end
+         end
+      end
+   
       
       #
       # Raises an AssertionFailure if the condition is false.
 
       def assert( condition, message, data = nil, &block )
          fail( message, data, &block ) unless condition
+         true
       end
       
       
@@ -55,8 +65,8 @@ module Schemaform
       # Dumps a message to $stderr, once per message.
       
       def warn_once( message )
-         $schemaform_quality_warnings = {} if $schemaform_quality_warnings.nil?
-         unless $schemaform_quality_warnings.member?(message)
+         @@quality_assurance__warnings = {} if !defined?(@@quality_assurance__warnings)
+         unless @@quality_assurance__warnings.member?(message)
             warn( message )
          end
       end
@@ -67,8 +77,8 @@ module Schemaform
       
       def warn( message )
          $stderr.puts( (message =~ /^[A-Z]+: / ? "" : "WARNING: ") + message )
-         $schemaform_quality_warnings = {} if $schemaform_quality_warnings.nil?
-         $schemaform_quality_warnings[message] = true
+         @@quality_assurance__warnings = {} if !defined?(@@quality_assurance__warnings)
+         @@quality_assurance__warnings[message] = true
       end
       
 
@@ -134,7 +144,7 @@ module Schemaform
             raise TypeCheckFailure.new( message )
          end
 
-         return object
+         return true
       end
 
    end # QualityAssurance

@@ -22,16 +22,16 @@
 
 module Schemaform
 class Schema
-class Field
-   include QualityAssurance
-   
-   def initialize( entity, name, type )
-      @entity = entity
-      @name   = name
-      @type   = type
+class Field < Base
+   def initialize( context, name, type )
+      super( context.schema )
+      @context = context
+      @name    = name
+      @path    = context.path + [name]
+      @type    = type
    end
 
-   attr_reader :name, :type
+   attr_reader :name, :type, :path, :context
 
    def resolve_type( resolution_path = [] )
       fail_unless_overridden

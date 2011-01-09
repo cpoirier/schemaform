@@ -27,12 +27,23 @@ module Schemaform
    
    module QualityAssurance
       def self.included( calling_class )
+         if !defined?(@@quality_assurance__checks_enabled) then
+            @@quality_assurance__checks_enabled   = true
+            @@quality_assurance__warnings_enabled = true
+         end
+
          unless calling_class.name == "Schemaform"
             calling_class.instance_eval do
                include InterfaceContracts
             end
          end
       end
+
+
+      # =======================================================================================
+      #                                      Runtime Checks
+      # =======================================================================================
+
       
       #
       # Provides a context in which interface contract enforcement and other quality code 
@@ -45,86 +56,10 @@ module Schemaform
 
       
       #
-      # Raises an AssertionFailure if the condition is false.
-
-      def assert( condition, message, data = nil, &block )
-         fail( message, data, &block ) unless condition
-         true
-      end
-      
-      
-      #
-      # Raises an AssertionFailure outright.
-      
-      def fail( message, data = nil, &block )
-         data = block.call() if block
-         raise AssertionFailure.new(message, data)
-      end
-      
-      
-      #
-      # Raises an AssertionFailure indicating a method should have been overrided.
-
-      def fail_unless_overridden()
-         fail( "You must override: " + caller()[0] )
-      end
-
-
-      #
-      # Dumps a message to $stderr, once per message.
-      
-      def warn_once( message )
-         @@quality_assurance__warnings = {} if !defined?(@@quality_assurance__warnings)
-         unless @@quality_assurance__warnings.member?(message)
-            warn( message )
-         end
-      end
-      
-      
-      #
-      # Dumps a message to $stderr.
-      
-      def warn( message )
-         $stderr.puts( (message =~ /^[A-Z]+: / ? "" : "WARNING: ") + message )
-         @@quality_assurance__warnings = {} if !defined?(@@quality_assurance__warnings)
-         @@quality_assurance__warnings[message] = true
-      end
-      
-
-      #
-      # Asserts that condition is true, but still outputs the message.
-      
-      def assert_and_warn_once( condition, message, data = nil, &block )
-         assert( condition, message, data, &block )
-         warn_once( message )
-      end
-      
-      
-      #
-      # Catches any exceptions raised in your block and returns error_return instead.  Returns
-      # your block's return value otherwise.
-
-      def ignore_errors( error_return = nil )
-         begin
-            return yield()
-         rescue
-            return error_return
-         end
-      end
-
-
-      #
       # Verifies that object is (one) of the specified type(s).
 
-      def type_check( object, type, allow_nil = false, last = nil )
-         name = nil
-         if object.is_a?(String) then
-            name      = object
-            object    = type
-            type      = allow_nil
-            allow_nil = last
-         end
-         
+      def type_check( name, object, type, allow_nil = false )
+         return true unless @@quality_assurance__checks_enabled
          return true if object.nil? && allow_nil
 
          message = ""
@@ -166,9 +101,6 @@ module Schemaform
       end
 
 
-      #
-      # Disables quality assurance checks.  Note that this is a global setting.
-      
       def self.disable_checks()
          @@quality_assurance__checks_enabled = false
       end
@@ -177,8 +109,97 @@ module Schemaform
          !@@quality_assurance__checks_enabled
       end
       
-      @@quality_assurance__checks_enabled = true
-   
+
+
+      # =======================================================================================
+      #                                          Warnings
+      # =======================================================================================
+
+      #
+      # Dumps a message to $stderr, once per message.
+      
+      def warn_once( message )
+         @@quality_assurance__warnings = {} if !defined?(@@quality_assurance__warnings)
+         unless @@quality_assurance__warnings.member?(message)
+            warn( message )
+         end
+      end
+      
+      
+      #
+      # Dumps a message to $stderr.
+      
+      def warn( message )
+         $stderr.puts( (message =~ /^[A-Z]+: / ? "" : "WARNING: ") + message )
+         @@quality_assurance__warnings = {} if !defined?(@@quality_assurance__warnings)
+         @@quality_assurance__warnings[message] = true
+      end
+      
+      
+      def self.disable_warnings()
+         @@quality_assurance__warnings_enabled = false
+      end
+      
+      def self.warnings_disabled?()
+         !@@quality_assurance__warnings_enabled
+      end
+      
+      
+
+
+      # =======================================================================================
+      #                                       Assertions
+      # =======================================================================================
+
+
+      #
+      # Raises an AssertionFailure if the condition is false.
+
+      def assert( condition, message, data = nil, &block )
+         fail( message, data, &block ) unless condition
+         true
+      end
+      
+      
+      #
+      # Raises an AssertionFailure outright.
+      
+      def fail( message, data = nil, &block )
+         data = block.call() if block
+         raise AssertionFailure.new(message, data)
+      end
+      
+      
+      #
+      # Raises an AssertionFailure indicating a method should have been overrided.
+
+      def fail_unless_overridden()
+         fail( "You must override: " + caller()[0] )
+      end
+
+
+      #
+      # Asserts that condition is true, but still outputs the message.
+      
+      def assert_and_warn_once( condition, message, data = nil, &block )
+         assert( condition, message, data, &block )
+         warn_once( message )
+      end
+      
+      
+      #
+      # Catches any exceptions raised in your block and returns error_return instead.  Returns
+      # your block's return value otherwise.
+
+      def ignore_errors( error_return = nil )
+         begin
+            return yield()
+         rescue
+            return error_return
+         end
+      end
+
+
 
    end # QualityAssurance
    

@@ -25,12 +25,13 @@ class Schema
 module Fields
 
 class StoredField < Field
-   def initialize( entity, name, type )
-      super( entity, name, type )
+   def initialize( context, name, type, required )
+      super( context, name, type )
+      @required = required
    end
       
    def resolve_type( resolution_path = [] )
-      type.resolve( resolution_path + [self] )
+      @type.resolve( resolution_path + [self] )
    end
    
 end

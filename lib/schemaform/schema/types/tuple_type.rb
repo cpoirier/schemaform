@@ -42,8 +42,8 @@ class TupleType < Type
 
    def add( name, type )
       check do
-         type_check("name", name, Symbol)
-         type_check("type", type, Type  )
+         type_check(:name, name, Symbol)
+         type_check(:type, type, Type  )
          assert( !@closed, "tuple type must not be closed to new attributes" )
          assert( !@attributes.member?(name), "tuple type cannot have two attributes with the same name (#{name})" )
       end

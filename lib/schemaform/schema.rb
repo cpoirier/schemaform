@@ -33,8 +33,9 @@ class Schema
    extend  QualityAssurance
    
    def initialize( name, context_schema = nil, &block )
-      @name        = name
       @context     = context_schema
+      @name        = name
+      @path        = (@context.nil? ? [] : @context.path) + [@name]
       @dsl         = DefinitionLanguage.new( self )
       @connection  = nil
       @types       = {}
@@ -89,7 +90,7 @@ class Schema
 
       def initialize( schema )
          check do
-            type_check( schema, Schema )
+            type_check( :schema, schema, Schema )
          end
          
          @schema = schema
@@ -134,8 +135,8 @@ class Schema
       def define_type( name, base_type = nil, modifiers = {} )
          @schema.instance_eval do
             check do
-               type_check( name, [Symbol, Class] )
-               type_check( modifiers, Hash )
+               type_check( :name, name, [Symbol, Class] )
+               type_check( :modifiers, modifiers, Hash )
             end
          
             if name.is_a?(Class) then
@@ -154,18 +155,13 @@ class Schema
    # ==========================================================================================
    
    
-   attr_reader :name, :context
+   attr_reader :name, :path, :context
 
    def top()
       return self if @context.nil?
       return @context.top
    end
-
-   def full_name()
-      @full_name = ((@context.exists? ? @context.full_name + "." : "") + @name.to_s) if @full_name.nil?
-      @full_name
-   end
-
+   
    def types_are_resolved?()
       @types_are_resolved
    end
@@ -177,7 +173,7 @@ class Schema
    def type( name, fail_if_missing = true, simple_check = false )
       return name if name.is_a?(Type)
       check do
-         type_check( name, [Symbol, Class] )
+         type_check( :name, name, [Symbol, Class] )
       end
       
       #
@@ -212,7 +208,7 @@ class Schema
    def relation( name, fail_if_missing = true )
       return name if name.is_a?(Relation)
       check do
-         type_check( name, Symbol )
+         type_check( :name, name, Symbol )
       end
       
       return @relations[name] if @relations.member?(name)
@@ -241,7 +237,7 @@ class Schema
       # Resolve types for all entity fields.
       
       @entities.each do |name, entity|
-         entity.resolve_field_types()
+         entity.resolve_types()
       end
 
       #
@@ -312,7 +308,7 @@ protected
 
    def register_subschema( schema )
       check do
-         assert( !@subschemas.member?(schema.name), "schema [#{full_name()}] already has a subschema named [#{schema.name}]" )
+         assert( !@subschemas.member?(schema.name), "schema [#{@path.join(".")}] already has a subschema named [#{schema.name}]" )
       end
       
       @subschemas[schema.name] = schema
@@ -325,7 +321,7 @@ protected
    
    def register_type( name, named_type )
       check do
-         assert( !@types.member?(name), "schema [#{full_name()}] already has a type named [#{name}]" )
+         assert( !@types.member?(name), "schema [#{@path.join(".")}] already has a type named [#{name}]" )
       end
       
       named_type.name = name
@@ -339,7 +335,7 @@ protected
    
    def register_relation( relation )
       check do
-         assert( !@relations.member?(relation.name), "schema [#{full_name()}] already has a relation named [#{relation.name}]" )
+         assert( !@relations.member?(relation.name), "schema [#{@path.join(".")}] already has a relation named [#{relation.name}]" )
       end
       
       @relations[relation.name] = relation      
@@ -352,7 +348,7 @@ protected
    
    def register_entity( entity )
       check do
-         assert( !@entities.member?(entity.name), "schema [#{full_name()}] already has an entity named [#{entity.name}]" )
+         assert( !@entities.member?(entity.name), "schema [#{@path.join(".")}] already has an entity named [#{entity.name}]" )
       end
       
       register_type( entity.name, entity.reference_type )

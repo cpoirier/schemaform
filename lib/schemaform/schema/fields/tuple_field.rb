@@ -24,18 +24,33 @@ module Schemaform
 class Schema
 module Fields
 
-class DerivedField < Field
-   def initialize( context, name, block )
+class TupleField < Field
+   def initialize( context, name, &block )
       super( context, name, nil )
-      @block = block
+      @tuple = Tuple.new( context.schema, self )
+      @dsl   = DefinitionLanguage.new( self )
+      
+      @dsl.instance_eval(&block) if block_given?
    end
    
-   def resolve_type( resolution_path = [] )
-      # @block.call( @relation.tuple_expression )
+   attr_reader :tuple
       
-      warn_once( "TODO: DerivedField.resolve_type() is unfinished" )
+   def resolve_type( resolution_path = [] )
+      @tuple.resolve_types( resolution_path + [self] )
    end
+   
+   # ==========================================================================================
+   #                                     Definition Language
+   # ==========================================================================================
+   
+   class DefinitionLanguage < Tuple::DefinitionLanguage
+      def initialize( tuple_field )
+         super( tuple_field.tuple )
+      end
+   end
+   
 end
+
 
 
 

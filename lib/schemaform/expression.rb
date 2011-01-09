@@ -26,7 +26,7 @@ class Expression
 
    def initialize( type )
       check do
-         type_check( type, Type )
+         type_check( :type, type, Type )
       end
       
       @type   = type

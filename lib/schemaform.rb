@@ -30,9 +30,6 @@ module Schemaform
    extend  QualityAssurance
    include QualityAssurance
    
-   #
-   # 
-   
    
    #
    # Creates a Schema and Package in one step, and calls your block to fill in the Package.
@@ -73,12 +70,11 @@ module Schemaform
 
 
    #
-   # Disables the warning output when interface contract enforcement is in force.
-
-   def self.disable_interface_contract_enforcement_warning()
-      QualityAssurance::InterfaceContracts.disable_enforcement_warning()
+   # Disables warnings for the entire Schemaform environment.
+   
+   def self.disable_warnings()
+      QualityAssurance.disable_warnings()
    end
-
 
 
 

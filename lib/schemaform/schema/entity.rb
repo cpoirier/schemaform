@@ -19,6 +19,7 @@
 # =============================================================================================
 
 require Schemaform.locate("relation.rb")
+require Schemaform.locate("tuple.rb"   )
 
 
 #
@@ -29,25 +30,29 @@ class Schema
 class Entity < Relation
       
    def initialize( schema, name, parent = nil, &block )
-      check do
-         type_check( schema, Schema )
-      end
-      
-      @schema      = schema
+      super( schema )
+
       @name        = name
+      @path        = schema.path + [name]
       @parent      = parent
-      @fields      = {}
+      @heading     = Tuple.new( schema, self )
       @keys        = {}
       @enumeration = nil
       @dsl         = DefinitionLanguage.new( self )
       
       @reference_type = Types::ReferenceType.new( self )
-      # @tuple_type     = Types::EntityBackedTupleType.new( self )
+      # @tuple_type     = Types::TupleType.new( schema )
+      
+      if @parent then
+         @parent.heading.each_field do |field|
+            @tuple.add_field field
+         end
+      end
       
       @dsl.instance_eval(&block) if block_given?
    end
    
-   attr_reader :schema, :name, :parent, :fields, :keys, :reference_type
+   attr_reader :schema, :name, :path, :parent, :heading, :keys, :reference_type
    attr_accessor :enumeration
 
    def has_parent?()
@@ -57,18 +62,16 @@ class Entity < Relation
    #
    # Returns true if the named field is defined in this or any parent entity.
    
-   def field?( name, check_parent = true )
-      return true if @fields.member?(name)
-      return @parent.field?(name) if check_parent && @parent.exists?
-      return false
+   def field?( name )
+      return @heading.field?(name)
    end
    
    #
    # Returns true if the named key is defined in this or any parent entity.
    
-   def key?( name, check_parent = true )
+   def key?( name )
       return true if @keys.member?(name)
-      return @parent.key?(name) if check_parent && @parent.exists?
+      return @parent.key?(name) if @parent.exists?
       return false
    end
    
@@ -79,11 +82,8 @@ class Entity < Relation
       @enumeration.exists?
    end
    
-   def resolve_field_types( resolution_path = [] )
-      @fields.each do |name, field|
-         field.resolve_type( resolution_path )
-         puts "#{@name}.#{name}: #{field.type.description}" if field.type.exists?
-      end
+   def resolve_types( resolution_path = [] )
+      @heading.resolve_types( resolution_path )
    end
    
 
@@ -92,76 +92,12 @@ class Entity < Relation
    # ==========================================================================================
    
    
-   class DefinitionLanguage
+   class DefinitionLanguage < Tuple::DefinitionLanguage
       def initialize( entity )
+         super( entity.heading )
          @entity = entity
       end
       
-   
-      #
-      # Defines a required field or subtuple within the entity.  To define a subtuple, supply a 
-      # block instead of a type.
-   
-      def required( name, *data )
-         @entity.instance_eval do
-            modifiers = data.last.is_a?(Hash) ? data.pop : {}
-            modifiers[:optional] = false
-      
-            if block_given? then
-               check do
-                  assert( data.empty?, "specify either a type or a block, not both" )
-               end               
-               warn_once( "TODO: subtuple support" )
-            else
-               base_type = data.shift
-               check do
-                  assert( data.empty?, "expected type and modifiers only" )
-               end
-               add_field Fields::StoredField.new(self, name, Types::ScalarType.new(base_type, modifiers, @schema))
-            end
-         end
-      end
-   
-   
-      #
-      # Defines an optional field or subtuple within the entity.  To define a subtuple, supply a 
-      # block instead of a type.
-   
-      def optional( name, *data )
-         @entity.instance_eval do
-            modifiers = data.last.is_a?(Hash) ? data.pop : {}
-            modifiers[:optional] = true
-      
-            if block_given? then
-               check do
-                  assert( data.empty?, "specify either a type or a block, not both" )
-               end
-               warn_once( "TODO: subtuple support" )
-            else
-               base_type = data.shift
-               check do
-                  type_check( base_type, [Class, Symbol] )
-                  assert( data.empty?, "expected type and modifiers" )
-               end
-               add_field Fields::StoredField.new(self, name, Types::ScalarType.new(base_type, modifiers, @schema))
-            end
-         end
-      end
-
-
-      #
-      # Defines a derived field within the entity.  Supply a Proc or a block.  
-   
-      def derived( name, proc = nil, &block )
-         @entity.instance_eval do
-            check do
-               assert( proc.nil? ^ block.nil?, "expected a Proc or block" )
-            end
-            
-            add_field Fields::DerivedField.new(self, name, proc.nil? ? block : proc)
-         end
-      end
-   
    
       #
       # Defines a candidate key on the entity -- a subset of fields that can uniquely identify
@@ -235,7 +171,7 @@ class Entity < Relation
                assert( @enumeration.nil?, "entity is already enumerated"             )
             end
             
-            if @fields.empty? then
+            if @heading.empty? then
                @dsl.required :name , :identifier
                @dsl.required :value, :integer
             else
@@ -252,7 +188,7 @@ class Entity < Relation
                @enumeration.fill(block)
             else
                check do
-                  assert( @fields.count == 2, "to use the simple enumeration form, the entity must have only two fields" )
+                  assert( @heading.length == 2, "to use the simple enumeration form, the entity must have only two fields" )
                end
 
                @enumeration.fill do
@@ -276,29 +212,11 @@ class Entity < Relation
    
    
 
-protected
-
-   def add_field( field )
-      name = field.name
-      
-      check do
-         assert( name.is_a?(Symbol)                   , "please use only Ruby symbols for field names"     )
-         assert( !@fields.member?(name)               , "duplicate field name #{name}"                     )
-         assert( @parent.nil? || !@parent.field?(name), "field name conflicts with field in parent entity" )
-      end
-      
-      @fields[name] = field
-      self
-   end
-   
-   
-   
 end # Entity
 end # Schema
 end # Schemaform
 
 
-require Schemaform.locate("field.rb")
 require Schemaform.locate("key.rb")
 require Schemaform.locate("enumeration.rb")
 

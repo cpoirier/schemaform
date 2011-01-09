@@ -18,18 +18,116 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("relation.rb")
-
 
 #
-# A set of typed, name/value pairs, that describes a 
-# A single entity within the schema.
+# A description of a single tuple (or "row") of data.  
 
 module Schemaform
 class Schema
-class Tuple
+class Tuple < Base
+   
+   def initialize( schema, naming_context = nil )
+      super( schema )
+      @context = naming_context
+      @fields  = {}
+      @type    = nil
+   end
+   
+   def name()
+      return @context.name if @context.exists?
+      return nil
+   end
+   
+   def path()
+      return @context.path if @context.exists?
+      return []
+   end
+   
+   
+   # ==========================================================================================
+   #                                     Definition Language
+   # ==========================================================================================
+   
+   
+   class DefinitionLanguage
+      def initialize( tuple )
+         @tuple = tuple
+      end
+      
+   
+      #
+      # Defines a required field or subtuple within the entity.  To define a subtuple, supply a 
+      # block instead of a type.
+   
+      def required( name, base_type = nil, modifiers = {}, required = true, &block )
+         @tuple.instance_eval do
+            if block_given? then
+               check { assert(base_type.nil?, "specify either a type or a block, not both") }
+               add_field Fields::TupleField.new(self, name, &block)
+            else
+               field_type = Types::ScalarType.new( base_type, modifiers, @schema )
+               add_field Fields::StoredField.new(self, name, field_type, required)
+            end
+         end
+      end
+
+      
+      #
+      # Defines an optional field or subtuple within the entity.  To define a subtuple, supply
+      # a block instead of a type.
+      
+      def optional( name, base_type = nil, modifiers = {}, &block )
+         required name, base_type, modifiers, false, &block
+      end
+      
+         
+      #
+      # Defines a derived field within the entity.  Supply a Proc or a block.  
+   
+      def derived( name, proc = nil, &block )
+         @tuple.instance_eval do
+            check { assert(proc.nil? ^ block.nil?, "expected a Proc or block") }
+            add_field Fields::DerivedField.new(self, name, proc.nil? ? block : proc)
+         end
+      end   
+   end
+   
+   
+   
+   
+   
+   def add_field( field )
+      check do
+         assert( @type.nil?, "fields cannot be added to a Tuple after its type has been resolved" )
+         assert( !@fields.member?(field.name), "a Tuple cannot contain two fields with the same name [#{field.name}]" )
+      end
+      
+      @fields[field.name] = field
+   end
+
+   def field?( name )
+      @fields.member?(name)
+   end
+   
+   def empty?()
+      @fields.empty?
+   end
+   
+   def length()
+      @fields.count
+   end
+   
+   
+   def resolve_types( resolution_path = [] )
+      @fields.each do |name, field|
+         field.resolve_type( resolution_path )
+         puts "#{field.path.join(".")}: #{field.type.description}" if field.type.exists?
+      end
+   end
+   
 
 end # Tuple
 end # Schema
 end # Schemaform
 
+require Schemaform.locate("field.rb")

@@ -29,7 +29,9 @@ class Schema
 class Entity < Relation
       
    def initialize( schema, name, parent = nil, &block )
-      type_check( schema, Schema )
+      check do
+         type_check( schema, Schema )
+      end
       
       @schema      = schema
       @name        = name
@@ -106,11 +108,15 @@ class Entity < Relation
             modifiers[:optional] = false
       
             if block_given? then
-               assert( data.empty?, "specify either a type or a block, not both" )
-               warn_nyi( "subtuple support" )
+               check do
+                  assert( data.empty?, "specify either a type or a block, not both" )
+               end               
+               warn_once( "TODO: subtuple support" )
             else
                base_type = data.shift
-               assert( data.empty?, "expected type and modifiers only" )
+               check do
+                  assert( data.empty?, "expected type and modifiers only" )
+               end
                add_field Fields::StoredField.new(self, name, Types::ScalarType.new(base_type, modifiers, @schema))
             end
          end
@@ -127,12 +133,16 @@ class Entity < Relation
             modifiers[:optional] = true
       
             if block_given? then
-               assert( data.empty?, "specify either a type or a block, not both" )
-               warn_nyi( "subtuple support" )
+               check do
+                  assert( data.empty?, "specify either a type or a block, not both" )
+               end
+               warn_once( "TODO: subtuple support" )
             else
                base_type = data.shift
-               type_check( base_type, [Class, Symbol] )
-               assert( data.empty?, "expected type and modifiers" )
+               check do
+                  type_check( base_type, [Class, Symbol] )
+                  assert( data.empty?, "expected type and modifiers" )
+               end
                add_field Fields::StoredField.new(self, name, Types::ScalarType.new(base_type, modifiers, @schema))
             end
          end
@@ -144,7 +154,10 @@ class Entity < Relation
    
       def derived( name, proc = nil, &block )
          @entity.instance_eval do
-            assert( proc.nil? ^ block.nil?, "expected a Proc or block" )
+            check do
+               assert( proc.nil? ^ block.nil?, "expected a Proc or block" )
+            end
+            
             add_field Fields::DerivedField.new(self, name, proc.nil? ? block : proc)
          end
       end
@@ -174,9 +187,11 @@ class Entity < Relation
       
             key_name = names.collect{|name| name.to_s}.join("_and_") if key_name.nil?
       
-            assert( !key?(key_name), "key name #{key_name} already exists in entity #{@name}" )
-            names.each do |name|
-               assert( field?(name), "key field #{name} is not a member of entity #{@name}" )
+            check do
+               assert( !key?(key_name), "key name #{key_name} already exists in entity #{@name}" )
+               names.each do |name|
+                  assert( field?(name), "key field #{name} is not a member of entity #{@name}" )
+               end
             end
             
             @keys[key_name] = Key.new( self, key_name, names )
@@ -215,14 +230,19 @@ class Entity < Relation
 
       def enumerate( *data, &block )
          @entity.instance_eval do
-            assert( @parent.nil?     , "enumerated entities cannot have a parent" )
-            assert( @enumeration.nil?, "entity is already enumerated"             )
-      
+            check do
+               assert( @parent.nil?     , "enumerated entities cannot have a parent" )
+               assert( @enumeration.nil?, "entity is already enumerated"             )
+            end
+            
             if @fields.empty? then
                @dsl.required :name , :identifier
                @dsl.required :value, :integer
             else
-               assert( @fields.length >= 2, "an enumerated entity needs at least name and value fields" )
+               check do
+                  assert( @fields.length >= 2, "an enumerated entity needs at least name and value fields" )
+               end
+               
                # TODO type check the first two fields, once you figure out how best to do it
             end
       
@@ -231,7 +251,9 @@ class Entity < Relation
             if block then
                @enumeration.fill(block)
             else
-               assert( @fields.count == 2, "to use the simple enumeration form, the entity must have only two fields" )
+               check do
+                  assert( @fields.count == 2, "to use the simple enumeration form, the entity must have only two fields" )
+               end
 
                @enumeration.fill do
                   value = 1
@@ -239,7 +261,9 @@ class Entity < Relation
                      name  = data.shift
                      value = data.shift if data.first.is_an?(Integer)
                
-                     assert( name.is_a?(Symbol), "expected a symbol or value, found #{name.class.name}" )
+                     check do
+                        assert( name.is_a?(Symbol), "expected a symbol or value, found #{name.class.name}" )
+                     end
                
                      define name, value
                      value += 1
@@ -257,9 +281,11 @@ protected
    def add_field( field )
       name = field.name
       
-      assert( name.is_a?(Symbol)                   , "please use only Ruby symbols for field names"     )
-      assert( !@fields.member?(name)               , "duplicate field name #{name}"                     )
-      assert( @parent.nil? || !@parent.field?(name), "field name conflicts with field in parent entity" )
+      check do
+         assert( name.is_a?(Symbol)                   , "please use only Ruby symbols for field names"     )
+         assert( !@fields.member?(name)               , "duplicate field name #{name}"                     )
+         assert( @parent.nil? || !@parent.field?(name), "field name conflicts with field in parent entity" )
+      end
       
       @fields[name] = field
       self

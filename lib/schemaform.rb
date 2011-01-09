@@ -107,7 +107,7 @@ module Schemaform
             break if line =~ /locate.$/
          end
 
-         assert( !stack.empty?, "caller stack doesn't seem to show context file, which is needed for Schemaform.require()" )
+         assert( !stack.empty?, "caller stack doesn't seem to show context file, which is needed for Schemaform.locate()" )
 
          trace_line  = stack.shift
          script_path = trace_line.split(":")[0]

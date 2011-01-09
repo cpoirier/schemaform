@@ -79,7 +79,9 @@ class ScalarType < Type
    
    def resolve( resolution_path = [] )
       if !@resolved then
-         assert( !resolution_path.member?(self), "type [#{description()}] in [#{@schema.full_name}] is directly or indirectly defined in terms of itself" )
+         check do
+            assert( !resolution_path.member?(self), "type [#{description()}] in [#{@schema.full_name}] is directly or indirectly defined in terms of itself" )
+         end
          
          @base_type = @schema.type( @base_type )
          @base_type.resolve( resolution_path + [self] )

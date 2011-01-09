@@ -25,7 +25,10 @@ class Expression
    include QualityAssurance
 
    def initialize( type )
-      type_check( type, Type )
+      check do
+         type_check( type, Type )
+      end
+      
       @type   = type
       @schema = type.schema
    end

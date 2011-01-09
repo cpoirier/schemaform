@@ -35,7 +35,10 @@ class Tuple < Expression
    # Returns the Schemaform record identifier expression for this tuple, if known.
    
    def id()
-      assert( @source.exists?, "source record not identifiable in this context" )
+      check do
+         assert( @source.exists?, "source record not identifiable in this context" )
+      end
+
       fail( "TODO: generate ID expression" )
    end
    

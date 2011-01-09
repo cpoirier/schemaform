@@ -88,7 +88,10 @@ class Schema
       include QualityAssurance
 
       def initialize( schema )
-         type_check( schema, Schema )
+         check do
+            type_check( schema, Schema )
+         end
+         
          @schema = schema
       end
 
@@ -116,7 +119,10 @@ class Schema
    
       def define( name, parent = nil, &block )
          @schema.instance_eval do
-            assert_and_warn_once( parent.nil?, "TODO: derived class support" )
+            check do
+               assert_and_warn_once( parent.nil?, "TODO: derived class support" )
+            end
+            
             register_entity Entity.new( self, name, parent, &block )
          end
       end
@@ -127,8 +133,10 @@ class Schema
    
       def define_type( name, base_type = nil, modifiers = {} )
          @schema.instance_eval do
-            type_check( name, [Symbol, Class] )
-            type_check( modifiers, Hash )
+            check do
+               type_check( name, [Symbol, Class] )
+               type_check( modifiers, Hash )
+            end
          
             if name.is_a?(Class) then
                register_type name, Types::MappedType.new(name, base_type, modifiers, modifiers.delete(:store), modifiers.delete(:load), self)
@@ -168,7 +176,9 @@ class Schema
    
    def type( name, fail_if_missing = true, simple_check = false )
       return name if name.is_a?(Type)
-      type_check( name, [Symbol, Class] )
+      check do
+         type_check( name, [Symbol, Class] )
+      end
       
       #
       # If attempting to resolve a Class, we will try for the requested Class or any of its
@@ -201,7 +211,9 @@ class Schema
    
    def relation( name, fail_if_missing = true )
       return name if name.is_a?(Relation)
-      type_check( name, Symbol )
+      check do
+         type_check( name, Symbol )
+      end
       
       return @relations[name] if @relations.member?(name)
       return @context.relation(name, fail_if_messing) if @context
@@ -299,7 +311,10 @@ protected
    # ==========================================================================================
 
    def register_subschema( schema )
-      assert( !@subschemas.member?(schema.name), "schema [#{full_name()}] already has a subschema named [#{schema.name}]" )
+      check do
+         assert( !@subschemas.member?(schema.name), "schema [#{full_name()}] already has a subschema named [#{schema.name}]" )
+      end
+      
       @subschemas[schema.name] = schema
       return schema
    end
@@ -309,7 +324,10 @@ protected
    # Registers a named type with the schema.
    
    def register_type( name, named_type )
-      assert( !@types.member?(name), "schema [#{full_name()}] already has a type named [#{name}]" )
+      check do
+         assert( !@types.member?(name), "schema [#{full_name()}] already has a type named [#{name}]" )
+      end
+      
       named_type.name = name
       @types[name] = named_type
       return named_type
@@ -320,7 +338,10 @@ protected
    # Registers a named relation with the schema.
    
    def register_relation( relation )
-      assert( !@relations.member?(relation.name), "schema [#{full_name()}] already has a relation named [#{relation.name}]" )
+      check do
+         assert( !@relations.member?(relation.name), "schema [#{full_name()}] already has a relation named [#{relation.name}]" )
+      end
+      
       @relations[relation.name] = relation      
       return relation
    end
@@ -330,7 +351,10 @@ protected
    # Registers an entity with the schema.
    
    def register_entity( entity )
-      assert( !@entities.member?(entity.name), "schema [#{full_name()}] already has an entity named [#{entity.name}]" )
+      check do
+         assert( !@entities.member?(entity.name), "schema [#{full_name()}] already has an entity named [#{entity.name}]" )
+      end
+      
       register_type( entity.name, entity.reference_type )
       register_relation( entity )
       @entities[entity.name] = entity      

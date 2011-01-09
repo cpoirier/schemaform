@@ -90,16 +90,9 @@ module QualityAssurance
       # wrapper method.  Each layer calls the previous by way of a variable.
       
    	def self.included( mod )
-		   unless InterfaceContracts.enforcement_disabled?
-		      unless InterfaceContracts.enforcement_warning_disabled?
-         	   $stderr.puts( "WARNING: enforcing Schemaform interface contracts" ) 
-         	   InterfaceContracts.disable_enforcement_warning
-         	end
-      	end
-
    		class << mod
    			def pre(method_name = nil, message = nil, &condition)
-   			   return if InterfaceContracts.enforcement_disabled?
+   			   return if QualityAssurance::checks_disabled?
    				old_method, method_name, message = InterfaceContracts.process_parameters( self, method_name, message )
 
                if old_method.nil? then
@@ -109,14 +102,14 @@ module QualityAssurance
                   define_method( method_name, &condition )  
                   condition_method = instance_method( method_name )
                   define_method(method_name) do |*args|
-                     assert( condition_method.bind(self).call(*args), "Pre-condition #{'\'' + message + '\' ' if message}failed" ) unless InterfaceContracts.enforcement_disabled?
+                     assert( condition_method.bind(self).call(*args), "Pre-condition #{'\'' + message + '\' ' if message}failed" ) unless QualityAssurance::checks_disabled?
                      old_method.bind(self).call(*args)
                   end
    				end
    			end
 
    			def post(method_name = nil, message = nil, &condition)
-   			   return if InterfaceContracts.enforcement_disabled?
+   			   return if QualityAssurance::checks_disabled?
    				old_method, method_name, message = InterfaceContracts.process_parameters( self, method_name, message )
             
                if old_method.nil? then
@@ -127,7 +120,7 @@ module QualityAssurance
                   condition_method = instance_method( method_name )
                   define_method(method_name) do |*args|
    					   result = old_method.bind(self).call(*args)
-   					   assert( condition_method.bind(self).call(*(args << result)), "Post-condition #{'\'' + message + '\' ' if message}failed" ) unless InterfaceContracts.enforcement_disabled?
+   					   assert( condition_method.bind(self).call(*(args << result)), "Post-condition #{'\'' + message + '\' ' if message}failed" ) unless QualityAssurance::checks_disabled?
    					   return result
                   end
    				end
@@ -136,40 +129,6 @@ module QualityAssurance
    	end
    	
    	
-   	#
-   	# Disables contract enforcement (for the entire run).  Should be done before any protected 
-   	# classes are loaded, or a runtime penalty will still be incurred.
-
-   	def self.disable_enforcement()
-   	   @@interface_contracts__disable_enforcement = true
-   	end
-   	
-   	
-   	#
-   	# Returns true if contract enforcement should be disabled.
-   	
-   	def self.enforcement_disabled?()
-   	   defined?(@@interface_contracts__disable_enforcement) # no point checking this: && @@interface_contracts__disable_enforcement
-   	end
-   	   
-
-   	#
-   	# Disables contract enforcement warning.
-
-   	def self.disable_enforcement_warning()
-   	   @@interface_contracts__disable_enforcement_warning = true
-   	end
-   	
-   	
-   	#
-   	# Returns true if contract enforcement should be disabled.
-   	
-   	def self.enforcement_warning_disabled?()
-   	   defined?(@@interface_contracts__disable_enforcement_warning) && @@interface_contracts__disable_enforcement_warning
-   	end
-   	   
-
-
       #
       # Given the parameters from a call to pre() or post(), returns the method being replaced (if
       # already defined), and the canonical method name and message.

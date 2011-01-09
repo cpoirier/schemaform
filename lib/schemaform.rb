@@ -62,14 +62,13 @@ module Schemaform
    # ==========================================================================================
 
    #
-   # Disables interface contract enforcement for the entire Schemaform environment.  This is
-   # generally a good idea for production code, as the interface checks can be quite expensive.
-   # Note that this is a global setting, and can't be re-enabled once disabled.  For maximum
-   # cost savings, call this before you use any other Schemaform APIs (or require any other
-   # Schemaform files).
+   # Disables checks for the entire Schemaform environment.  This is generally a good idea for 
+   # production code, as checks can be quite expensive.  Note that this is a global setting, 
+   # and can't be re-enabled once disabled.  For maximum cost savings, call this before you use 
+   # any other Schemaform APIs (or require any other Schemaform files).
 
-   def self.disable_interface_contract_enforcement()
-      QualityAssurance::InterfaceContracts.disable_enforcement()
+   def self.disable_checks()
+      QualityAssurance.disable_checks()
    end
 
 

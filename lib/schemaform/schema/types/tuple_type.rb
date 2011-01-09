@@ -40,13 +40,22 @@ class TupleType < Type
    #
    # Adds an attribute to the tuple.
 
-   pre do |name, type|
-      type_check( name, Symbol )
-      assert( !@closed                  , "tuple type must not be closed to new attributes"          )
-      assert( !@attributes.member?(name), "tuple type cannot have two attributes with the same name" )
-   end
    def add( name, type )
+      check do
+         type_check("name", name, Symbol)
+         type_check("type", type, Type  )
+         assert( !@closed, "tuple type must not be closed to new attributes" )
+         assert( !@attributes.member?(name), "tuple type cannot have two attributes with the same name (#{name})" )
+      end
+          
       @attributes[name] = type
+   end
+   
+   #
+   # Closes the type to further changes.
+   
+   def close()
+      @closed = true
    end
    
 

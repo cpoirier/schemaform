@@ -33,7 +33,16 @@ module Schemaform
             end
          end
       end
-   
+      
+      #
+      # Provides a context in which interface contract enforcement and other quality code 
+      # can be easily disabled at run-time.  
+      
+      def check()
+         return unless @@quality_assurance__checks_enabled
+         yield
+      end
+
       
       #
       # Raises an AssertionFailure if the condition is false.
@@ -107,7 +116,15 @@ module Schemaform
       #
       # Verifies that object is (one) of the specified type(s).
 
-      def type_check( object, type, allow_nil = false )
+      def type_check( object, type, allow_nil = false, last = nil )
+         name = nil
+         if object.is_a?(String) then
+            name      = object
+            object    = type
+            type      = allow_nil
+            allow_nil = last
+         end
+         
          return true if object.nil? && allow_nil
 
          message = ""
@@ -139,13 +156,29 @@ module Schemaform
          end
 
          if error then
-            actual = object.class.name
-            message = "unexpected type " + actual + " (" + message + ")"
+            message += " for [#{name}]" if name
+            actual  = object.class.name
+            message = message + " (found " + actual + ")"
             raise TypeCheckFailure.new( message )
          end
 
          return true
       end
+
+
+      #
+      # Disables quality assurance checks.  Note that this is a global setting.
+      
+      def self.disable_checks()
+         @@quality_assurance__checks_enabled = false
+      end
+      
+      def self.checks_disabled?()
+         !@@quality_assurance__checks_enabled
+      end
+      
+      @@quality_assurance__checks_enabled = true
+   
 
    end # QualityAssurance
    

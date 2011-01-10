@@ -28,16 +28,21 @@ class Field < Base
       super( context.schema )
       type_check( :context, context, Tuple )
       
-      @context = context
-      @name    = name
-      @path    = context.path + [name]
-      @type    = type
+      @context    = context
+      @name       = name
+      @path       = context.path + [name]
+      @type       = type
+      @expression = nil
    end
+   
+   attr_reader :name, :type, :path, :context, :expression
 
-   attr_reader :name, :type, :path, :context
-
-   def resolve_type( resolution_path = [], tuple_expression = nil )
-      fail_unless_overridden
+   def close()
+      @expression = Expressions::Field.new(self) if @expression.nil?
+   end
+   
+   def resolve( supervisor, tuple_expression = nil )
+      fail_unless_overridden( self, :resolve )
    end
    
    

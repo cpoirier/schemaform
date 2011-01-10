@@ -82,8 +82,11 @@ class Entity < Relation
       @enumeration.exists?
    end
    
-   def resolve_types( resolution_path = [] )
-      @heading.resolve_types( resolution_path )
+   def resolve( supervisor )
+      supervisor.monitor(self, path()) do
+         warn_once( "TODO: key resolution and other entity-level resolution jobs" )
+         @heading.resolve(supervisor)
+      end
    end
    
 

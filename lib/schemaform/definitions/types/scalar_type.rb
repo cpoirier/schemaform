@@ -77,15 +77,13 @@ class ScalarType < Type
    # Resolves the base type and constraints for this type, converting a deferred type to 
    # a functional one.
    
-   def resolve( resolution_path = [] )
-      if !@resolved then
-         check do
-            assert( !resolution_path.member?(self), "type [#{description()}] in [#{@schema.path.join(".")}] is directly or indirectly defined in terms of itself" )
-         end
-         
-         @base_type = @schema.type( @base_type )
-         @base_type.resolve( resolution_path + [self] )
-      
+   def resolve( supervisor = nil )
+      return self if @resolved
+      supervisor = @schema.supervisor if supervisor.nil?
+      supervisor.monitor(self, "type [#{@schema.path.join(".")}.#{description()}]") do
+         @base_type = @schema.find( @base_type )
+         @base_type.resolve( supervisor )
+   
          if @constraints.nil? && @modifiers.exists? then
             @constraints = []
             @modifiers.each do |name, value|
@@ -94,6 +92,8 @@ class ScalarType < Type
                end
             end
          end
+         
+         self
       end
    end
    

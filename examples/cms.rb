@@ -38,11 +38,11 @@ def example_cms_schema( context_schema = nil )
       
       define :Role do
          required :name                  , String, :length => 40
-         derived  :parents               , lambda {|role| role.find_matching(:RoleInheritance).return_only(:parent => :role)}
-         derived  :ancestors             , lambda {|role| role.find_matching(:RoleInheritance).follow(:RoleInheritance, :role, :parent).return_only(:parent => :role)}
-         derived  :closure               , lambda {|role| relation(:role => role.id) + role.ancestors}
-         derived  :capabilities          , lambda {|role| role.closure.join(:RoleCapability).return_only(:capability)}
-         derived  :inherited_capabilities, lambda {|role| role.ancestors.join(:RoleCapability).return_only(:capability)}
+         # derived  :parents               , lambda {|role| role.find_matching(:RoleInheritance).return_only(:parent => :role)}
+         # derived  :ancestors             , lambda {|role| role.find_matching(:RoleInheritance).follow(:RoleInheritance, :role, :parent).return_only(:parent => :role)}
+         # derived  :closure               , lambda {|role| relation(:role => role.id) + role.ancestors}
+         # derived  :capabilities          , lambda {|role| role.closure.join(:RoleCapability).return_only(:capability)}
+         # derived  :inherited_capabilities, lambda {|role| role.ancestors.join(:RoleCapability).return_only(:capability)}
          optional :something do
             required :x, String
             optional :y, String

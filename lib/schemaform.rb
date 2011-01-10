@@ -19,7 +19,7 @@
 # =============================================================================================
 
 
-require File.expand_path(File.dirname(__FILE__)) + "/schemaform/quality_assurance.rb"
+require File.expand_path(File.dirname(__FILE__)) + "/schemaform/sundry/quality_assurance.rb"
 
 #
 # Provides the master entry points for the Schemaform system, allowing you to define schemas,
@@ -140,7 +140,7 @@ private
    # Loads all Schemaform code into memory.
    
    def self.load_all()
-      require locate("schemaform/ruby_extensions.rb"   )
+      require locate("schemaform/sundry.rb"            )
       require locate("schemaform/definitions.rb"       )
       require locate("schemaform/expressions.rb"       )
       require locate("schemaform/runtime/connection.rb")

@@ -23,6 +23,23 @@ class Array
    
    
    #
+   # Pushes an element before calling your block, then pops it again before returning.
+   
+   def push_and_pop( element )
+      result = nil
+      
+      begin
+         push element
+         result = yield()
+      ensure
+         pop
+      end
+      
+      result
+   end
+   
+   
+   #
    # Appends your value to a list at the specified index, creating an array at that index
    # if not present.
    

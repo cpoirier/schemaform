@@ -173,8 +173,9 @@ module Schemaform
       #
       # Raises an AssertionFailure indicating a method should have been overrided.
 
-      def fail_unless_overridden()
-         fail( "You must override: " + caller()[0] )
+      def fail_unless_overridden( object, method )
+         method = object.instance_class.instance_method(method) unless method.is_a?(Method)
+         fail( "You must override: #{method.owner.name}.#{method.name} in #{object.class.name}" )
       end
 
 

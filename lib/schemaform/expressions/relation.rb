@@ -19,6 +19,8 @@
 # =============================================================================================
 
 
+require Schemaform.locate("expression.rb")
+
 
 #
 # Base class for all Relation models.

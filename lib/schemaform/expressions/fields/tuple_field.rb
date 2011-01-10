@@ -19,21 +19,30 @@
 # =============================================================================================
 
 
+#
+# An expression wrapper for a TupleField
+
 module Schemaform
 module Expressions
-class Expression
-   include QualityAssurance
-
-   def initialize()
-   end
+module Fields
    
-   def resolve( supervisor )
-      fail_unless_overridden( self, :resolve )
+class TupleField < Field
+
+   def initialize( definition )
+      super( definition )
+      @tuple = definition.tuple.expression
+
+      @tuple.fields.each do |name, field|
+         instance_class.class_eval do
+            define_method field.name do |*args|
+               return field
+            end
+         end
+      end
    end
 
-   alias type resolve
-   
-end # Expression
+end # TupleField
+
+end # Fields
 end # Expressions
 end # Schemaform
-

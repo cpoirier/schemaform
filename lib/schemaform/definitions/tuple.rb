@@ -28,10 +28,13 @@ class Tuple < Base
    
    def initialize( schema, naming_context = nil )
       super( schema )
-      @context = naming_context
-      @fields  = {}
-      @type    = nil
+      @context    = naming_context
+      @fields     = {}
+      @type       = nil
+      @expression = nil
    end
+   
+   attr_reader :expression
    
    def name()
       return @context.name if @context.exists?
@@ -43,6 +46,7 @@ class Tuple < Base
       return []
    end
    
+      
    
    # ==========================================================================================
    #                                     Definition Language
@@ -107,7 +111,7 @@ class Tuple < Base
    
    def add_field( field )
       check do
-         assert( @type.nil?, "fields cannot be added to a Tuple after its type has been resolved" )
+         assert( @expression.nil? && @type.nil?, "fields cannot be added to a Tuple after type resolution has begun" )
          assert( !@fields.member?(field.name), "a Tuple cannot contain two fields with the same name [#{field.name}]" )
       end
       
@@ -126,12 +130,26 @@ class Tuple < Base
       @fields.count
    end
    
+   def close()
+      if @expression.nil? then
+         each_field do |field|
+            field.close()
+         end
+      
+         @expression = Expressions::Tuple.new(self) 
+      end
+   end
    
-   def resolve_types( resolution_path = [], tuple_expression = nil )
-      tuple_expression = Expressions::Tuple.new(self) if tuple_expression.nil?
-      @fields.each do |name, field|
-         field.resolve_type( resolution_path, tuple_expression )
-         puts "#{field.path.join(".")}: #{field.type.description}" if field.type.exists?
+   def resolve( supervisor, tuple_expression = nil )
+      return @type unless @type.nil?
+      supervisor.monitor(self, @context.path) do
+         close()
+         
+         @type = Types::TupleType.new(@schema) do |type|
+            each_field do |field|
+               type.add field.name, field.resolve( supervisor, tuple_expression.nil? ? @expression : tuple_expression )
+            end
+         end
       end
    end
    

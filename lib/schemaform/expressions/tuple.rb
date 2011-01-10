@@ -29,15 +29,16 @@ module Expressions
 class Tuple < Expression
 
    def initialize( definition )
-      super( nil )
+      super()
       @definition = definition
       @fields     = {}
       
       #
-      # Define one Field expression for each field in the Tuple definition.
+      # Define one Field expression for each field in the Tuple definition, and
+      # make it directly available on the interface.
       
-      @definition.each_field do |field_definition|
-         @fields[field_definition.name] = field = Field.new( field_definition )
+      @definition.each_field do |field_definition|                  
+         @fields[field_definition.name] = field = field_definition.expression
          instance_class.class_eval do
             define_method field_definition.name do |*args|
                return field
@@ -45,6 +46,14 @@ class Tuple < Expression
          end
       end
    end
+   
+   attr_reader :fields
+   
+   def resolve( supervisor )
+      @definition.resolve( supervisor )
+   end
+   
+   
    
    #
    # Returns the Schemaform record identifier expression for this tuple, if known.

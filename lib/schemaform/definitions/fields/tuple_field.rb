@@ -29,15 +29,28 @@ class TupleField < Field
       super( context, name, nil )
       @tuple = Tuple.new( context.schema, self )
       @dsl   = DefinitionLanguage.new( self )
-      
+
       @dsl.instance_eval(&block) if block_given?
    end
    
    attr_reader :tuple
       
-   def resolve_type( resolution_path = [], tuple_expression = nil )
-      @tuple.resolve_types( resolution_path + [self], tuple_expression )
+   def resolve( supervisor, tuple_expression = nil )
+      supervisor.monitor(self, path()) do
+         close()
+         @tuple.resolve( supervisor, tuple_expression )
+      end
    end
+   
+   def close()
+      if @expression.nil? then
+         @tuple.close()
+         @expression = Expressions::Fields::TupleField.new(self) 
+      end
+   end
+   
+   
+   
    
    # ==========================================================================================
    #                                     Definition Language

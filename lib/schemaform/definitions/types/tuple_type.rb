@@ -31,10 +31,23 @@ class TupleType < Type
       super( schema )
       @attributes = attributes 
       @closed     = closed
+      
+      if block_given? then
+         yield( self )
+         close
+      end
    end
    
    def dimensionality() 
       1
+   end
+
+   def description()
+      descriptions = []
+      @attributes.each do |name, type|
+         descriptions << "#{name}: #{type.description}"
+      end
+      "[#{descriptions.join(", ")}]"
    end
 
    #
@@ -56,6 +69,7 @@ class TupleType < Type
    
    def close()
       @closed = true
+      self
    end
    
 

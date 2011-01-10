@@ -19,17 +19,31 @@
 # =============================================================================================
 
 
+require Schemaform.locate("expression.rb")
+
 #
 # Represents a Field as an expression.
 
 module Schemaform
 module Expressions
-class Field
+class Field < Expression
 
    def initialize( definition )
-      
+      super()
+      @definition = definition
    end
+   
+   def name()
+      @definition.name
+   end
+   
+   def resolve( supervisor )
+      @definition.resolve( supervisor )
+   end
+   
 
 end # Field
 end # Expressions
 end # Schemaform
+
+Dir[Schemaform.locate("fields/*.rb")].each {|path| require path}

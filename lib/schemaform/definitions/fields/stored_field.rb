@@ -30,8 +30,10 @@ class StoredField < Field
       @required = required
    end
       
-   def resolve_type( resolution_path = [], tuple_expression = nil )
-      @type.resolve( resolution_path + [self] )
+   def resolve( supervisor, tuple_expression = nil )
+      supervisor.monitor(self, path()) do
+         @type.resolve( supervisor )
+      end
    end
    
 end

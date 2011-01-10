@@ -55,15 +55,15 @@ class Type < Base
    # Returns the "dimensionality" or order of this type: 0 for scalar, 1 for tuple, 2 for relation.
    
    def dimensionality()
-      fail_unless_overridden
+      fail_unless_overridden( self, :dimensionality )
    end
 
    
    #
    # Resolves any deferred typing information within the Type.
    
-   def resolve( resolution_path = [] )
-      fail_unless_overridden
+   def resolve( supervisor )
+      fail_unless_overridden( self, :resolve )
    end
 
    

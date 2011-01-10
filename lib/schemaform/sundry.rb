@@ -19,21 +19,6 @@
 # =============================================================================================
 
 
-module Schemaform
-module Expressions
-class Expression
-   include QualityAssurance
-
-   def initialize()
-   end
-   
-   def resolve( supervisor )
-      fail_unless_overridden( self, :resolve )
-   end
-
-   alias type resolve
-   
-end # Expression
-end # Expressions
-end # Schemaform
-
+Dir[Schemaform.locate("sundry/*.rb")].each do |path| 
+   require path
+end

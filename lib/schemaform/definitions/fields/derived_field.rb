@@ -30,10 +30,12 @@ class DerivedField < Field
       @block = block
    end
    
-   def resolve_type( resolution_path = [], tuple_expression = nil )
-      @block.call( tuple_expression )
-      
-      warn_once( "TODO: DerivedField.resolve_type() is unfinished" )
+   def resolve( supervisor, tuple_expression = nil )
+      supervisor.monitor( self, path() ) do
+         result_expression = @block.call( tuple_expression )
+         type_check( "derived field result", result_expression, Expressions::Expression )
+         result_expression.resolve( supervisor )
+      end
    end
 end
 

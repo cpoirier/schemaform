@@ -43,6 +43,7 @@ class Schema
       @subschemas  = {}
       @relations   = {}
       @entities    = {}
+      @supervisor  = @context.exists? ? @context.supervisor : TypeResolutionSupervisor.new( self )
          
       @types_are_resolved = false
 
@@ -77,6 +78,8 @@ class Schema
       @dsl.instance_eval(&block) if block_given?
       resolve_types() if @context.nil? || @context.types_are_resolved?
    end
+   
+   attr_reader :name, :path, :context, :supervisor
    
    def any_type()
       return @context.exists? ? @context.any_type : @types[:any]
@@ -136,8 +139,6 @@ class Schema
    # ==========================================================================================
    
    
-   attr_reader :name, :path, :context
-
    def top()
       return self if @context.nil?
       return @context.top
@@ -151,7 +152,7 @@ class Schema
    #
    # Returns the Type for a name (Symbol or Class), or nil.
    
-   def type( name, fail_if_missing = true, simple_check = false )
+   def find( name, fail_if_missing = true, simple_check = false )
       return name if name.is_a?(Type)
       check do
          type_check( :name, name, [Symbol, Class] )
@@ -165,13 +166,13 @@ class Schema
       type = nil
       if name.is_a?(Class) and !simple_check then
          name.ancestors.each do |current|
-            break if type = type(current, false, true)
+            break if type = find(current, false, true)
          end
       else
          if @types.member?(name) then
             type = @types[name]
          elsif @context.exists? then
-            type = @context.type(name, false, true)
+            type = @context.find(name, false, true)
          end
       end   
 
@@ -215,19 +216,18 @@ class Schema
       return if @types_are_resolved
       
       #
-      # Resolve types for all entity fields.
-      
-      @entities.each do |name, entity|
-         entity.resolve_types()
-      end
-
-      #
-      # Resolve any unresolved defined types.
+      # Resolve any defined types first.
       
       @types.each do |name, type|
-         type.resolve()
+         type.resolve(@supervisor)
       end
+   
+      #
+      # Resolve entities next.
       
+      @entities.each do |name, entity|
+         entity.resolve(@supervisor)
+      end
       
       #
       # Pass the call down the chain.
@@ -239,6 +239,32 @@ class Schema
       @types_are_resolved = true
    end
    
+
+   #
+   # A helper class that ensures type resolution errors are noticed and reported.
+   
+   class TypeResolutionSupervisor
+      include QualityAssurance
+      
+      def initialize( schema )
+         @schema  = schema
+         @entries = []
+      end
+
+      def monitor( scope, scope_name )
+         scope_name = scope_name.join(".") if scope_name.is_an?(Array)
+         assert( !@entries.member?(scope), "detected loop while trying to resolve [#{scope_name}]" )
+         type = @entries.push_and_pop(scope) { yield() }
+         check do
+            assert( type.exists?, "unable to resolve type for [#{scope_name}]" )
+            type_check( :type, type, Type )
+         end
+         
+         warn_once( "DEBUG: #{scope_name} resolved to #{type.description}" ) unless scope.is_a?(Type)
+         return type
+      end
+
+   end # TypeResolutionSupervisor
 
    
    

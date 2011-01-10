@@ -19,20 +19,32 @@
 # =============================================================================================
 
 
-module Schemaform
-class Schema
-module TypeConstraints
-class LengthConstraint
+require Schemaform.locate("scalar_type.rb")
 
-   def initialize( length )
-      @length = length
+
+#
+# A type that maps a Ruby type into the Schemaform typing system.
+
+module Schemaform
+module Definitions
+module Types
+class MappedType < ScalarType
+
+   def initialize( ruby_type, base_type, constraints = [], storer = nil, loader = nil, schema = nil )
+      super( base_type, constraints, schema )
+      @ruby_type = ruby_type
+      @storer    = storer
+      @loader    = loader
+      
+      name = ruby_type
    end
    
-   def accepts?( value )
-      return value.length <= @length
+   def mapped_type()
+      return self 
    end
 
-end # LengthConstraint
-end # TypeConstraints
-end # Schema
+   
+end # MappedType
+end # Types
+end # Definitions
 end # Schemaform

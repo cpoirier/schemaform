@@ -26,7 +26,7 @@ require Schemaform.locate("tuple.rb"   )
 # A single entity within the schema.
 
 module Schemaform
-class Schema
+module Definitions
 class Entity < Relation
       
    def initialize( schema, name, parent = nil, &block )
@@ -213,7 +213,7 @@ class Entity < Relation
    
 
 end # Entity
-end # Schema
+end # Definitions
 end # Schemaform
 
 

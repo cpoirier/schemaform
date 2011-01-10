@@ -18,6 +18,7 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("base.rb")
 
 
 #
@@ -26,7 +27,7 @@
 # among other things.
 
 module Schemaform
-class Schema
+module Definitions
 class Type < Base
 
    def initialize( schema )
@@ -75,7 +76,7 @@ class Type < Base
 
    
 end # Type
-end # Schema
+end # Definitions
 end # Schemaform
 
 

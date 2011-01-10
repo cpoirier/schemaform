@@ -20,18 +20,20 @@
 
 
 #
-# Base class for all type constraints.
+# A base class for elements of the Schema, providing a route back.
 
 module Schemaform
-class Schema
-class TypeConstraint
+module Definitions
+class Base
+   include QualityAssurance
 
-   def initialize()
+   def initialize( schema )
+      type_check( :schema, schema, Schema )
+      @schema = schema
    end
 
-end # TypeConstraint
-end # Schema
+   attr_reader :schema
+
+end # Base
+end # Definitions
 end # Schemaform
-
-
-Dir[Schemaform.locate("type_constraints/*.rb")].each {|path| require path}

@@ -19,33 +19,26 @@
 # =============================================================================================
 
 
-#
-# Manages enumeration data on behalf of an enumerated entity.
 
 module Schemaform
-class Schema
-class Enumeration
-   include QualityAssurance
+module Definitions
+module Fields
 
-   attr_reader :entity, :definitions
-   
-   def initialize( entity )
-      @entity      = entity
-      @definitions = []
-   end
-
-   def fill( &block )
-      instance_eval(&block)
+class DerivedField < Field
+   def initialize( context, name, block )
+      super( context, name, nil )
+      @block = block
    end
    
-   #
-   # Defines a single record for the enumeration.  Fields must match the entity.
-   
-   def define( *fields )
-      warn_once( "TODO: type check and count the enumeration values" )
-      @definitions << fields
+   def resolve_type( resolution_path = [], tuple_expression = nil )
+      @block.call( tuple_expression )
+      
+      warn_once( "TODO: DerivedField.resolve_type() is unfinished" )
    end
+end
 
-end # Enumeration
-end # Schema
+
+
+end # Fields
+end # Definitions
 end # Schemaform

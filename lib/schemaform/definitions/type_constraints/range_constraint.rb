@@ -20,18 +20,19 @@
 
 
 module Schemaform
-class Schema
-class Key
-      
-   def initialize( entity, name, field_names )
-      @entity = entity
-      @name   = name
-      @field_names = field_names
+module Definitions
+module TypeConstraints
+class RangeConstraint
+
+   def initialize( range )
+      @range = range
    end
    
+   def accepts?( value )
+      return @range === value
+   end
 
-   
-end # Key
-end # Schema
+end # RangeConstraint
+end # TypeConstraints
+end # Definitions
 end # Schemaform
-

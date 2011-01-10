@@ -28,6 +28,7 @@ require 'monitor'
 # either unique names or separate connection prefices.  
 
 module Schemaform
+module Definitions
 class Schema
    include QualityAssurance
    extend  QualityAssurance
@@ -81,26 +82,6 @@ class Schema
       return @context.exists? ? @context.any_type : @types[:any]
    end
       
-   
-   #
-   # A base class for elements of the Schema, providing a route back.
-   
-   class Base
-      include QualityAssurance
-
-      def initialize( schema )
-         check do
-            type_check( :schema, schema, Schema )
-         end
-         
-         @schema = schema
-      end
-
-      attr_reader :schema
-
-   end # Base
-
-   
    
    
    
@@ -362,21 +343,24 @@ protected
    
    
 end # Schema
+end # Definitions
 end # Schemaform
 
 
-require Schemaform.locate("schema/type.rb"           ) 
-require Schemaform.locate("schema/type_constraint.rb")
-require Schemaform.locate("schema/entity.rb"         )
+require Schemaform.locate("type.rb"           ) 
+require Schemaform.locate("type_constraint.rb")
+require Schemaform.locate("entity.rb"         )
 
 #
 # Define the core type constraints.
 
 module Schemaform
+module Definitions
 class Schema
    define_type_constraint :length, Types::TextType   , TypeConstraints::LengthConstraint
    define_type_constraint :length, Types::BinaryType , TypeConstraints::LengthConstraint
    define_type_constraint :range , Types::NumericType, TypeConstraints::RangeConstraint
    define_type_constraint :check , Type              , TypeConstraints::CheckConstraint
+end
 end
 end

@@ -19,26 +19,24 @@
 # =============================================================================================
 
 
+#
+# Runs arbitrary Ruby code as a constraint on a type.
 
 module Schemaform
-class Schema
-module Fields
+module Definitions
+module TypeConstraints
+class CheckConstraint
 
-class DerivedField < Field
-   def initialize( context, name, block )
-      super( context, name, nil )
-      @block = block
+   def initialize( proc )
+      @proc == proc      
    end
    
-   def resolve_type( resolution_path = [] )
-      # @block.call( @relation.tuple_expression )
-      
-      warn_once( "TODO: DerivedField.resolve_type() is unfinished" )
+   def accepts?( value )
+      @proc.call( value )
    end
-end
 
-
-
-end # Fields
-end # Schema
+end # CheckConstraint
+end # TypeConstraints
+end # Definitions
 end # Schemaform
+

@@ -18,25 +18,32 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("base.rb")
 
-#
-# Runs arbitrary Ruby code as a constraint on a type.
 
 module Schemaform
-class Schema
-module TypeConstraints
-class CheckConstraint
+module Definitions
+class Field < Base
+   def initialize( context, name, type )
+      super( context.schema )
+      type_check( :context, context, Tuple )
+      
+      @context = context
+      @name    = name
+      @path    = context.path + [name]
+      @type    = type
+   end
 
-   def initialize( proc )
-      @proc == proc      
+   attr_reader :name, :type, :path, :context
+
+   def resolve_type( resolution_path = [], tuple_expression = nil )
+      fail_unless_overridden
    end
    
-   def accepts?( value )
-      @proc.call( value )
-   end
-
-end # CheckConstraint
-end # TypeConstraints
-end # Schema
+   
+end # Field
+end # Definitions
 end # Schemaform
 
+
+Dir[Schemaform.locate("fields/*.rb")].each {|path| require path}

@@ -20,47 +20,24 @@
 
 
 #
-# A dimension 1 type, in which there is a set of name/type pairs (the attributes).
+# A type that represents a reference to an entity.
 
 module Schemaform
-class Schema
+module Definitions
 module Types
-class TupleType < Type
-   
-   def initialize( schema, attributes = {}, closed = false )
-      super( schema )
-      @attributes = attributes 
-      @closed     = closed
-   end
-   
-   def dimensionality() 
-      1
-   end
+class ReferenceType < ScalarType
 
-   #
-   # Adds an attribute to the tuple.
-
-   def add( name, type )
-      check do
-         type_check(:name, name, Symbol)
-         type_check(:type, type, Type  )
-         assert( !@closed, "tuple type must not be closed to new attributes" )
-         assert( !@attributes.member?(name), "tuple type cannot have two attributes with the same name (#{name})" )
-      end
-          
-      @attributes[name] = type
+   def initialize( entity )
+      super( entity.has_parent? ? entity.parent.reference_type : entity.schema.any_type )
+      self.name = entity.name
    end
    
-   #
-   # Closes the type to further changes.
-   
-   def close()
-      @closed = true
+   def description()
+      return name.to_s + " reference"
    end
    
 
-end # TupleType
-end # Types
-end # Schema
+end # ReferenceType
+end # Tyeps
+end # Definitions
 end # Schemaform
-

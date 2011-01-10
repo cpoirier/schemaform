@@ -13,6 +13,10 @@
 
 
 class Object
+   def instance_class()
+      class << self ; self ; end
+   end
+   
    def each()
       yield( self ) 
    end

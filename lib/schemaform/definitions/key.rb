@@ -19,25 +19,19 @@
 # =============================================================================================
 
 
-#
-# A type that represents a reference to an entity.
-
 module Schemaform
-class Schema
-module Types
-class ReferenceType < ScalarType
-
-   def initialize( entity )
-      super( entity.has_parent? ? entity.parent.reference_type : entity.schema.any_type )
-      self.name = entity.name
-   end
-   
-   def description()
-      return name.to_s + " reference"
+module Definitions
+class Key
+      
+   def initialize( entity, name, field_names )
+      @entity = entity
+      @name   = name
+      @field_names = field_names
    end
    
 
-end # ReferenceType
-end # Tyeps
-end # Schema
+   
+end # Key
+end # Definitions
 end # Schemaform
+

@@ -38,7 +38,7 @@ module Schemaform
 
    def self.define( name, context_schema = nil, &block )
       load_all()
-      Schema.new( name, context_schema, &block )
+      Definitions::Schema.new( name, context_schema, &block )
    end
    
    
@@ -120,7 +120,7 @@ module Schemaform
    
    def self.define_type_constraint( name, type_class, constraint_class )
       load_all()
-      Schema.define_type_constraint( name, type_class, constraint_class )
+      Definitions::Schema.define_type_constraint( name, type_class, constraint_class )
    end
 
    
@@ -141,7 +141,8 @@ private
    
    def self.load_all()
       require locate("schemaform/ruby_extensions.rb"   )
-      require locate("schemaform/schema.rb"            )
+      require locate("schemaform/definitions.rb"       )
+      require locate("schemaform/expressions.rb"       )
       require locate("schemaform/runtime/connection.rb")
    end
    

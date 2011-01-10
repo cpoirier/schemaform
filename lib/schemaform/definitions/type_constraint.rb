@@ -20,20 +20,18 @@
 
 
 #
-# Defines a si
-# Provides a naming context and a unit of storage within the Schemaform system.  Multiple
-# Schemas can coexist within one physical database, but names are unique.
+# Base class for all type constraints.
 
 module Schemaform
-class Schema
-class Section
-      
-   def initialize( name )
+module Definitions
+class TypeConstraint
+
+   def initialize()
    end
-   
 
-
-   
-end # Section
-end # Schema
+end # TypeConstraint
+end # Definitions
 end # Schemaform
+
+
+Dir[Schemaform.locate("type_constraints/*.rb")].each {|path| require path}

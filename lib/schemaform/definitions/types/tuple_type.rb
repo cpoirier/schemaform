@@ -19,26 +19,48 @@
 # =============================================================================================
 
 
+#
+# A dimension 1 type, in which there is a set of name/type pairs (the attributes).
 
 module Schemaform
-class Schema
-module Fields
-
-class StoredField < Field
-   def initialize( context, name, type, required )
-      super( context, name, type )
-      @required = required
-   end
-      
-   def resolve_type( resolution_path = [] )
-      @type.resolve( resolution_path + [self] )
+module Definitions
+module Types
+class TupleType < Type
+   
+   def initialize( schema, attributes = {}, closed = false )
+      super( schema )
+      @attributes = attributes 
+      @closed     = closed
    end
    
-end
+   def dimensionality() 
+      1
+   end
 
+   #
+   # Adds an attribute to the tuple.
 
+   def add( name, type )
+      check do
+         type_check(:name, name, Symbol)
+         type_check(:type, type, Type  )
+         assert( !@closed, "tuple type must not be closed to new attributes" )
+         assert( !@attributes.member?(name), "tuple type cannot have two attributes with the same name (#{name})" )
+      end
+          
+      @attributes[name] = type
+   end
+   
+   #
+   # Closes the type to further changes.
+   
+   def close()
+      @closed = true
+   end
+   
 
-
-end # Fields
-end # Schema
+end # TupleType
+end # Types
+end # Definitions
 end # Schemaform
+

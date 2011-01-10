@@ -20,19 +20,15 @@
 
 
 module Schemaform
-class Schema
-module TypeConstraints
-class RangeConstraint
+module Expressions
+class Expression
+   include QualityAssurance
 
-   def initialize( range )
-      @range = range
+   def initialize( type = nil )
+      @type = type
    end
    
-   def accepts?( value )
-      return @range === value
-   end
-
-end # RangeConstraint
-end # TypeConstraints
-end # Schema
+end # Expression
+end # Expressions
 end # Schemaform
+

@@ -18,6 +18,8 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("expression.rb")
+
 
 #
 # A tuple, potentially linked to an entity record (if identifiable).
@@ -26,15 +28,28 @@ module Schemaform
 module Expressions
 class Tuple < Expression
 
-   def initialize( type, source = nil )
-      super( type )
-      @source = source      
+   def initialize( definition )
+      super( nil )
+      @definition = definition
+      @fields     = {}
+      
+      #
+      # Define one Field expression for each field in the Tuple definition.
+      
+      @definition.each_field do |field_definition|
+         @fields[field_definition.name] = field = Field.new( field_definition )
+         instance_class.class_eval do
+            define_method field_definition.name do |*args|
+               return field
+            end
+         end
+      end
    end
    
    #
    # Returns the Schemaform record identifier expression for this tuple, if known.
    
-   def id()
+   def id()      
       check do
          assert( @source.exists?, "source record not identifiable in this context" )
       end
@@ -48,25 +63,13 @@ class Tuple < Expression
    # field refers to this tuple (if identifiable).
 
    def find_matching( relation, on_field = nil )
-      assert( @source.exists?, "source record not identifiable in this context" )
-      relation = RelationExpression.new( @schema.relation(relation) )
-      relation 
-      if
-         
-         
+      fail
+      # assert( @source.exists?, "source record not identifiable in this context" )
+      # relation = RelationExpression.new( @schema.relation(relation) )
+      # relation 
    end
    
    
-   #
-   # Returns a FieldExpression for any of this tuple's fields.
-   
-   def method_missing(  )
-      if @type.member?()
-   end
-   
-   
-   
-
 end # Tuple
 end # Expressions
 end # Schemaform

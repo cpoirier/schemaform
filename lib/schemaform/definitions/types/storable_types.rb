@@ -19,17 +19,39 @@
 # =============================================================================================
 
 
+require Schemaform.locate("scalar_type.rb")
+
+
 #
-# A base class for all Relations within Schemaform (Entities, Subsets, etc.)
+# Schemaform storable types.
 
 module Schemaform
-class Schema
-class Relation < Base
+module Definitions
+module Types
 
-   def initialize( schema )
-      super( schema )
+class StorableType < ScalarType
+   def storage_type()
+      return self
    end
+end
 
-end # Relation
-end # Schema
+
+class BinaryType < StorableType
+end
+
+class TextType < StorableType
+end
+
+class NumericType < StorableType
+end
+
+class IntegerType < NumericType
+end
+
+class DateTimeType < StorableType
+end
+
+
+end # Types
+end # Definitions
 end # Schemaform

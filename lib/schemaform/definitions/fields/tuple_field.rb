@@ -19,22 +19,41 @@
 # =============================================================================================
 
 
+
 module Schemaform
-module Expressions
-class Expression
-   include QualityAssurance
+module Definitions
+module Fields
 
-   def initialize( type )
-      check do
-         type_check( :type, type, Type )
-      end
+class TupleField < Field
+   def initialize( context, name, &block )
+      super( context, name, nil )
+      @tuple = Tuple.new( context.schema, self )
+      @dsl   = DefinitionLanguage.new( self )
       
-      @type   = type
-      @schema = type.schema
+      @dsl.instance_eval(&block) if block_given?
    end
+   
+   attr_reader :tuple
+      
+   def resolve_type( resolution_path = [], tuple_expression = nil )
+      @tuple.resolve_types( resolution_path + [self], tuple_expression )
+   end
+   
+   # ==========================================================================================
+   #                                     Definition Language
+   # ==========================================================================================
+   
+   class DefinitionLanguage < Tuple::DefinitionLanguage
+      def initialize( tuple_field )
+         super( tuple_field.tuple )
+      end
+   end
+   
 end
-end # Expressions
+
+
+
+
+end # Fields
+end # Definitions
 end # Schemaform
-
-
-Dir[Schemaform.locate("expressions/*.rb")].each {|path| require path}

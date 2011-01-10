@@ -23,7 +23,7 @@
 # A description of a single tuple (or "row") of data.  
 
 module Schemaform
-class Schema
+module Definitions
 class Tuple < Base
    
    def initialize( schema, naming_context = nil )
@@ -94,7 +94,16 @@ class Tuple < Base
    
    
    
+   # ==========================================================================================
+   #                                          Operations
+   # ==========================================================================================
    
+   
+   def each_field()
+      @fields.each do |name, field|
+         yield( field )
+      end
+   end
    
    def add_field( field )
       check do
@@ -118,16 +127,18 @@ class Tuple < Base
    end
    
    
-   def resolve_types( resolution_path = [] )
+   def resolve_types( resolution_path = [], tuple_expression = nil )
+      tuple_expression = Expressions::Tuple.new(self) if tuple_expression.nil?
       @fields.each do |name, field|
-         field.resolve_type( resolution_path )
+         field.resolve_type( resolution_path, tuple_expression )
          puts "#{field.path.join(".")}: #{field.type.description}" if field.type.exists?
       end
    end
    
 
 end # Tuple
-end # Schema
+end # Definitions
 end # Schemaform
 
 require Schemaform.locate("field.rb")
+require Schemaform.locate("schemaform/expressions/tuple.rb")

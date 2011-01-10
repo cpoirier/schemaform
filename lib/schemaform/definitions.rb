@@ -19,41 +19,9 @@
 # =============================================================================================
 
 
+require Schemaform.locate("definitions/base.rb")
+require Schemaform.locate("definitions/schema.rb")
 
-module Schemaform
-class Schema
-module Fields
-
-class TupleField < Field
-   def initialize( context, name, &block )
-      super( context, name, nil )
-      @tuple = Tuple.new( context.schema, self )
-      @dsl   = DefinitionLanguage.new( self )
-      
-      @dsl.instance_eval(&block) if block_given?
-   end
-   
-   attr_reader :tuple
-      
-   def resolve_type( resolution_path = [] )
-      @tuple.resolve_types( resolution_path + [self] )
-   end
-   
-   # ==========================================================================================
-   #                                     Definition Language
-   # ==========================================================================================
-   
-   class DefinitionLanguage < Tuple::DefinitionLanguage
-      def initialize( tuple_field )
-         super( tuple_field.tuple )
-      end
-   end
-   
+Dir[Schemaform.locate("definitions/*.rb")].each do |path| 
+   require path
 end
-
-
-
-
-end # Fields
-end # Schema
-end # Schemaform

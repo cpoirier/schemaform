@@ -19,28 +19,20 @@
 # =============================================================================================
 
 
-
 module Schemaform
-class Schema
-class Field < Base
-   def initialize( context, name, type )
-      super( context.schema )
-      @context = context
-      @name    = name
-      @path    = context.path + [name]
-      @type    = type
-   end
+module Definitions
+module TypeConstraints
+class LengthConstraint
 
-   attr_reader :name, :type, :path, :context
-
-   def resolve_type( resolution_path = [] )
-      fail_unless_overridden
+   def initialize( length )
+      @length = length
    end
    
-   
-end # Field
-end # Schema
+   def accepts?( value )
+      return value.length <= @length
+   end
+
+end # LengthConstraint
+end # TypeConstraints
+end # Definitions
 end # Schemaform
-
-
-Dir[Schemaform.locate("fields/*.rb")].each {|path| require path}

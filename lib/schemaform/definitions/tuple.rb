@@ -24,28 +24,24 @@
 
 module Schemaform
 module Definitions
-class Tuple < Base
+class Tuple < Type
    
-   def initialize( schema, naming_context = nil )
+   def initialize( schema, naming_context = nil, &block )
       super( schema )
-      @context    = naming_context
-      @fields     = {}
-      @type       = nil
-      @expression = nil
+      @naming_context = naming_context || self   # Where we get the tuple expression when resolving fields
+      @fields         = {}                       # name => Formula
+      @expression     = Expressions::Tuple.new(self)
+      @closed         = false
+      
+      DefinitionLanguage.new(self).instance_eval(&block) if block_given?
    end
    
-   attr_reader :expression
-   
-   def name()
-      return @context.name if @context.exists?
-      return nil
+   attr_reader :naming_context, :expression
+
+   def dimensionality()
+      1
    end
-   
-   def path()
-      return @context.path if @context.exists?
-      return []
-   end
-   
+      
       
    
    # ==========================================================================================
@@ -54,8 +50,9 @@ class Tuple < Base
    
    
    class DefinitionLanguage
-      def initialize( tuple )
-         @tuple = tuple
+      def initialize( tuple, schema = nil )
+         @tuple  = tuple
+         @schema = schema || @tuple.schema
       end
       
    
@@ -64,13 +61,14 @@ class Tuple < Base
       # block instead of a type.
    
       def required( name, base_type = nil, modifiers = {}, required = true, &block )
+         field_class = required ? FieldTypes::RequiredField : FieldTypes::OptionalField
          @tuple.instance_eval do
             if block_given? then
                check { assert(base_type.nil?, "specify either a type or a block, not both") }
-               add_field Fields::TupleField.new(self, name, &block)
+               subtuple = Tuple.new( @schema, @naming_context, &block )
+               add_field name, field_class.new(self, subtuple)
             else
-               field_type = Types::ScalarType.new( base_type, modifiers, @schema )
-               add_field Fields::StoredField.new(self, name, field_type, required)
+               add_field name, field_class.new(self, TypeReference.new(@schema, base_type, modifiers))
             end
          end
       end
@@ -91,7 +89,7 @@ class Tuple < Base
       def derived( name, proc = nil, &block )
          @tuple.instance_eval do
             check { assert(proc.nil? ^ block.nil?, "expected a Proc or block") }
-            add_field Fields::DerivedField.new(self, name, proc.nil? ? block : proc)
+            add_field name, FieldTypes::DerivedField.new(self, proc.nil? ? block : proc)
          end
       end   
    end
@@ -109,13 +107,14 @@ class Tuple < Base
       end
    end
    
-   def add_field( field )
+   def add_field( name, field )
       check do
-         assert( @expression.nil? && @type.nil?, "fields cannot be added to a Tuple after type resolution has begun" )
-         assert( !@fields.member?(field.name), "a Tuple cannot contain two fields with the same name [#{field.name}]" )
+         assert( !@closed              , "fields cannot be added to a Tuple after type resolution has begun" )
+         assert( !@fields.member?(name), "a Tuple cannot contain two fields with the same name [#{name}]"    )
       end
       
-      @fields[field.name] = field
+      @fields[name] = field
+      field.name = name
    end
 
    def field?( name )
@@ -129,28 +128,24 @@ class Tuple < Base
    def length()
       @fields.count
    end
+
+
    
-   def close()
-      if @expression.nil? then
-         each_field do |field|
-            field.close()
-         end
-      
-         @expression = Expressions::Tuple.new(self) 
-      end
-   end
-   
-   def resolve( supervisor, tuple_expression = nil )
-      return @type unless @type.nil?
-      supervisor.monitor(self, @context.path) do
-         close()
-         
-         @type = Types::TupleType.new(@schema) do |type|
+   # ==========================================================================================
+   #                                       Type Operations
+   # ==========================================================================================
+
+   def resolve( supervisor )
+      unless @closed
+         @closed = true
+         supervisor.monitor(self, path()) do
             each_field do |field|
-               type.add field.name, field.resolve( supervisor, tuple_expression.nil? ? @expression : tuple_expression )
+               field.resolve( supervisor )
             end
          end
       end
+      
+      self
    end
    
 

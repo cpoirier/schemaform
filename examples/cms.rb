@@ -38,7 +38,7 @@ def example_cms_schema( context_schema = nil )
       
       define :Role do
          required :name                  , String, :length => 40
-         # derived  :parents               , lambda {|role| role.find_matching(:RoleInheritance).return_only(:parent => :role)}
+         derived  :parents               , lambda {|role| role.find_matching(:RoleInheritance)} # .return_only(:parent => :role)}
          # derived  :ancestors             , lambda {|role| role.find_matching(:RoleInheritance).follow(:RoleInheritance, :role, :parent).return_only(:parent => :role)}
          # derived  :closure               , lambda {|role| relation(:role => role.id) + role.ancestors}
          # derived  :capabilities          , lambda {|role| role.closure.join(:RoleCapability).return_only(:capability)}
@@ -46,7 +46,7 @@ def example_cms_schema( context_schema = nil )
          optional :something do
             required :x, String
             optional :y, String
-            derived  :z, lambda {|role| role.something.x}
+            derived  :z, lambda {|role| role.parents}
          end
       end
 

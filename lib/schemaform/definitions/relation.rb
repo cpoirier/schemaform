@@ -24,11 +24,16 @@
 
 module Schemaform
 module Definitions
-class Relation < Base
+class Relation < Type
 
    def initialize( schema )
       super( schema )
    end
+   
+   def dimensionality()
+      return 2
+   end
+   
 
 end # Relation
 end # Definitions

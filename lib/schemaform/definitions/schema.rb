@@ -19,6 +19,7 @@
 # =============================================================================================
 
 require 'monitor'
+require Schemaform.locate("base.rb")
 
 
 #
@@ -29,34 +30,33 @@ require 'monitor'
 
 module Schemaform
 module Definitions
-class Schema
-   include QualityAssurance
-   extend  QualityAssurance
+class Schema < Base
+   extend QualityAssurance
    
-   def initialize( name, context_schema = nil, &block )
-      @context     = context_schema
-      @name        = name
-      @path        = (@context.nil? ? [] : @context.path) + [@name]
+   def initialize( name, schema = nil, &block )
+      super( schema, name, true )
+      
+      @root        = schema ? schema.root : self
       @dsl         = DefinitionLanguage.new( self )
       @connection  = nil
       @types       = {}
       @subschemas  = {}
       @relations   = {}
       @entities    = {}
-      @supervisor  = @context.exists? ? @context.supervisor : TypeResolutionSupervisor.new( self )
+      @supervisor  = schema ? schema.supervisor : TypeResolutionSupervisor.new( self )
          
       @types_are_resolved = false
 
-      if @context.nil? then
-         register_type :all     , Types::ScalarType.new(   nil, [], self )
-         register_type :any     , Types::ScalarType.new(   @types[:all]  )
-         register_type :void    , Types::ScalarType.new(   @types[:all]  )
+      if @root == self then
+         register_type :all     , ScalarType.new(   nil, self     )
+         register_type :any     , ScalarType.new(   @types[:all]  )
+         register_type :void    , ScalarType.new(   @types[:all]  )
          
-         register_type :binary  , Types::BinaryType.new(   @types[:any ] )   
-         register_type :text    , Types::TextType.new(     @types[:any ] ) 
-         register_type :datetime, Types::DateTimeType.new( @types[:text] ) 
-         register_type :real    , Types::NumericType.new(  @types[:any ] )    
-         register_type :integer , Types::IntegerType.new(  @types[:real] )    
+         register_type :binary  , BinaryType.new(   @types[:any ] )   
+         register_type :text    , TextType.new(     @types[:any ] ) 
+         register_type :datetime, DateTimeType.new( @types[:text] ) 
+         register_type :real    , NumericType.new(  @types[:any ] )    
+         register_type :integer , IntegerType.new(  @types[:real] )    
 
          @dsl.instance_eval do
             define_type :boolean   , :integer, :range  => 0..1
@@ -72,17 +72,17 @@ class Schema
                                     :load  => lambda {|s| year, month, day, hour, minute, second, micros = *s.split(/[:\-\.] /); Time.utc(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i, micros.to_i)}  
          end
       else
-         @context.register_subschema( self )
+         schema.register_subschema( self )
       end
       
       @dsl.instance_eval(&block) if block_given?
-      resolve_types() if @context.nil? || @context.types_are_resolved?
+      resolve_types() if schema.nil? || schema.types_are_resolved?
    end
    
-   attr_reader :name, :path, :context, :supervisor
+   attr_reader :root, :supervisor
    
    def any_type()
-      return @context.exists? ? @context.any_type : @types[:any]
+      return find_type(:any)
    end
       
    
@@ -116,17 +116,18 @@ class Schema
       #
       # Defines a simple (non-entity) type.  
    
-      def define_type( name, base_type = nil, modifiers = {} )
+      def define_type( name, base_name = nil, modifiers = {} )
          @schema.instance_eval do
             check do
                type_check( :name, name, [Symbol, Class] )
                type_check( :modifiers, modifiers, Hash )
             end
-         
+
+            base_type = TypeReference.new(self, base_name, modifiers)
             if name.is_a?(Class) then
-               register_type name, Types::MappedType.new(name, base_type, modifiers, modifiers.delete(:store), modifiers.delete(:load), self)
+               register_type name, MappedType.new(name, base_type, modifiers.delete(:store), modifiers.delete(:load), @schema)
             else
-               register_type name, Types::ScalarType.new(base_type, modifiers, self)
+               register_type name, base_type
             end
          end
       end
@@ -139,11 +140,6 @@ class Schema
    # ==========================================================================================
    
    
-   def top()
-      return self if @context.nil?
-      return @context.top
-   end
-   
    def types_are_resolved?()
       @types_are_resolved
    end
@@ -152,11 +148,10 @@ class Schema
    #
    # Returns the Type for a name (Symbol or Class), or nil.
    
-   def find( name, fail_if_missing = true, simple_check = false )
+   def find_type( name, fail_if_missing = true, simple_check = false )
       return name if name.is_a?(Type)
-      check do
-         type_check( :name, name, [Symbol, Class] )
-      end
+      check { type_check(:name, name, [Symbol, Class]) }
+
       
       #
       # If attempting to resolve a Class, we will try for the requested Class or any of its
@@ -166,13 +161,13 @@ class Schema
       type = nil
       if name.is_a?(Class) and !simple_check then
          name.ancestors.each do |current|
-            break if type = find(current, false, true)
+            break if type = find_type(current, false, true)
          end
       else
          if @types.member?(name) then
             type = @types[name]
-         elsif @context.exists? then
-            type = @context.find(name, false, true)
+         elsif @schema.exists? then
+            type = @schema.find_type(name, false, true)
          end
       end   
 
@@ -187,14 +182,14 @@ class Schema
    #
    # Returns an Entity or other named Relation for a name (Symbol), or nil.
    
-   def relation( name, fail_if_missing = true )
+   def find_relation( name, fail_if_missing = true )
       return name if name.is_a?(Relation)
       check do
          type_check( :name, name, Symbol )
       end
       
       return @relations[name] if @relations.member?(name)
-      return @context.relation(name, fail_if_messing) if @context
+      return @schema.relation(name, fail_if_messing) if @schema
       return nil unless fail_if_missing
       fail( "unrecognized relation [#{name}]" )
    end
@@ -208,13 +203,14 @@ class Schema
    #                                      Type Resolution
    # ==========================================================================================
 
-
+   
    #
    # Resolves types for all fields within the Schema.
    
    def resolve_types()
       return if @types_are_resolved
-      
+
+
       #
       # Resolve any defined types first.
       
@@ -383,10 +379,10 @@ require Schemaform.locate("entity.rb"         )
 module Schemaform
 module Definitions
 class Schema
-   define_type_constraint :length, Types::TextType   , TypeConstraints::LengthConstraint
-   define_type_constraint :length, Types::BinaryType , TypeConstraints::LengthConstraint
-   define_type_constraint :range , Types::NumericType, TypeConstraints::RangeConstraint
-   define_type_constraint :check , Type              , TypeConstraints::CheckConstraint
+   define_type_constraint :length, TextType   , TypeConstraints::LengthConstraint
+   define_type_constraint :length, BinaryType , TypeConstraints::LengthConstraint
+   define_type_constraint :range , NumericType, TypeConstraints::RangeConstraint
+   define_type_constraint :check , Type       , TypeConstraints::CheckConstraint
 end
 end
 end

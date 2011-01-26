@@ -20,53 +20,27 @@
 
 
 
+#
+# A type that maps a Ruby type into the Schemaform typing system.
+
 module Schemaform
 module Definitions
-module Fields
+class MappedType < ScalarType
 
-class TupleField < Field
-   def initialize( context, name, &block )
-      super( context, name, nil )
-      @tuple = Tuple.new( context.schema, self )
-      @dsl   = DefinitionLanguage.new( self )
-
-      @dsl.instance_eval(&block) if block_given?
-   end
-   
-   attr_reader :tuple
+   def initialize( ruby_type, base_type, storer = nil, loader = nil, schema = nil )
+      super( base_type, schema )
+      @ruby_type = ruby_type
+      @storer    = storer
+      @loader    = loader
       
-   def resolve( supervisor, tuple_expression = nil )
-      supervisor.monitor(self, path()) do
-         close()
-         @tuple.resolve( supervisor, tuple_expression )
-      end
+      self.name = ruby_type
    end
    
-   def close()
-      if @expression.nil? then
-         @tuple.close()
-         @expression = Expressions::Fields::TupleField.new(self) 
-      end
+   def mapped_type()
+      return self 
    end
-   
-   
-   
-   
-   # ==========================================================================================
-   #                                     Definition Language
-   # ==========================================================================================
-   
-   class DefinitionLanguage < Tuple::DefinitionLanguage
-      def initialize( tuple_field )
-         super( tuple_field.tuple )
-      end
-   end
-   
-end
 
-
-
-
-end # Fields
+   
+end # MappedType
 end # Definitions
 end # Schemaform

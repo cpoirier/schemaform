@@ -19,6 +19,7 @@
 # =============================================================================================
 
 
+
 #
 # The base type for all scalar types.  Scalar types follow a type hierarchy for assignment and 
 # join compatibility, and can have a set of TypeConstraints that limit the domain of the 
@@ -26,25 +27,14 @@
 
 module Schemaform
 module Definitions
-module Types
 class ScalarType < Type
 
    #
    # If you specify a Schema, it will be used.  If not, it will be pulled from the base Type.
    
-   def initialize( base_type = nil, constraints = [], schema = nil )
-      super( base_type.is_a?(Type) ? base_type.schema : schema )
-      
+   def initialize( base_type = nil, schema = nil )
+      super( schema || base_type.schema )
       @base_type = base_type
-      @resolved  = base_type.nil? || base_type.is_a?(ScalarType)
-      
-      if constraints.is_an?(Array) then
-         @constraints = constraints
-      else
-         @constraints = nil
-         @modifiers   = constraints
-         @resolved    = false
-      end
    end
    
    def dimensionality()
@@ -58,43 +48,15 @@ class ScalarType < Type
    end
 
    def base_type()
-      resolve() unless @resolved
       @base_type
    end
    
-   def constraints()
-      resolve() unless @resolved
-      @constraints
-   end
-   
    def complete?()
-      resolve() unless @resolved
       return storage_type.exists? && mapped_type.exists?
    end
    
-   
-   #
-   # Resolves the base type and constraints for this type, converting a deferred type to 
-   # a functional one.
-   
    def resolve( supervisor = nil )
-      return self if @resolved
-      supervisor = @schema.supervisor if supervisor.nil?
-      supervisor.monitor(self, "type [#{@schema.path.join(".")}.#{description()}]") do
-         @base_type = @schema.find( @base_type )
-         @base_type.resolve( supervisor )
-   
-         if @constraints.nil? && @modifiers.exists? then
-            @constraints = []
-            @modifiers.each do |name, value|
-               if constraint = @schema.build_constraint(name, value, @base_type) then
-                  @constraints << constraint
-               end
-            end
-         end
-         
-         self
-      end
+      self
    end
    
    
@@ -103,7 +65,6 @@ class ScalarType < Type
    
    def storage_type()
       if !defined?(@storage_type) then
-         resolve()
          @storage_type = @base_type.nil? ? nil : @base_type.storage_type
       end
       
@@ -115,7 +76,6 @@ class ScalarType < Type
    
    def mapped_type()
       if !defined?(@mapped_type) then
-         resolve()
          @mapped_type = @base_type.nil? ? nil : @base_type.mapped_type
       end
    
@@ -127,7 +87,6 @@ class ScalarType < Type
    # Returns true IFF the specified value is an instance of this Type.
    
    def accepts?( value )
-      resolve()
       return false if @base_type.nil?
       return false unless @base_type.accepts?(value)
       @constraints.each do |constraint|
@@ -142,7 +101,6 @@ class ScalarType < Type
    # Returns true if a value of this type can be compared to a value of the other.
    
    def comparable_to?( other )
-      resolve()
       return true if storage_type.exists? && storage_type == other.storage_type
       return true if assignable_from?( other )
       return other.assignable_from?( self )
@@ -152,7 +110,6 @@ class ScalarType < Type
    # Returns true if a variable of this type can accept a value of the other.
    
    def assignable_from?( source )
-      resolve()
       return source.typeof?(self)
    end
    
@@ -162,7 +119,6 @@ class ScalarType < Type
    def typeof?( other )
       return true if other == self
 
-      resolve()
       current = self
       while current = current.base_type
          return true if other == current
@@ -175,17 +131,16 @@ class ScalarType < Type
    # Iterates over this class and every base type.
    
    def each_effective_type()
-      resolve()
-
       current = self
       while current
          yield( current )
-         current = current.base_type
+         current = current.base_type.resolve(@schema.supervisor)
       end
    end
    
 
 end # ScalarType
-end # Types
 end # Definitions
 end # Schemaform
+
+Dir[Schemaform.locate("scalar_types/*.rb")].each {|path| require path}

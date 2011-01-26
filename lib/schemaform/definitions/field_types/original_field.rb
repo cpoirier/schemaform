@@ -20,27 +20,26 @@
 
 
 
+#
+# An original (as opposed to derived) field.
+
 module Schemaform
 module Definitions
-module Fields
+module FieldTypes
+   
+class OriginalField < Field
 
-class DerivedField < Field
-   def initialize( context, name, block )
-      super( context, name, nil )
-      @block = block
+   def initialize( container, type )
+      super( container )
+      @type = type
    end
    
-   def resolve( supervisor, tuple_expression = nil )
-      supervisor.monitor( self, path() ) do
-         result_expression = @block.call( tuple_expression )
-         type_check( "derived field result", result_expression, Expressions::Expression )
-         result_expression.resolve( supervisor )
-      end
+   def resolve( supervisor )
+      supervisor.monitor(self, path()) { @type.resolve(supervisor) }
    end
-end
 
+end # OriginalField
 
-
-end # Fields
+end # FieldTypes
 end # Definitions
 end # Schemaform

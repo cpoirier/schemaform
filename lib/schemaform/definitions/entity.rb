@@ -39,9 +39,9 @@ class Entity < Relation
       @keys        = {}
       @enumeration = nil
       @dsl         = DefinitionLanguage.new( self )
+      @expression  = nil
       
-      @reference_type = Types::ReferenceType.new( self )
-      # @tuple_type     = Types::TupleType.new( schema )
+      @reference_type = ReferenceType.new( self )
       
       if @parent then
          @parent.heading.each_field do |field|
@@ -52,7 +52,7 @@ class Entity < Relation
       @dsl.instance_eval(&block) if block_given?
    end
    
-   attr_reader :schema, :name, :path, :parent, :heading, :keys, :reference_type
+   attr_reader :schema, :name, :path, :parent, :heading, :keys, :reference_type, :expression
    attr_accessor :enumeration
 
    def has_parent?()
@@ -82,9 +82,10 @@ class Entity < Relation
       @enumeration.exists?
    end
    
-   def resolve( supervisor )
+   def resolve( supervisor = nil )
       supervisor.monitor(self, path()) do
          warn_once( "TODO: key resolution and other entity-level resolution jobs" )
+         warn_once( "TODO: create a relation type" )
          @heading.resolve(supervisor)
       end
    end

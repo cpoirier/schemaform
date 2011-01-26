@@ -29,6 +29,12 @@ module Schemaform
 module Expressions
 class Relation < Expression
    
+   def initialize()
+      super()
+   end
+   
+   
+   
    # def initialize( tuple, keys = [] )
    #    @tuple = tuple
    #    @keys  = keys
@@ -169,3 +175,5 @@ class Relation < Expression
 end # Relation
 end # Expressions
 end # Schemaform
+
+Dir[Schemaform.locate("relations/*.rb")].each {|path| require path}

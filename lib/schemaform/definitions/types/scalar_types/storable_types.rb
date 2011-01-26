@@ -19,25 +19,35 @@
 # =============================================================================================
 
 
+
 #
-# A type that represents a reference to an entity.
+# Schemaform storable types.
 
 module Schemaform
 module Definitions
-module Types
-class ReferenceType < ScalarType
 
-   def initialize( entity )
-      super( entity.has_parent? ? entity.parent.reference_type : entity.schema.any_type )
-      self.name = entity.name
+class StorableType < ScalarType
+   def storage_type()
+      return self
    end
-   
-   def description()
-      return name.to_s + " reference"
-   end
-   
+end
 
-end # ReferenceType
-end # Tyeps
+
+class BinaryType < StorableType
+end
+
+class TextType < StorableType
+end
+
+class NumericType < StorableType
+end
+
+class IntegerType < NumericType
+end
+
+class DateTimeType < StorableType
+end
+
+
 end # Definitions
 end # Schemaform

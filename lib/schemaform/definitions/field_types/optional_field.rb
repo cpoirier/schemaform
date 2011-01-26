@@ -18,36 +18,25 @@
 #             limitations under the License.
 # =============================================================================================
 
-require 'rubygems'
-require 'sequel'
+
+require Schemaform.locate("original_field.rb")
 
 
 #
-# Provides the primary bridge between a Schema and the physical storage in which is lives.  
+# An optional field -- one that will show a default value if not specifically set.
 
 module Schemaform
-module Runtime
-class Connection
+module Definitions
+module FieldTypes
+   
+class OptionalField < OriginalField
 
-   def initialize( schema, connection_string, properties = {} )
-      assert( !properties.member?(:server), "in order to maintain proper transaction protection, the Sequel :servers parameter cannot be used with Schemaform" )
-
-      @schema    = schema.root
-      @read_only = !!properties.delete(:read_only)
-      @prefix    = properties.delete(:prefix)
-      @sequel    = Sequel.connect( connection_string, properties )
-      
-      update_database_structures
+   def initialize( container, type )
+      super( container, type )
    end
-   
-   
-   
-   
-   def update_database_structures()
-      @sequel[]
-   end
-   
 
-end # Runtime
-end # Connection
+end # OptionalField
+
+end # FieldTypes
+end # Definitions
 end # Schemaform

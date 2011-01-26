@@ -18,36 +18,24 @@
 #             limitations under the License.
 # =============================================================================================
 
-require 'rubygems'
-require 'sequel'
-
 
 #
-# Provides the primary bridge between a Schema and the physical storage in which is lives.  
+# A type that represents a reference to an entity.
 
 module Schemaform
-module Runtime
-class Connection
+module Definitions
+class ReferenceType < ScalarType
 
-   def initialize( schema, connection_string, properties = {} )
-      assert( !properties.member?(:server), "in order to maintain proper transaction protection, the Sequel :servers parameter cannot be used with Schemaform" )
-
-      @schema    = schema.root
-      @read_only = !!properties.delete(:read_only)
-      @prefix    = properties.delete(:prefix)
-      @sequel    = Sequel.connect( connection_string, properties )
-      
-      update_database_structures
+   def initialize( entity )
+      super( entity.has_parent? ? entity.parent.reference_type : entity.schema.any_type )
+      self.name = entity.name
    end
    
-   
-   
-   
-   def update_database_structures()
-      @sequel[]
+   def description()
+      return name.to_s + " reference"
    end
    
 
-end # Runtime
-end # Connection
+end # ReferenceType
+end # Definitions
 end # Schemaform

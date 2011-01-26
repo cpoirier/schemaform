@@ -32,15 +32,8 @@ class Type < Base
 
    def initialize( schema )
       super( schema )
-      @name = nil
    end
-   
-   attr_accessor :name
-   
-   def named?()
-      @name.exists?
-   end
-   
+      
 
    #
    # Returns a human-readable summary of the type, for inclusion in diagnostic output.
@@ -79,6 +72,6 @@ end # Type
 end # Definitions
 end # Schemaform
 
+Dir[Schemaform.locate("types/*.rb")].each { |path| require path }
 
-Dir[Schemaform.locate("types/*.rb")].each {|path| require path}
 

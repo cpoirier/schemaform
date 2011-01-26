@@ -28,54 +28,50 @@ module Schemaform
 module Expressions
 class Tuple < Expression
 
-   def initialize( definition )
-      super()
-      @definition = definition
-      @fields     = {}
-      
-      #
-      # Define one Field expression for each field in the Tuple definition, and
-      # make it directly available on the interface.
-      
-      @definition.each_field do |field_definition|                  
-         @fields[field_definition.name] = field = field_definition.expression
-         instance_class.class_eval do
-            define_method field_definition.name do |*args|
-               return field
-            end
-         end
-      end
-   end
-   
    attr_reader :fields
    
-   def resolve( supervisor )
-      @definition.resolve( supervisor )
-   end
-   
-   
-   
-   #
-   # Returns the Schemaform record identifier expression for this tuple, if known.
-   
-   def id()      
-      check do
-         assert( @source.exists?, "source record not identifiable in this context" )
-      end
 
-      fail( "TODO: generate ID expression" )
-   end
-   
-   
    #
    # Returns a subset of some relation for which the first (or specified) reference
    # field refers to this tuple (if identifiable).
 
    def find_matching( relation, on_field = nil )
-      fail
-      # assert( @source.exists?, "source record not identifiable in this context" )
-      # relation = RelationExpression.new( @schema.relation(relation) )
-      # relation 
+      relation_definition = @definition.schema.find_relation(relation)
+      assert( relation_definition, "unable to find relation [#{relation}]" )
+      return relation_definition.expression
+   end
+   
+
+
+
+   
+   # ==========================================================================================
+   #                                   For Schemaform Use Only
+   # ==========================================================================================
+
+   def initialize( definition )
+      super()
+      @definition = definition
+      @fields     = {}
+   end
+   
+   def resolve( supervisor )
+      @definition.resolve( supervisor )
+   end
+
+   def method_missing( symbol, *args, &block )
+      if @definition.field?(symbol) then
+         field_definition = @definition.fields[symbol]
+         field_expression = field_definition.expression
+         @fields[symbol]  = field_expression
+         instance_class.class_eval do
+            define_method symbol do |*args|
+               return field_expression
+            end
+         end
+      else
+         raise NoMethodError.new(nil, symbol, self)
+      end
    end
    
    

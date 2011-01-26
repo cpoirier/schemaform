@@ -24,24 +24,17 @@ require Schemaform.locate("base.rb")
 module Schemaform
 module Definitions
 class Field < Base
-   def initialize( context, name, type )
-      super( context.schema )
-      type_check( :context, context, Tuple )
-      
-      @context    = context
-      @name       = name
-      @path       = context.path + [name]
-      @type       = type
-      @expression = nil
+   def initialize( container )
+      type_check( :container, container, Tuple )
+      super( container.schema )
+      @container = container
    end
    
-   attr_reader :name, :type, :path, :context, :expression
-
    def close()
       @expression = Expressions::Field.new(self) if @expression.nil?
    end
    
-   def resolve( supervisor, tuple_expression = nil )
+   def resolve( supervisor )
       fail_unless_overridden( self, :resolve )
    end
    
@@ -51,4 +44,4 @@ end # Definitions
 end # Schemaform
 
 
-Dir[Schemaform.locate("fields/*.rb")].each {|path| require path}
+Dir[Schemaform.locate("field_types/*.rb")].each {|path| require path}

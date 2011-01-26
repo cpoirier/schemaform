@@ -19,32 +19,29 @@
 # =============================================================================================
 
 
-require Schemaform.locate("scalar_type.rb")
+require Schemaform.locate("base.rb")
 
 
 #
-# A type that maps a Ruby type into the Schemaform typing system.
+# A structure that captures a by-name reference to a Type, with some set of modifiers.
 
 module Schemaform
 module Definitions
-module Types
-class MappedType < ScalarType
+class TypeReference < Base
 
-   def initialize( ruby_type, base_type, constraints = [], storer = nil, loader = nil, schema = nil )
-      super( base_type, constraints, schema )
-      @ruby_type = ruby_type
-      @storer    = storer
-      @loader    = loader
-      
-      name = ruby_type
+   def initialize( schema, type_name, modifiers = {} )
+      super( schema )
+      @type_name = type_name
+      @modifiers = modifiers
    end
    
-   def mapped_type()
-      return self 
+   def resolve( supervisor )
+      return @type unless @type.nil?
+      @type = supervisor.monitor( self, path() ) do
+         ConstrainedType.build( @schema.find_type(@type_name), @modifiers )
+      end
    end
 
-   
-end # MappedType
-end # Types
+end # TypeReference
 end # Definitions
 end # Schemaform

@@ -19,28 +19,24 @@
 # =============================================================================================
 
 
+require Schemaform.locate("original_field.rb")
+
+
+#
+# A required field -- one that must be present within its context Tuple.
 
 module Schemaform
 module Definitions
-module Fields
-
-class StoredField < Field
-   def initialize( context, name, type, required )
-      super( context, name, type )
-      @required = required
-   end
-      
-   def resolve( supervisor, tuple_expression = nil )
-      supervisor.monitor(self, path()) do
-         @type.resolve( supervisor )
-      end
-   end
+module FieldTypes
    
-end
+class RequiredField < OriginalField
 
+   def initialize( container, type )
+      super( container, type )
+   end
 
+end # RequiredField
 
-
-end # Fields
+end # FieldTypes
 end # Definitions
 end # Schemaform

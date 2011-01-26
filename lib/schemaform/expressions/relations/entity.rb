@@ -18,36 +18,23 @@
 #             limitations under the License.
 # =============================================================================================
 
-require 'rubygems'
-require 'sequel'
 
+require Schemaform.locate("base_relation.rb")
 
 #
-# Provides the primary bridge between a Schema and the physical storage in which is lives.  
+# Expression wrapper for a base entity
 
 module Schemaform
-module Runtime
-class Connection
+module Expressions
+module Relations
+class Entity < BaseRelation
 
-   def initialize( schema, connection_string, properties = {} )
-      assert( !properties.member?(:server), "in order to maintain proper transaction protection, the Sequel :servers parameter cannot be used with Schemaform" )
-
-      @schema    = schema.root
-      @read_only = !!properties.delete(:read_only)
-      @prefix    = properties.delete(:prefix)
-      @sequel    = Sequel.connect( connection_string, properties )
-      
-      update_database_structures
-   end
-   
-   
-   
-   
-   def update_database_structures()
-      @sequel[]
+   def initialize( definition )
+      super( definition )
    end
    
 
-end # Runtime
-end # Connection
+end # Entity
+end # Relations
+end # Expressions
 end # Schemaform

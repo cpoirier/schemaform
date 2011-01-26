@@ -20,19 +20,45 @@
 
 
 #
-# A base class for elements of the Schema, providing a route back.
+# A base class for elements of the Schema, providing a route back.  Also deals with standard
+# naming, for things that need it.
 
 module Schemaform
 module Definitions
 class Base
    include QualityAssurance
 
-   def initialize( schema )
-      type_check( :schema, schema, Schema )
+   def initialize( schema, name = nil, allow_nil_schema = false )
+      type_check( :schema, schema, Schema, allow_nil_schema )
       @schema = schema
+      self.name = name if name
    end
 
-   attr_reader :schema
+   attr_reader :schema, :path
+   
+   def path=( path )
+      @path = path.flatten
+   end
+   
+   def name=( name )
+      self.path = @schema.nil? ? [name] : [@schema.path, name]
+   end
+   
+   def name()
+      return nil if !defined?(@path) || @path.nil? || @path.empty?
+      return @path.last
+   end
+      
+   def full_name()
+      return nil if !defined?(@path) || @path.nil?
+      return @path.join(".")
+   end
+   
+   def named?()
+      !name().nil?
+   end
+   
+
 
 end # Base
 end # Definitions

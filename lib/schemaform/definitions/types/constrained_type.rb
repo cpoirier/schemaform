@@ -18,36 +18,36 @@
 #             limitations under the License.
 # =============================================================================================
 
-require 'rubygems'
-require 'sequel'
-
 
 #
-# Provides the primary bridge between a Schema and the physical storage in which is lives.  
+# A specialized, non-base type that wraps constraints around another type.
 
 module Schemaform
-module Runtime
-class Connection
+module Definitions
+class ConstrainedType < Type
 
-   def initialize( schema, connection_string, properties = {} )
-      assert( !properties.member?(:server), "in order to maintain proper transaction protection, the Sequel :servers parameter cannot be used with Schemaform" )
-
-      @schema    = schema.root
-      @read_only = !!properties.delete(:read_only)
-      @prefix    = properties.delete(:prefix)
-      @sequel    = Sequel.connect( connection_string, properties )
+   def initialize( underlying_type, constraints )
+      super( underlying_type.schema )
+      @underlying_type = underlying_type
+      @constraints     = constraints
+   end
+   
+   def self.build( underlying_type, modifiers )
+      constraints = []
+      modifiers.each do |name, value|
+         if constraint = underlying_type.schema.build_constraint(name, value, underlying_type) then
+            constraints << constraint
+         end
+      end
       
-      update_database_structures
+      constraints.empty? ? underlying_type : new( underlying_type, constraints )      
    end
    
-   
-   
-   
-   def update_database_structures()
-      @sequel[]
+   def dimensionality()
+      @underlying_type.dimensionality()
    end
    
 
-end # Runtime
-end # Connection
+end # ConstrainedType
+end # Definitions
 end # Schemaform

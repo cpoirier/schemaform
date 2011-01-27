@@ -59,7 +59,7 @@ module Schemaform
       # Verifies that object is (one) of the specified type(s).
 
       def type_check( name, object, type, allow_nil = false )
-         return true unless @@quality_assurance__checks_enabled
+         return true unless @@quality_assurance__checks_enabled || check_even_if_checks_disabled
          return true if object.nil? && allow_nil
 
          message = ""
@@ -151,7 +151,7 @@ module Schemaform
       #                                       Assertions
       # =======================================================================================
 
-
+      
       #
       # Raises an AssertionFailure if the condition is false.
 
@@ -199,6 +199,18 @@ module Schemaform
             return error_return
          end
       end
+      
+      #
+      # Adds data to any Bug thrown within the block.
+      
+      def annotate_errors( data )
+         begin
+            yield()
+         rescue Bug
+            $!.annotate( data )
+            raise
+         end
+      end
 
 
 
@@ -214,6 +226,20 @@ module Schemaform
       def initialize( message, data = nil )
          super( message )
          @data = data
+      end
+      
+      def annotate( additional_data )
+         @data = {} if @data.nil?
+         @data.update( additional_data )
+      end
+      
+      def print_data( stream = $stderr )         
+         unless @data.nil? || @data.empty?
+            width = @data.keys.inject(0){|max, current| width = current.to_s.length; width > max ? width : max }
+            @data.each do |key, value|
+               stream.puts( key.to_s.rjust(width) + ": " + value.to_s )
+            end
+         end
       end
    end
 
@@ -248,5 +274,13 @@ class Exception
 
       return value
    end
-
+   
+   def relative_backtrace( relative_to )
+      relative_to = File.expand_path(relative_to.sub(/\/$/, "")) + "/"
+      backtrace.collect do |line|
+         path, rest = line.split(":", 2)
+         absolute_path = File.expand_path(path)
+         (absolute_path.start_with?(relative_to) ? absolute_path[(relative_to.length)..-1] : absolute_path) + ":" + rest
+      end
+   end
 end

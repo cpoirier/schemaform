@@ -32,8 +32,11 @@ class DerivedField < Field
    
    def resolve( supervisor )
       supervisor.monitor(self, path()) do
-         result_expression = @block.call( @container.naming_context.expression )
-         result_expression.resolve( supervisor )
+         annotate_errors( :field => full_name() ) do 
+            result_expression = @block.call( naming_context.expression )
+            type_check( :result_expression, result_expression, Expressions::Expression )
+            result_expression.resolve( supervisor )
+         end
       end   
    end
 end

@@ -104,8 +104,26 @@ end
 
 if $0 == __FILE__ then
    
-   require "../lib/schemaform.rb"
-   schema     = example_cms_schema()
-   # connection = schema.connect( ARGV.empty? ? "sqlite:///tmp/example_cms.db" : ARGV.shift )
+   begin
+      require "../lib/schemaform.rb"
+      schema     = example_cms_schema()
+      # connection = schema.connect( ARGV.empty? ? "sqlite:///tmp/example_cms.db" : ARGV.shift )
+   
+   rescue ScriptError => e
+      raise unless e.respond_to?("failsafe_message")
 
+      if ENV.member?("TM_LINE_NUMBER") then 
+         e.print_data( $stderr )
+         raise
+      else
+         $stderr.puts ("=" * e.failsafe_message.length)
+         $stderr.puts e.failsafe_message
+         e.print_data( $stderr )
+         e.relative_backtrace(File.dirname(__FILE__))[0..15].each{ |line| $stderr.puts line }
+         exit 2
+      end
+   end
+   
 end
+
+

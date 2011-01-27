@@ -35,12 +35,13 @@ class Entity < Relation
       @name        = name
       @path        = schema.path + [name]
       @parent      = parent
-      @heading     = Tuple.new( schema, self )
+      @heading     = Tuple.new( schema )
       @keys        = {}
       @enumeration = nil
       @dsl         = DefinitionLanguage.new( self )
       @expression  = nil
-      
+
+      @heading.path   = @path
       @reference_type = ReferenceType.new( self )
       
       if @parent then

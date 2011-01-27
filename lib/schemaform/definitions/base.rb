@@ -36,12 +36,16 @@ class Base
 
    attr_reader :schema, :path
    
+   def parent()
+      @schema
+   end
+   
    def path=( path )
       @path = path.flatten
    end
    
    def name=( name )
-      self.path = @schema.nil? ? [name] : [@schema.path, name]
+      self.path = parent().nil? ? [name] : [parent().path, name]
    end
    
    def name()

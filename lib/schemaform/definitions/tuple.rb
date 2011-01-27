@@ -27,12 +27,14 @@ module Definitions
 class Tuple < Type
    
    def initialize( schema, naming_context = nil, &block )
+      type_check( :naming_context, naming_context, Tuple, true )
       super( schema )
+      
       @naming_context = naming_context || self   # Where we get the tuple expression when resolving fields
       @fields         = {}                       # name => Formula
       @expression     = Expressions::Tuple.new(self)
       @closed         = false
-      
+
       DefinitionLanguage.new(self).instance_eval(&block) if block_given?
    end
    

@@ -27,11 +27,16 @@ class Field < Base
    def initialize( container )
       type_check( :container, container, Tuple )
       super( container.schema )
-      @container = container
+      @container  = container
+      @expression = Expressions::Field.new(self)
    end
    
-   def close()
-      @expression = Expressions::Field.new(self) if @expression.nil?
+   def parent()
+      @container
+   end
+   
+   def naming_context()
+      @container.naming_context
    end
    
    def resolve( supervisor )

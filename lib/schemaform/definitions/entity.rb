@@ -57,7 +57,7 @@ class Entity < Relation
    end
    
    def description()
-      full_name()
+      full_name() + " " + super
    end
    
    #
@@ -83,11 +83,11 @@ class Entity < Relation
       @enumeration.exists?
    end
    
-   def resolve( supervisor )
+   def resolve()
       supervisor.monitor(self) do
          warn_once( "TODO: key resolution and other entity-level resolution jobs" )
          warn_once( "TODO: create a relation type" )
-         @heading.resolve(supervisor)
+         @heading.resolve()
          self
       end
    end

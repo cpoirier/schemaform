@@ -39,7 +39,7 @@ class Field < Definition
       tuple.root_tuple
    end
    
-   def resolve( supervisor )
+   def resolve()
       fail_unless_overridden( self, :resolve )
    end
    

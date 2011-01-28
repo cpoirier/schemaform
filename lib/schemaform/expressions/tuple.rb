@@ -55,8 +55,8 @@ class Tuple < Expression
       @fields     = {}
    end
    
-   def resolve( supervisor )
-      @definition.resolve( supervisor )
+   def resolve()
+      @definition.resolve()
    end
 
    def method_missing( symbol, *args, &block )
@@ -69,6 +69,7 @@ class Tuple < Expression
                return field_expression
             end
          end
+         return send( symbol, *args, &block )
       else
          raise NoMethodError.new(nil, symbol, self)
       end

@@ -18,8 +18,6 @@
 #             limitations under the License.
 # =============================================================================================
 
-require File.expand_path(File.dirname(__FILE__) + "/quality_assurance/interface_contracts.rb")
-
 module Schemaform
 
    #
@@ -31,12 +29,6 @@ module Schemaform
             @@quality_assurance__checks_enabled   = true
             @@quality_assurance__warnings_enabled = true
          end
-
-         unless calling_class.name == "Schemaform"
-            calling_class.instance_eval do
-               include InterfaceContracts
-            end
-         end
       end
 
 
@@ -47,11 +39,13 @@ module Schemaform
       
       #
       # Provides a context in which interface contract enforcement and other quality code 
-      # can be easily disabled at run-time.  
+      # can be easily disabled at run-time.  If you pass in a value, it will be passed to
+      # your block, and returned after (even if your block wasn't called).
       
-      def check()
-         return unless @@quality_assurance__checks_enabled
-         yield
+      def check( value = nil )
+         return value unless @@quality_assurance__checks_enabled
+         yield( value )
+         value
       end
 
       
@@ -201,8 +195,9 @@ module Schemaform
       end
       
       #
-      # Adds data to any Bug thrown within the block.
-      
+      # Adds data to any Bug thrown within the block.  Note: annotations will not
+      # overwrite existing data (which is probably what you want).
+            
       def annotate_errors( data )
          begin
             yield()
@@ -229,8 +224,7 @@ module Schemaform
       end
       
       def annotate( additional_data )
-         @data = {} if @data.nil?
-         @data.update( additional_data )
+         @data = additional_data.merge( @data || {} )
       end
       
       def print_data( stream = $stderr )         
@@ -291,5 +285,25 @@ class Exception
       end
       
       relative_backtrace
+   end
+   
+   def generate_report( stream = $stderr, backtrace_levels = 15 )
+      if ENV.member?("TM_LINE_NUMBER") then 
+         print_data( stream ) if respond_to?("print_data")
+         raise
+      else
+         heading   = "CAUGHT #{self.class.name}"
+         message   = failsafe_message
+         backtrace = relative_backtrace(Schemaform.locate("schemaform/.."))
+         
+         stream.puts ("=" * message.length)
+         stream.puts heading
+         stream.puts message
+         print_data( stream ) if respond_to?("print_data")
+         stream.puts ""
+         backtrace[0..(backtrace_levels - 1)].each{ |line| stream.puts "   #{line}" }
+         stream.puts "   . . . skipping #{backtrace.length - backtrace_levels} more levels" if backtrace.length > backtrace_levels
+         return 2
+      end
    end
 end

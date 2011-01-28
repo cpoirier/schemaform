@@ -58,7 +58,7 @@ class Type < Definition
    #
    # Resolves any deferred typing information within the Type.
    
-   def resolve( supervisor )
+   def resolve()
       fail_unless_overridden( self, :resolve )
    end
 

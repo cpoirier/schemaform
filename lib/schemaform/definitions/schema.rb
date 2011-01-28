@@ -171,7 +171,7 @@ class Schema < Definition
          assert( type.exists?, name.is_a?(Symbol) ? "unrecognized type [#{name}]" : "no type mapping for class [#{name.name}]" )
       end
       
-      return type
+      return type.resolve()
    end
    
    
@@ -209,14 +209,14 @@ class Schema < Definition
       # Resolve any defined types first.
       
       @types.each do |name, type|
-         type.resolve(@supervisor)
+         type.resolve()
       end
    
       #
       # Resolve entities next.
       
       @entities.each do |name, entity|
-         entity.resolve(@supervisor)
+         entity.resolve()
       end
       
       #
@@ -242,15 +242,15 @@ class Schema < Definition
       end
       
       def monitor( scope )
-         assert( !@entries.member?(scope), "detected loop while trying to resolve #{scope_description(scope)}" )
-         type = @entries.push_and_pop(scope) { yield() }
-         check do
-            assert( type.exists?, "unable to resolve type for [#{class_name_for(scope)} #{scope.full_name}]" )
-            type_check( :type, type, Type )
+         description = scope_description(scope)
+         assert( !@entries.member?(scope), "detected loop while trying to resolve #{description}" )
+         return annotate_errors( :scope => description ) do
+            check( @entries.push_and_pop(scope) { yield() } ) do |type|
+               assert( type.exists?, "unable to resolve type for [#{class_name_for(scope)} #{scope.full_name}]" )
+               type_check( :type, type, Type )
+               warn_once( "DEBUG: #{description} resolved to #{class_name_for(type)} #{type.description}" ) unless scope.is_a?(TypeReference)
+            end
          end
-
-         warn_once( "DEBUG: #{scope_description(scope)} resolved to #{class_name_for(type)} #{type.description}" ) unless scope.is_a?(TypeReference)
-         return type
       end
 
    private

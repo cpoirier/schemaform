@@ -37,8 +37,8 @@ class Field < Expression
       @definition.name
    end
    
-   def resolve( supervisor )
-      @definition.resolve( supervisor )
+   def resolve()
+      @definition.resolve()
    end
    
 

@@ -28,12 +28,12 @@ class DerivedField < Field
       @block = block
    end
    
-   def resolve( supervisor )
+   def resolve()
       supervisor.monitor(self) do
          annotate_errors( :field => full_name() ) do 
             result_expression = @block.call( root_tuple.expression )
             type_check( :result_expression, result_expression, Expressions::Expression )
-            result_expression.resolve( supervisor )
+            result_expression.resolve()
          end
       end   
    end

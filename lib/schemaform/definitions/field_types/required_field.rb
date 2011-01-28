@@ -29,7 +29,7 @@ module Schemaform
 module Definitions
 class RequiredField < OriginalField
 
-   def initialize( container, type )
+   def initialize( container, type = nil )
       super( container, type )
    end
 

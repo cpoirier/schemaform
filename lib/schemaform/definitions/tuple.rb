@@ -43,7 +43,7 @@ class Tuple < Type
    end
    
    def description()
-      pairs = @fields.collect{|name, field| ":" + name.to_s + " => " + field.resolve(schema.supervisor).description}
+      pairs = @fields.collect{|name, field| ":" + name.to_s + " => " + field.resolve().description}
       "{" + pairs.join(", ") + "}"
    end
 
@@ -75,10 +75,11 @@ class Tuple < Type
          @tuple.instance_eval do
             if block_given? then
                check { assert(base_type.nil?, "specify either a type or a block, not both") }
-               field = add_field( name, field_class.new(self, nil) )
+               field = add_field( name, field_class.new(self) )
                field.type = Tuple.new( field, &block )
             else
-               add_field name, field_class.new(self, TypeReference.new(schema, base_type, modifiers))
+               field = add_field( name, field_class.new(self) )
+               field.type = TypeReference.new( field, base_type, modifiers )
             end
          end
       end
@@ -146,12 +147,12 @@ class Tuple < Type
    #                                       Type Operations
    # ==========================================================================================
 
-   def resolve( supervisor )
+   def resolve()
       unless @closed
          @closed = true
          supervisor.monitor(self) do
             each_field do |field|
-               field.resolve( supervisor )
+               field.resolve()
             end
             self
          end

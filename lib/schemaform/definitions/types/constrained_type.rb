@@ -51,8 +51,8 @@ class ConstrainedType < Type
       @underlying_type.dimensionality()
    end
 
-   def resolve( supervisor )
-      @underlying_type.resolve(supervisor)
+   def resolve()
+      @underlying_type.resolve()
    end
 
    def description()

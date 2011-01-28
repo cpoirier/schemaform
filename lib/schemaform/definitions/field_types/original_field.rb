@@ -27,15 +27,15 @@ module Schemaform
 module Definitions
 class OriginalField < Field
 
-   def initialize( container, type )
+   def initialize( container, type = nil )
       super( container )
       @type = type
    end
    
    attr_accessor :type
    
-   def resolve( supervisor )
-      supervisor.monitor(self) { @type.resolve(supervisor) }
+   def resolve()
+      supervisor.monitor(self) { @type.resolve() }
    end
 
 end # OriginalField

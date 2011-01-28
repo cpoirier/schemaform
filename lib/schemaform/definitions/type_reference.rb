@@ -34,7 +34,7 @@ class TypeReference < Definition
       @type      = nil
    end
    
-   def resolve( supervisor )
+   def resolve()
       return @type unless @type.nil?
       @type = supervisor.monitor( self ) do
          ConstrainedType.build( schema.find_type(@type_name), @modifiers )

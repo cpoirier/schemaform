@@ -74,7 +74,13 @@ class Definition
       schema.context ? schema.context.root : schema
    end
    
+   def to_s()
+      full_name()
+   end
 
+   def supervisor()
+      schema.supervisor()
+   end
 
 end # Definition
 end # Schemaform

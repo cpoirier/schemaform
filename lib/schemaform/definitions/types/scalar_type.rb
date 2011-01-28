@@ -56,7 +56,7 @@ class ScalarType < Type
       return storage_type.exists? && mapped_type.exists?
    end
    
-   def resolve( supervisor = nil )
+   def resolve()
       self
    end
    
@@ -135,7 +135,7 @@ class ScalarType < Type
       current = self
       while current
          yield( current )
-         current = current.base_type.resolve(schema.supervisor)
+         current = current.base_type.resolve()
       end
    end
    

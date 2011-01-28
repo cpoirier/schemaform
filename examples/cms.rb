@@ -112,18 +112,8 @@ if $0 == __FILE__ then
    rescue SystemExit ; raise
    rescue Interrupt, Errno::EPIPE ; exit
    rescue Exception => e
-      raise unless e.respond_to?("failsafe_message")
-
-      if ENV.member?("TM_LINE_NUMBER") then 
-         e.print_data( $stderr ) if e.respond_to?("print_data")
-         raise
-      else
-         $stderr.puts ("=" * e.failsafe_message.length)
-         $stderr.puts e.failsafe_message
-         e.print_data( $stderr ) if e.respond_to?("print_data")
-         e.relative_backtrace(Schemaform.locate("schemaform/.."))[0..15].each{ |line| $stderr.puts line }
-         exit 2
-      end
+      raise unless e.respond_to?("generate_report")
+      exit e.generate_report()
    end
    
 end

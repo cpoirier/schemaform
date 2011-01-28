@@ -27,7 +27,7 @@ class Expression
    def initialize()
    end
    
-   def resolve( supervisor )
+   def resolve()
       fail_unless_overridden( self, :resolve )
    end
 

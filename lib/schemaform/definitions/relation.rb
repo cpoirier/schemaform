@@ -18,6 +18,7 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("type.rb")
 
 #
 # A base class for all Relations within Schemaform (Entities, Subsets, etc.)
@@ -26,12 +27,25 @@ module Schemaform
 module Definitions
 class Relation < Type
 
-   def initialize( schema )
-      super( schema )
+   def initialize( context, heading, name = nil )
+      super( context, name )
+      @heading = heading
    end
+   
+   attr_reader :heading
    
    def dimensionality()
       return 2
+   end
+   
+   def description()
+      "[" + @heading.description + "]"
+   end
+   
+   def resolve( supervisor )
+      supervisor.monitor(self) do
+         @heading.resolve(supervisor)
+      end
    end
    
 

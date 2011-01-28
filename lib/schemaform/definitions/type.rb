@@ -18,7 +18,6 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("base.rb")
 
 
 #
@@ -28,10 +27,10 @@ require Schemaform.locate("base.rb")
 
 module Schemaform
 module Definitions
-class Type < Base
+class Type < Definition
 
-   def initialize( schema )
-      super( schema )
+   def initialize( context, name = nil )
+      super( context, name )
    end
       
 
@@ -39,8 +38,12 @@ class Type < Base
    # Returns a human-readable summary of the type, for inclusion in diagnostic output.
    
    def description()
-      return name.to_s if named?
-      return "<unnamed type of dimensionality #{dimensionality}>"
+      return full_name.to_s if named?
+      return "an unnamed " + case dimensionality
+         when 0 ; "scalar"
+         when 1 ; "tuple"
+         when 2 ; "relation"
+      end + " type"
    end
 
    

@@ -35,6 +35,7 @@ class CheckConstraint
       @proc.call( value )
    end
 
+
 end # CheckConstraint
 end # TypeConstraints
 end # Definitions

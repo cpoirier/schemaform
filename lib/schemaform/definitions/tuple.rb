@@ -26,23 +26,32 @@ module Schemaform
 module Definitions
 class Tuple < Type
    
-   def initialize( schema, naming_context = nil, &block )
-      type_check( :naming_context, naming_context, Tuple, true )
-      super( schema )
+   def initialize( context, &block )
+      super( context )
       
-      @naming_context = naming_context || self   # Where we get the tuple expression when resolving fields
-      @fields         = {}                       # name => Formula
-      @expression     = Expressions::Tuple.new(self)
-      @closed         = false
+      @fields     = {}                       
+      @expression = Expressions::Tuple.new(self)
+      @closed     = false
 
       DefinitionLanguage.new(self).instance_eval(&block) if block_given?
    end
    
-   attr_reader :naming_context, :expression
+   attr_reader :expression, :root_tuple, :fields
 
    def dimensionality()
       1
    end
+   
+   def description()
+      pairs = @fields.collect{|name, field| ":" + name.to_s + " => " + field.resolve(schema.supervisor).description}
+      "{" + pairs.join(", ") + "}"
+   end
+
+   def root_tuple()
+      return context.tuple.root_tuple if context.is_a?(Field)
+      return self
+   end
+   
       
       
    
@@ -52,9 +61,8 @@ class Tuple < Type
    
    
    class DefinitionLanguage
-      def initialize( tuple, schema = nil )
-         @tuple  = tuple
-         @schema = schema || @tuple.schema
+      def initialize( tuple )
+         @tuple = tuple
       end
       
    
@@ -63,14 +71,14 @@ class Tuple < Type
       # block instead of a type.
    
       def required( name, base_type = nil, modifiers = {}, required = true, &block )
-         field_class = required ? FieldTypes::RequiredField : FieldTypes::OptionalField
+         field_class = required ? RequiredField : OptionalField
          @tuple.instance_eval do
             if block_given? then
                check { assert(base_type.nil?, "specify either a type or a block, not both") }
-               subtuple = Tuple.new( @schema, @naming_context, &block )
-               add_field name, field_class.new(self, subtuple)
+               field = add_field( name, field_class.new(self, nil) )
+               field.type = Tuple.new( field, &block )
             else
-               add_field name, field_class.new(self, TypeReference.new(@schema, base_type, modifiers))
+               add_field name, field_class.new(self, TypeReference.new(schema, base_type, modifiers))
             end
          end
       end
@@ -91,7 +99,7 @@ class Tuple < Type
       def derived( name, proc = nil, &block )
          @tuple.instance_eval do
             check { assert(proc.nil? ^ block.nil?, "expected a Proc or block") }
-            add_field name, FieldTypes::DerivedField.new(self, proc.nil? ? block : proc)
+            add_field name, DerivedField.new(self, proc.nil? ? block : proc)
          end
       end   
    end
@@ -117,6 +125,7 @@ class Tuple < Type
       
       @fields[name] = field
       field.name = name
+      field
    end
 
    def field?( name )
@@ -140,10 +149,11 @@ class Tuple < Type
    def resolve( supervisor )
       unless @closed
          @closed = true
-         supervisor.monitor(self, path()) do
+         supervisor.monitor(self) do
             each_field do |field|
                field.resolve( supervisor )
             end
+            self
          end
       end
       

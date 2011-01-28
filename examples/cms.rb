@@ -109,17 +109,19 @@ if $0 == __FILE__ then
       schema     = example_cms_schema()
       # connection = schema.connect( ARGV.empty? ? "sqlite:///tmp/example_cms.db" : ARGV.shift )
    
-   rescue ScriptError => e
+   rescue SystemExit ; raise
+   rescue Interrupt, Errno::EPIPE ; exit
+   rescue Exception => e
       raise unless e.respond_to?("failsafe_message")
 
       if ENV.member?("TM_LINE_NUMBER") then 
-         e.print_data( $stderr )
+         e.print_data( $stderr ) if e.respond_to?("print_data")
          raise
       else
          $stderr.puts ("=" * e.failsafe_message.length)
          $stderr.puts e.failsafe_message
-         e.print_data( $stderr )
-         e.relative_backtrace(File.dirname(__FILE__))[0..15].each{ |line| $stderr.puts line }
+         e.print_data( $stderr ) if e.respond_to?("print_data")
+         e.relative_backtrace(Schemaform.locate("schemaform/.."))[0..15].each{ |line| $stderr.puts line }
          exit 2
       end
    end

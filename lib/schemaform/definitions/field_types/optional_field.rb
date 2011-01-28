@@ -27,8 +27,6 @@ require Schemaform.locate("original_field.rb")
 
 module Schemaform
 module Definitions
-module FieldTypes
-   
 class OptionalField < OriginalField
 
    def initialize( container, type )
@@ -36,7 +34,5 @@ class OptionalField < OriginalField
    end
 
 end # OptionalField
-
-end # FieldTypes
 end # Definitions
 end # Schemaform

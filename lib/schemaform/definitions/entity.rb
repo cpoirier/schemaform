@@ -29,23 +29,19 @@ module Schemaform
 module Definitions
 class Entity < Relation
       
-   def initialize( schema, name, parent = nil, &block )
-      super( schema )
+   def initialize( name, base_entity, schema, &block )
+      super( base_entity || schema, Tuple.new(self), name )
 
-      @name        = name
-      @path        = schema.path + [name]
-      @parent      = parent
-      @heading     = Tuple.new( schema )
+      @base_entity = base_entity
       @keys        = {}
       @enumeration = nil
       @dsl         = DefinitionLanguage.new( self )
-      @expression  = nil
+      @expression  = Expressions::Relations::Entity.new( self )
 
-      @heading.path   = @path
       @reference_type = ReferenceType.new( self )
       
-      if @parent then
-         @parent.heading.each_field do |field|
+      if @base_entity then
+         @base_entity.heading.each_field do |field|
             @tuple.add_field field
          end
       end
@@ -53,26 +49,30 @@ class Entity < Relation
       @dsl.instance_eval(&block) if block_given?
    end
    
-   attr_reader :schema, :name, :path, :parent, :heading, :keys, :reference_type, :expression
+   attr_reader :keys, :reference_type, :expression
    attr_accessor :enumeration
 
-   def has_parent?()
-      @parent.exists?
+   def has_base_entity?()
+      @base_entity.exists?
+   end
+   
+   def description()
+      full_name()
    end
    
    #
-   # Returns true if the named field is defined in this or any parent entity.
+   # Returns true if the named field is defined in this or any base entity.
    
    def field?( name )
       return @heading.field?(name)
    end
    
    #
-   # Returns true if the named key is defined in this or any parent entity.
+   # Returns true if the named key is defined in this or any base entity.
    
    def key?( name )
       return true if @keys.member?(name)
-      return @parent.key?(name) if @parent.exists?
+      return @base_entity.key?(name) if @base_entity.exists?
       return false
    end
    
@@ -83,11 +83,12 @@ class Entity < Relation
       @enumeration.exists?
    end
    
-   def resolve( supervisor = nil )
-      supervisor.monitor(self, path()) do
+   def resolve( supervisor )
+      supervisor.monitor(self) do
          warn_once( "TODO: key resolution and other entity-level resolution jobs" )
          warn_once( "TODO: create a relation type" )
          @heading.resolve(supervisor)
+         self
       end
    end
    
@@ -172,8 +173,8 @@ class Entity < Relation
       def enumerate( *data, &block )
          @entity.instance_eval do
             check do
-               assert( @parent.nil?     , "enumerated entities cannot have a parent" )
-               assert( @enumeration.nil?, "entity is already enumerated"             )
+               assert( @base_entity.nil?, "enumerated entities cannot have a base" )
+               assert( @enumeration.nil?, "entity is already enumerated"           )
             end
             
             if @heading.empty? then

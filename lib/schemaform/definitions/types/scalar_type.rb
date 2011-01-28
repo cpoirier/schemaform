@@ -32,8 +32,9 @@ class ScalarType < Type
    #
    # If you specify a Schema, it will be used.  If not, it will be pulled from the base Type.
    
-   def initialize( base_type = nil, schema = nil )
-      super( schema || base_type.schema )
+   def initialize( base_type = nil, schema = nil, name = nil )
+      super( schema || base_type.schema, name )
+      warn_once( "ScalarType.new() interface seems wrong" )
       @base_type = base_type
    end
    
@@ -134,7 +135,7 @@ class ScalarType < Type
       current = self
       while current
          yield( current )
-         current = current.base_type.resolve(@schema.supervisor)
+         current = current.base_type.resolve(schema.supervisor)
       end
    end
    

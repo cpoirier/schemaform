@@ -24,20 +24,28 @@
 # naming, for things that need it.
 
 module Schemaform
-module Definitions
-class Base
+class Definition
    include QualityAssurance
 
-   def initialize( schema, name = nil, allow_nil_schema = false )
-      type_check( :schema, schema, Schema, allow_nil_schema )
-      @schema = schema
-      self.name = name if name
+   def initialize( context, name = nil )
+      @context = context
+      @name    = name
    end
 
-   attr_reader :schema, :path
+   attr_reader :context
    
-   def parent()
+   def schema()
+      if @schema.nil? then
+         @schema = self.is_a?(Definitions::Schema) ? self : context.schema
+         self.name = @name if @name
+      end
       @schema
+   end
+   
+   def path()
+      return @path if defined?(@path) && @path.exists?
+      return @context.path if @context.exists?
+      return nil
    end
    
    def path=( path )
@@ -45,25 +53,33 @@ class Base
    end
    
    def name=( name )
-      self.path = parent().nil? ? [name] : [parent().path, name]
+      self.path = context.nil? ? [name] : [context.path, name]
    end
    
    def name()
-      return nil if !defined?(@path) || @path.nil? || @path.empty?
-      return @path.last
+      return nil if path.nil? || path.empty?
+      return path.last
    end
       
    def full_name()
-      return nil if !defined?(@path) || @path.nil?
-      return @path.join(".")
+      return nil if path.nil?
+      return path.join(".")
    end
    
    def named?()
       !name().nil?
    end
    
+   def root()
+      schema.context ? schema.context.root : schema
+   end
+   
 
 
-end # Base
-end # Definitions
+end # Definition
 end # Schemaform
+
+
+Dir[Schemaform.locate("definitions/*.rb")].each do |path| 
+   require path
+end

@@ -25,8 +25,6 @@
 
 module Schemaform
 module Definitions
-module FieldTypes
-   
 class OriginalField < Field
 
    def initialize( container, type )
@@ -34,12 +32,12 @@ class OriginalField < Field
       @type = type
    end
    
+   attr_accessor :type
+   
    def resolve( supervisor )
-      supervisor.monitor(self, path()) { @type.resolve(supervisor) }
+      supervisor.monitor(self) { @type.resolve(supervisor) }
    end
 
 end # OriginalField
-
-end # FieldTypes
 end # Definitions
 end # Schemaform

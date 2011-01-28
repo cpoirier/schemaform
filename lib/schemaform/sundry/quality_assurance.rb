@@ -93,7 +93,7 @@ module Schemaform
          if error then
             message += " for [#{name}]" if name
             actual  = object.class.name
-            message = message + " (found " + actual + ")"
+            message = message + ", found " + actual
             raise TypeCheckFailure.new( message )
          end
 
@@ -275,12 +275,21 @@ class Exception
       return value
    end
    
-   def relative_backtrace( relative_to )
+   def relative_backtrace( relative_to, skip_qa_routines = true )
       relative_to = File.expand_path(relative_to.sub(/\/$/, "")) + "/"
-      backtrace.collect do |line|
+
+      relative_backtrace = []
+      backtrace.each do |line|
          path, rest = line.split(":", 2)
          absolute_path = File.expand_path(path)
-         (absolute_path.start_with?(relative_to) ? absolute_path[(relative_to.length)..-1] : absolute_path) + ":" + rest
+         
+         if skip_qa_routines && absolute_path == __FILE__ && rest =~ /check|assert/ then
+            relative_backtrace.clear
+         else
+            relative_backtrace << (absolute_path.start_with?(relative_to) ? absolute_path[(relative_to.length)..-1] : absolute_path) + ":" + rest
+         end
       end
+      
+      relative_backtrace
    end
 end

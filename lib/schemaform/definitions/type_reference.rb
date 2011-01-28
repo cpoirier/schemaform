@@ -19,26 +19,25 @@
 # =============================================================================================
 
 
-require Schemaform.locate("base.rb")
-
 
 #
 # A structure that captures a by-name reference to a Type, with some set of modifiers.
 
 module Schemaform
 module Definitions
-class TypeReference < Base
+class TypeReference < Definition
 
-   def initialize( schema, type_name, modifiers = {} )
-      super( schema )
+   def initialize( context, type_name, modifiers = {} )
+      super( context, type_name )
       @type_name = type_name
       @modifiers = modifiers
+      @type      = nil
    end
    
    def resolve( supervisor )
       return @type unless @type.nil?
-      @type = supervisor.monitor( self, path() ) do
-         ConstrainedType.build( @schema.find_type(@type_name), @modifiers )
+      @type = supervisor.monitor( self ) do
+         ConstrainedType.build( schema.find_type(@type_name), @modifiers )
       end
    end
 

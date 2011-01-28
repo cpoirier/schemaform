@@ -19,7 +19,6 @@
 # =============================================================================================
 
 require 'monitor'
-require Schemaform.locate("base.rb")
 
 
 #
@@ -30,24 +29,21 @@ require Schemaform.locate("base.rb")
 
 module Schemaform
 module Definitions
-class Schema < Base
-   extend QualityAssurance
+class Schema < Definition
    
-   def initialize( name, schema = nil, &block )
-      super( schema, name, true )
+   def initialize( name, context_schema = nil, &block )
+      super( context_schema, name )
       
-      @root        = schema ? schema.root : self
       @dsl         = DefinitionLanguage.new( self )
-      @connection  = nil
       @types       = {}
       @subschemas  = {}
       @relations   = {}
       @entities    = {}
-      @supervisor  = schema ? schema.supervisor : TypeResolutionSupervisor.new( self )
+      @supervisor  = context_schema ? context_schema.supervisor : TypeResolutionSupervisor.new( self )
          
       @types_are_resolved = false
 
-      if @root == self then
+      if root == self then
          register_type :all     , ScalarType.new(   nil, self     )
          register_type :any     , ScalarType.new(   @types[:all]  )
          register_type :void    , ScalarType.new(   @types[:all]  )
@@ -72,14 +68,14 @@ class Schema < Base
                                     :load  => lambda {|s| year, month, day, hour, minute, second, micros = *s.split(/[:\-\.] /); Time.utc(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i, micros.to_i)}  
          end
       else
-         schema.register_subschema( self )
+         context_schema.register_subschema( self )
       end
       
       @dsl.instance_eval(&block) if block_given?
-      resolve_types() if schema.nil? || schema.types_are_resolved?
+      resolve_types() if context_schema.nil? || context_schema.types_are_resolved?
    end
    
-   attr_reader :root, :supervisor
+   attr_reader :supervisor
    
    def any_type()
       return find_type(:any)
@@ -108,7 +104,7 @@ class Schema < Base
                assert_and_warn_once( parent.nil?, "TODO: derived class support" )
             end
             
-            register_entity Entity.new( self, name, parent, &block )
+            register_entity Entity.new( name, parent, self, &block )
          end
       end
    
@@ -167,7 +163,7 @@ class Schema < Base
          if @types.member?(name) then
             type = @types[name]
          elsif @schema.exists? then
-            type = @schema.find_type(name, false, true)
+            type = schema.find_type(name, false, true)
          end
       end   
 
@@ -184,12 +180,10 @@ class Schema < Base
    
    def find_relation( name, fail_if_missing = true )
       return name if name.is_a?(Relation)
-      check do
-         type_check( :name, name, Symbol )
-      end
+      type_check( :name, name, Symbol )
       
       return @relations[name] if @relations.member?(name)
-      return @schema.relation(name, fail_if_messing) if @schema
+      return schema.relation(name, fail_if_messing) if schema
       return nil unless fail_if_missing
       fail( "unrecognized relation [#{name}]" )
    end
@@ -246,20 +240,28 @@ class Schema < Base
          @schema  = schema
          @entries = []
       end
-
-      def monitor( scope, scope_name )
-         scope_name = scope_name.join(".") if scope_name.is_an?(Array)
-         assert( !@entries.member?(scope), "detected loop while trying to resolve [#{scope_name}]" )
+      
+      def monitor( scope )
+         assert( !@entries.member?(scope), "detected loop while trying to resolve #{scope_description(scope)}" )
          type = @entries.push_and_pop(scope) { yield() }
          check do
-            assert( type.exists?, "unable to resolve type for [#{scope_name}]" )
+            assert( type.exists?, "unable to resolve type for [#{class_name_for(scope)} #{scope.full_name}]" )
             type_check( :type, type, Type )
          end
-         
-         warn_once( "DEBUG: #{scope_name} resolved to #{type.description}" ) unless scope.is_a?(Type)
+
+         warn_once( "DEBUG: #{scope_description(scope)} resolved to #{class_name_for(type)} #{type.description}" ) unless scope.is_a?(TypeReference)
          return type
       end
 
+   private
+      def class_name_for( object )
+         object.class.name.gsub("Schemaform::Definitions::", "")
+      end
+      
+      def scope_description( scope )
+         "#{class_name_for(scope)} #{scope.full_name}"
+      end
+      
    end # TypeResolutionSupervisor
 
    

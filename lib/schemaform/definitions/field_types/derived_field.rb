@@ -22,28 +22,22 @@
 
 module Schemaform
 module Definitions
-module FieldTypes
-
 class DerivedField < Field
-   def initialize( container, block )
-      super( container )
+   def initialize( tuple, block )
+      super( tuple )
       @block = block
    end
    
    def resolve( supervisor )
-      supervisor.monitor(self, path()) do
+      supervisor.monitor(self) do
          annotate_errors( :field => full_name() ) do 
-            result_expression = @block.call( naming_context.expression )
+            result_expression = @block.call( root_tuple.expression )
             type_check( :result_expression, result_expression, Expressions::Expression )
             result_expression.resolve( supervisor )
          end
       end   
    end
 end
-
-
-
-end # FieldTypes
 end # Definitions
 end # Schemaform
 

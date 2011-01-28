@@ -33,7 +33,7 @@ class MappedType < ScalarType
       @storer    = storer
       @loader    = loader
       
-      self.name = ruby_type
+      self.path = [ruby_type.class.name]
    end
    
    def mapped_type()

@@ -24,12 +24,11 @@
 
 module Schemaform
 module Definitions
-class Enumeration
-   include QualityAssurance
-
+class Enumeration < Definition
    attr_reader :entity, :definitions
    
    def initialize( entity )
+      super( entity )
       @entity      = entity
       @definitions = []
    end

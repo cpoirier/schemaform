@@ -18,25 +18,25 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("base.rb")
 
+#
+# A Field in a Tuple.
 
 module Schemaform
 module Definitions
-class Field < Base
-   def initialize( container )
-      type_check( :container, container, Tuple )
-      super( container.schema )
-      @container  = container
+class Field < Definition
+   def initialize( tuple )
+      type_check( :tuple, tuple, Tuple )
+      super( tuple )
       @expression = Expressions::Field.new(self)
    end
    
-   def parent()
-      @container
-   end
+   attr_reader :expression
    
-   def naming_context()
-      @container.naming_context
+   alias tuple context
+   
+   def root_tuple()
+      tuple.root_tuple
    end
    
    def resolve( supervisor )

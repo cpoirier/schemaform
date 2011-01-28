@@ -43,8 +43,20 @@ class ConstrainedType < Type
       constraints.empty? ? underlying_type : new( underlying_type, constraints )      
    end
    
+   def method_missing( symbol, *args, &block )
+      @underlying_type.send( symbol, *args, &block )
+   end
+   
    def dimensionality()
       @underlying_type.dimensionality()
+   end
+
+   def resolve( supervisor )
+      @underlying_type.resolve(supervisor)
+   end
+
+   def description()
+      @underlying_type.description()
    end
    
 

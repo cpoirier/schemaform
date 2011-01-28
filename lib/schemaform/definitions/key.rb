@@ -21,14 +21,15 @@
 
 module Schemaform
 module Definitions
-class Key
+class Key < Definition
       
    def initialize( entity, name, field_names )
-      @entity = entity
+      super( entity )
       @name   = name
       @field_names = field_names
    end
    
+   alias entity context
 
    
 end # Key

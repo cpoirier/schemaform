@@ -158,7 +158,7 @@ module Schemaform
       #
       # Raises an AssertionFailure outright.
       
-      def fail( message, data = nil, &block )
+      def fail( message = "this should not happen", data = nil, &block )
          data = block.call() if block
          raise AssertionFailure.new(message, data)
       end

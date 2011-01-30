@@ -42,17 +42,6 @@ module Schemaform
    end
    
    
-   #
-   # Connects a Schema to a physical database.  Schemaform uses the Sequel library for database
-   # connectivity, and the connection_string and properties are passed through to Sequel.  An 
-   # additional property, :prefix, may be supplied if you need to use multiple Schemas in the 
-   # same physical database.  The prefix will be used to ensure table names from this Schema 
-   # don't collide with table names from other Schemas.
-   
-   def self.connect( schema, connection_string, properties )
-   end
-   
-
    
    # ==========================================================================================
    #                                    Environment Configuration

@@ -121,7 +121,7 @@ class Schema < Definition
 
             base_type = TypeReference.new(self, base_name, modifiers)
             if name.is_a?(Class) then
-               register_type name, MappedType.new(name, base_type, modifiers.delete(:store), modifiers.delete(:load), @schema)
+               register_type name, MappedType.new(name, base_type, modifiers.delete(:load), modifiers.delete(:store), @schema)
             else
                register_type name, base_type
             end

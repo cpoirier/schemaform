@@ -26,8 +26,10 @@ module Schemaform
 module Definitions
 class Tuple < Type
    
-   def initialize( context, &block )
+   def initialize( context, type_name = nil, extends = nil, loader = nil, storer = nil, &block )
       super( context )
+      
+      warn_once( "base type and modifiers not yet supported for Tuple types" )
       
       @fields     = {}                       
       @expression = Expressions::Tuple.new(self)
@@ -73,12 +75,12 @@ class Tuple < Type
       def required( name, base_type = nil, modifiers = {}, required = true, &block )
          field_class = required ? RequiredField : OptionalField
          @tuple.instance_eval do
+            field = add_field( name, field_class.new(self) )
             if block_given? then
-               check { assert(base_type.nil?, "specify either a type or a block, not both") }
-               field = add_field( name, field_class.new(self) )
-               field.type = Tuple.new( field, &block )
+               assert( (type_name = base_type).exists?, "please name the tuple type for field [#{name}]" )
+               field.type = Tuple.new( field, type_name, modifiers.delete(:extends), modifiers.delete(:load), modifiers.delete(:store), &block )
             else
-               field = add_field( name, field_class.new(self) )
+               assert( base_type.exists?, "expected type for field [#{name}]")
                field.type = TypeReference.new( field, base_type, modifiers )
             end
          end

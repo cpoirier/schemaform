@@ -28,7 +28,7 @@ class Coupling
 
    def connect( account = nil, for_reading = false )
       assert( !for_reading, "read-only support not yet implemented" )
-            
+      
    end
    
    def connect_for_reading( account = nil )

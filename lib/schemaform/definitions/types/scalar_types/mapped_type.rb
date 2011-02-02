@@ -27,11 +27,11 @@ module Schemaform
 module Definitions
 class MappedType < ScalarType
 
-   def initialize( ruby_type, base_type, storer = nil, loader = nil, schema = nil )
+   def initialize( ruby_type, base_type, loader = nil, storer = nil, schema = nil )
       super( base_type, schema )
       @ruby_type = ruby_type
-      @storer    = storer
       @loader    = loader
+      @storer    = storer
       
       self.path = [ruby_type.class.name]
    end

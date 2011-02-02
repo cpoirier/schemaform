@@ -26,7 +26,7 @@ class Key < Definition
    def initialize( entity, name, field_names )
       super( entity )
       @name   = name
-      @field_names = field_names
+      @fields = field_names
    end
    
    alias entity context

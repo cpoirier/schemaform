@@ -43,7 +43,7 @@ def example_cms_schema( context_schema = nil )
          # derived  :closure               , lambda {|role| relation(:role => role.id) + role.ancestors}
          # derived  :capabilities          , lambda {|role| role.closure.join(:RoleCapability).return_only(:capability)}
          # derived  :inherited_capabilities, lambda {|role| role.ancestors.join(:RoleCapability).return_only(:capability)}
-         optional :something do
+         optional :something, :RoleSomething do
             required :x, String
             optional :y, String
             derived  :z, lambda {|role| role.parents}

@@ -38,8 +38,8 @@ class ScalarType < Type
       @base_type = base_type
    end
    
-   def dimensionality()
-      0  
+   def type_info()
+      TypeInfo::SCALAR
    end
    
    def description()

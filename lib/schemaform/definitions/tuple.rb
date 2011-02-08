@@ -34,14 +34,15 @@ class Tuple < Type
       @fields     = {}                       
       @expression = Expressions::Tuple.new(self)
       @closed     = false
+      @definer    = DefinitionLanguage.new(self)
 
-      DefinitionLanguage.new(self).instance_eval(&block) if block_given?
+      define(&block) if block_given?
    end
    
-   attr_reader :expression, :root_tuple, :fields
+   attr_reader :expression, :root_tuple, :fields, :definer
 
-   def dimensionality()
-      1
+   def type_info()
+      TypeInfo::TUPLE
    end
    
    def description()
@@ -54,6 +55,9 @@ class Tuple < Type
       return self
    end
    
+   def define( &block )
+      @definer.instance_eval( &block )
+   end
       
       
    
@@ -66,7 +70,7 @@ class Tuple < Type
       def initialize( tuple )
          @tuple = tuple
       end
-      
+
    
       #
       # Defines a required field or subtuple within the entity.  To define a subtuple, supply a 
@@ -81,7 +85,7 @@ class Tuple < Type
                field.type = Tuple.new( field, type_name, modifiers.delete(:extends), modifiers.delete(:load), modifiers.delete(:store), &block )
             else
                assert( base_type.exists?, "expected type for field [#{name}]")
-               field.type = TypeReference.new( field, base_type, modifiers )
+               field.type = TypeReference.build( field, base_type, modifiers )
             end
          end
       end
@@ -105,6 +109,22 @@ class Tuple < Type
             add_field name, DerivedField.new(self, proc.nil? ? block : proc)
          end
       end   
+      
+      
+      #
+      # Creates a reference type.
+      
+      def member_of( entity_name )
+         TypeReference.new( @tuple, entity_name, {}, :entity )
+      end
+      
+      
+      #
+      # Creates a set
+      
+      def set_of( type_name, modifiers = {} )
+         SetType.new( TypeReference.build(@tuple, type_name, modifiers, :scalar), @tuple.schema )
+      end
    end
    
    

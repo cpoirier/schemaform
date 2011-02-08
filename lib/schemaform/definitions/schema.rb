@@ -98,7 +98,7 @@ class Schema < Definition
       #
       # Defines an entity within the Schema.
    
-      def define( name, parent = nil, &block )
+      def define_entity( name, parent = nil, &block )
          @schema.instance_eval do
             check do
                assert_and_warn_once( parent.nil?, "TODO: derived class support" )
@@ -183,9 +183,22 @@ class Schema < Definition
       type_check( :name, name, Symbol )
       
       return @relations[name] if @relations.member?(name)
-      return schema.relation(name, fail_if_messing) if schema
+      return schema.find_relation(name, fail_if_messing) if schema
       return nil unless fail_if_missing
       fail( "unrecognized relation [#{name}]" )
+   end
+   
+   #
+   # Returns an Entity (only) for a name (Symbol), or nil.
+   
+   def find_entity( name, fail_if_missing = true )
+      return name if name.is_a?(Entity)
+      type_check( :name, name, Symbol )
+      
+      return @entities[name] if @entities.member?(name)
+      return schema.find_entity(name, fail_if_messing) if schema
+      return nil unless fail_if_missing
+      fail( "unrecognized entity [#{name}]" )
    end
    
    

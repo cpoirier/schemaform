@@ -18,37 +18,41 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("type.rb")
+
 
 #
-# A base class for all Relations within Schemaform (Entities, Subsets, etc.)
+# The SF equivalent of an array type -- but one that does not support duplicates, in keeping with
+# the zeitgeist of set math.  If you need a non-unique set (ie. an actual array), you'll need to
+# make an entity with an index field.
 
 module Schemaform
 module Definitions
-class Relation < Type
+class SetType < Type
 
-   def initialize( context, heading, name = nil )
-      super( context, name )
-      @heading = heading
+   #
+   # If you specify a Schema, it will be used.  If not, it will be pulled from the base Type.
+   
+   def initialize( member_type = nil, schema = nil, name = nil )
+      super( schema || member_type.schema, name )
+      @member_type = member_type
    end
    
-   attr_reader :heading
-
    def type_info()
-      return TypeInfo::RELATION
+      TypeInfo::SET  
    end
    
    def description()
-      "[" + @heading.description + "]"
+      # return name.to_s if named?
+      return "[ #{@member_type.resolve.description} ]"
    end
-   
+
    def resolve()
-      supervisor.monitor(self) do
-         @heading.resolve()
-      end
+      @member_type.resolve()
+      self
    end
    
 
-end # Relation
+end # SetType
 end # Definitions
 end # Schemaform
+

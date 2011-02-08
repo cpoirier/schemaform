@@ -26,18 +26,50 @@
 module Schemaform
 module Definitions
 class TypeReference < Definition
+   extend QualityAssurance
+   
+   def self.build( context, type_name, modifiers = {}, restriction = nil )
+      case type_name
+      when Type, TypeReference
+         check do
+            assert( modifiers.empty?, "modifiers cannot be added to an existing Type or TypeReference"    )
+            assert( restriction.nil?, "restrictions cannot be added to an existing Type or TypeReference" )
+         end
+         
+         return type_name if Type === type_name
+         return new( context, type_name.type_name, type_name.modifiers, type_name.restriction )
+      else
+         return new( context, type_name, modifiers, restriction )
+      end
+   end
+   
+   attr_reader :type_name, :modifiers, :restriction
 
-   def initialize( context, type_name, modifiers = {} )
+   def initialize( context, type_name, modifiers = {}, restriction = nil )
+      type_check( :type_name, type_name, [Symbol, Class, Type] )
       super( context, type_name )
-      @type_name = type_name
-      @modifiers = modifiers
-      @type      = nil
+      @type_name   = type_name
+      @modifiers   = modifiers
+      @restriction = restriction
+      @type        = nil
    end
    
    def resolve()
       return @type unless @type.nil?
+      
       @type = supervisor.monitor( self ) do
-         ConstrainedType.build( schema.find_type(@type_name), @modifiers )
+         case @restriction
+         when :entity
+            schema.find_entity(@type_name).reference_type
+         when :scalar
+            if entity = schema.find_entity(@type_name, false) then
+               entity.reference_type
+            else
+               ConstrainedType.build( schema.find_type(@type_name), @modifiers )
+            end
+         else
+            ConstrainedType.build( schema.find_type(@type_name), @modifiers )
+         end
       end
    end
 

@@ -98,11 +98,27 @@ class Entity < Relation
    # ==========================================================================================
    
    
-   class DefinitionLanguage < Tuple::DefinitionLanguage
+   class DefinitionLanguage
       def initialize( entity )
-         super( entity.heading )
          @entity = entity
       end
+      
+      
+      #
+      # Triggers the inline definition of the Tuple for the Entity.
+      
+      def each( tuple_name, tuple_base = nil, &block )
+         @entity.heading.define(&block)
+      end
+      
+      
+      #
+      # Defines the Entity heading in terms of a named Tuple.
+      
+      def of( tuple_name )
+         @entity.change_heading( tuple_name )
+      end
+      
       
    
       #
@@ -178,8 +194,10 @@ class Entity < Relation
             end
             
             if @heading.empty? then
-               @dsl.required :name , :identifier
-               @dsl.required :value, :integer
+               @heading.define do 
+                  required :name , :identifier
+                  required :value, :integer
+               end
             else
                check do
                   assert( @fields.length >= 2, "an enumerated entity needs at least name and value fields" )

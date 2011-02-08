@@ -52,7 +52,7 @@ module Schemaform
       #
       # Verifies that object is (one) of the specified type(s).
 
-      def type_check( name, object, type, allow_nil = false )
+      def type_check( name, object, type, allow_nil = false, data = {} )
          return true unless @@quality_assurance__checks_enabled || check_even_if_checks_disabled
          return true if object.nil? && allow_nil
 
@@ -88,7 +88,7 @@ module Schemaform
             message += " for [#{name}]" if name
             actual  = object.class.name
             message = message + ", found " + actual
-            raise TypeCheckFailure.new( message )
+            raise TypeCheckFailure.new( message, data )
          end
 
          return true
@@ -227,6 +227,11 @@ module Schemaform
          @data = additional_data.merge( @data || {} )
       end
       
+      def has?( name )
+         return false if @data.nil?
+         return @data.member?(name)
+      end
+      
       def print_data( stream = $stderr )         
          unless @data.nil? || @data.empty?
             width = @data.keys.inject(0){|max, current| width = current.to_s.length; width > max ? width : max }
@@ -235,6 +240,7 @@ module Schemaform
             end
          end
       end
+      
    end
 
    class AssertionFailure < Bug; end
@@ -277,7 +283,7 @@ class Exception
          path, rest = line.split(":", 2)
          absolute_path = File.expand_path(path)
          
-         if skip_qa_routines && absolute_path == __FILE__ && rest =~ /check|assert/ then
+         if relative_backtrace.length <= 2 && skip_qa_routines && absolute_path == __FILE__ && rest =~ /check|assert/ then
             relative_backtrace.clear
          else
             relative_backtrace << (absolute_path.start_with?(relative_to) ? absolute_path[(relative_to.length)..-1] : absolute_path) + ":" + rest

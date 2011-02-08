@@ -36,32 +36,27 @@ def example_cms_schema( context_schema = nil )
       # and so on).  Each Account (below) has exactly one Role, and draws the Role's full 
       # set of direct and inherited capabilities.
       
-      define :Role do
-         required :name                  , String, :length => 40
-         derived  :parents               , lambda {|role| role.find_matching(:RoleInheritance)} # .return_only(:parent => :role)}
-         # derived  :ancestors             , lambda {|role| role.find_matching(:RoleInheritance).follow(:RoleInheritance, :role, :parent).return_only(:parent => :role)}
-         # derived  :closure               , lambda {|role| relation(:role => role.id) + role.ancestors}
-         # derived  :capabilities          , lambda {|role| role.closure.join(:RoleCapability).return_only(:capability)}
-         # derived  :inherited_capabilities, lambda {|role| role.ancestors.join(:RoleCapability).return_only(:capability)}
-         optional :something, :RoleSomething do
-            required :x, String
-            optional :y, String
-            derived  :z, lambda {|role| role.parents}
+      define_entity :Roles do
+         each :Role do
+            required :name                  , String, :length => 40
+            required :capabilities          , set_of(:Capabilities)
+            required :parents               , set_of(:Roles       )
+            # derived  :ancestors             , lambda {|role| role.parents.follow(:Roles, :parents).as_set() }
+            # derived  :inherited_capabilities, lambda {|role| role.ancestors.capabilities }
+            # derived  :all_capabilities      , lambda {|role| role.capabilities + role.inherited_capabilities }
+            optional :something, :RoleSomething do
+               required :x, String
+               optional :y, String
+               derived  :z, lambda {|role| role.parents}
+            end
          end
       end
 
-      define :Capability do
-         required :name, String, :length => 40
-      end
-
-      define :RoleInheritance do
-         required :role  , :Role
-         required :parent, :Role
-      end
-
-      define :RoleCapability do
-         required :role      , :Role
-         required :capability, :Capability
+      define_entity :Capabilities do
+         each :Capability do
+            required :name, String, :length => 40
+            # derived  :used_in, lamda {|capability| capability.find_matching(:Roles, :parents)}
+         end
       end
 
 
@@ -69,26 +64,30 @@ def example_cms_schema( context_schema = nil )
 
       #=== Account management =================================================================
 
-      define :Account do
-         required :email_address  , String, :length => 50
-         required :display_name   , String, :length => 50
-         required :safe_name      , String, :length => 50
-         # TODO: field :hashed_password, SHA1 -- what to we want this to do; should it be excluded from retrieve?
-         required :role           , :Role
-         required :lockedout_until, Time, :default => Time.at(0)
-
+      define_entity :Accounts do
+         each :Account do
+            required :email_address  , String, :length => 50
+            required :display_name   , String, :length => 50
+            required :safe_name      , String, :length => 50
+            # required :role           , member_of(:Roles)
+            required :lockedout_until, Time, :default => Time.at(0)
+            # TODO: field :hashed_password, SHA1 -- what to we want this to do; should it be excluded from retrieve?
+         end
+         
          key :safe_name
          key :email_address
       end
 
-      define :AuthenticationAttempt do
-         required :account, :Account
-         required :time   , Time
-         required :from   , IPAddr
-         required :result , :AuthenticationResult
+      define_entity :AuthenticationAttempts do
+         each :AuthenticationAttempt do
+            # required :account, member_of(:Accounts)
+            required :time   , Time
+            required :from   , IPAddr
+            # required :result , member_of(:AuthenticationResults)
+         end
       end
 
-      define :AuthenticationResult do
+      define_entity :AuthenticationResults do
          enumerate :valid, :invalid
       end
       

@@ -67,7 +67,7 @@ class Definition
    end
    
    def named?()
-      !name().nil?
+      !name().nil? 
    end
    
    def root()

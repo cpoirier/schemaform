@@ -28,21 +28,26 @@
 module Schemaform
 module Definitions
 class Type < Definition
-
+   
    def initialize( context, name = nil )
       super( context, name )
    end
-      
+   
+   def type_info()
+      fail_unless_overridden( self, :type_info )
+   end
+   
 
    #
    # Returns a human-readable summary of the type, for inclusion in diagnostic output.
    
    def description()
       return full_name.to_s if named?
-      return "an unnamed " + case dimensionality
-         when 0 ; "scalar"
-         when 1 ; "tuple"
-         when 2 ; "relation"
+      return "an unnamed " + case type_info
+         when TypeInfo::SCALAR   ; "scalar"
+         when TypeInfo::TUPLE    ; "tuple"            
+         when TypeInfo::RELATION ; "relation"
+         when TypeInfo::SET      ; "set of"
       end + " type"
    end
 

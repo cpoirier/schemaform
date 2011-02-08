@@ -18,37 +18,41 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("type.rb")
 
 #
-# A base class for all Relations within Schemaform (Entities, Subsets, etc.)
+# Provides internal meta-type information.
 
 module Schemaform
 module Definitions
-class Relation < Type
+class TypeInfo
+   
+private
+   def initialize( has_heading, is_multi_valued )
+      @has_heading     = has_heading
+      @is_multi_valued = is_multi_valued
+   end
 
-   def initialize( context, heading, name = nil )
-      super( context, name )
-      @heading = heading
+public
+   SCALAR   = new( false, false )
+   TUPLE    = new( true , false )
+   SET      = new( false, true  )
+   RELATION = new( true , true  )
+   
+   def has_heading?()
+      @has_heading
    end
    
-   attr_reader :heading
-
-   def type_info()
-      return TypeInfo::RELATION
+   def multi_valued?()
+      @is_multi_valued
    end
    
-   def description()
-      "[" + @heading.description + "]"
-   end
-   
-   def resolve()
-      supervisor.monitor(self) do
-         @heading.resolve()
-      end
+   def ===( type )
+      info = type.respond_to?(:has_heading?) ? type : type.type_info
+      @has_heading == info.has_heading? && @is_multi_valued == info.multi_valued?
    end
    
 
-end # Relation
+
+end # TypeInfo
 end # Definitions
 end # Schemaform

@@ -376,20 +376,6 @@ protected
    end
    
    
-   #
-   # Converts the Schema into a plan for use with a SQL database.  This involves figuring out 
-   # storable field types and flattening everything into rectangular tables.
-   
-   def build_plan()
-
-      #
-      # First up, validate and convert the primary keys.  We need these for reference types.
-      
-      @entities.each do |entity|
-         
-      end
-   end 
-   
    
    
 end # Schema

@@ -19,28 +19,63 @@
 # =============================================================================================
 
 
+#
+# A base class for machinery that maps a defined schema into one that can be used at
+# runtime with a specific database engine.
 
 module Schemaform
-module Adapters
+class Mapper
+   include QualityAssurance
    extend QualityAssurance
+   include Runtime::Schema
+
+
+   def initialize()
+   end
    
-   def self.adapter_class_for( connection_url, fail_if_missing = true )
+   
+   def map( schema )
+      schema.entities.each do |entity|
+         entity.primary_key
+      end
+   end
+
+
+
+
+
+
+
+
+   # ==========================================================================================
+   #                                            Lookup
+   # ==========================================================================================
+
+   #
+   # Retrieves the Translator class for the specified connection URL.
+   
+   def self.class_for( connection_url, fail_if_missing = true )
       @@selectors = [] unless defined?(@@selectors) && @@selectors.is_an?(Array)
       @@selectors.each do |selector|
-         return selector.adapter_class if selector.matches?(connection_url)
+         return selector.mapper_class if selector.matches?(connection_url)
       end
       
-      fail( "unable to find adapter for #{connection_url}" ) if fail_if_missing
+      fail( "unable to find mapper for #{connection_url}" ) if fail_if_missing
       return nil
    end
 
-   def self.register( adapter_class, url_pattern = nil, &url_tester )
+   
+   #
+   # Registers a Translator class.  You can pass a pattern or a block which will be
+   # used to determine applicability to the current URL string.
+   
+   def self.register( mapper_class, url_pattern = nil, &url_tester )
       @@selectors = [] unless defined?(@@selectors) && @@selectors.is_an?(Array)
       if url_pattern.nil? then
          assert( block_given?, "expected either a pattern or a block" )
-         @@selectors << BlockBasedSelector.new( adapter_class, &url_tester )
+         @@selectors << BlockBasedSelector.new( mapper_class, &url_tester )
       else
-         @@selectors << PatternBasedSelector.new( adapter_class, url_pattern )
+         @@selectors << PatternBasedSelector.new( mapper_class, url_pattern )
       end
    end
    
@@ -53,9 +88,9 @@ module Adapters
 
    class Selector
       include QualityAssurance
-      attr_reader :adapter_class
-      def initialize( adapter_class )
-         @adapter_class = adapter_class
+      attr_reader :mapper_class
+      def initialize( mapper_class )
+         @mapper_class = mapper_class
       end
       
       def matches?( connection_url )
@@ -64,8 +99,8 @@ module Adapters
    end
    
    class PatternBasedSelector < Selector
-      def initialize( adapter_class, url_pattern )
-         super( adapter_class )
+      def initialize( mapper_class, url_pattern )
+         super( mapper_class )
          @url_pattern = url_pattern
       end
       
@@ -75,8 +110,8 @@ module Adapters
    end
    
    class BlockBasedSelector < Selector
-      def initialize( adapter_class, &block )
-         super( adapter_class )
+      def initialize( mapper_class, &block )
+         super( mapper_class )
          @tester = block
       end
       
@@ -85,10 +120,10 @@ module Adapters
       end
    end
       
-end # Adapters
+end # Mapper
 end # Schemaform
 
 
-Dir[Schemaform.locate("adapters/*/adapter.rb")].each do |path| 
+Dir[Schemaform.locate("mappers/*.rb")].each do |path| 
    require path
 end

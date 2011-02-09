@@ -20,22 +20,18 @@
 
 
 #
-# Provides all necessary machinery for mapping a Schema into a SQLLite database.
+# Represents a standard SQL table.
 
 module Schemaform
-module Adapters
-module SQLite
-class Adapter
-   Adapters.register( self, /^sqlite:/ )
+module Runtime
+module Schema
+class Table
 
-   
    def initialize()
       
    end
 
-   
-end # Adapter
-end # SQLite
-end # Adapters
+end # Table
+end # Schema
+end # Runtime
 end # Schemaform
-

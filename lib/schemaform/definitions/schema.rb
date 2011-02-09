@@ -34,12 +34,12 @@ class Schema < Definition
    def initialize( name, context_schema = nil, &block )
       super( context_schema, name )
       
-      @dsl         = DefinitionLanguage.new( self )
-      @types       = {}
-      @subschemas  = {}
-      @relations   = {}
-      @entities    = {}
-      @supervisor  = context_schema ? context_schema.supervisor : TypeResolutionSupervisor.new( self )
+      @dsl        = DefinitionLanguage.new( self )
+      @types      = {}
+      @subschemas = {}
+      @relations  = {}
+      @entities   = {}
+      @supervisor = context_schema ? context_schema.supervisor : TypeResolutionSupervisor.new( self )
          
       @types_are_resolved = false
 
@@ -376,6 +376,19 @@ protected
    end
    
    
+   #
+   # Converts the Schema into a plan for use with a SQL database.  This involves figuring out 
+   # storable field types and flattening everything into rectangular tables.
+   
+   def build_plan()
+
+      #
+      # First up, validate and convert the primary keys.  We need these for reference types.
+      
+      @entities.each do |entity|
+         
+      end
+   end 
    
    
    

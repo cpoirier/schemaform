@@ -34,6 +34,7 @@ class Entity < Relation
 
       @base_entity = base_entity
       @keys        = {}
+      @primary_key = nil
       @enumeration = nil
       @dsl         = DefinitionLanguage.new( self )
       @expression  = Expressions::Relations::Entity.new( self )
@@ -59,6 +60,13 @@ class Entity < Relation
    def description()
       full_name() + " " + super
    end
+   
+   def primary_key()
+      return @primary_key unless @primary_key.nil?
+      return @base_entity.primary_key unless @base_entity.nil?
+      return nil
+   end
+   
    
    #
    # Returns true if the named field is defined in this or any base entity.
@@ -153,6 +161,13 @@ class Entity < Relation
             end
             
             @keys[key_name] = Key.new( self, key_name, names )
+         
+            #
+            # For the sake of expediency, we are making the primary key the first key 
+            # in the entity (or any of its base entities).  In the future, something more
+            # intelligent might be useful.
+            
+            @primary_key = key_name if primary_key.nil?
          end
       end
    
@@ -187,6 +202,7 @@ class Entity < Relation
       #   end
 
       def enumerate( *data, &block )
+         dsl = self
          @entity.instance_eval do
             check do
                assert( @base_entity.nil?, "enumerated entities cannot have a base" )
@@ -198,6 +214,7 @@ class Entity < Relation
                   required :name , :identifier
                   required :value, :integer
                end
+               dsl.key :name
             else
                check do
                   assert( @fields.length >= 2, "an enumerated entity needs at least name and value fields" )

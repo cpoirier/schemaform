@@ -50,13 +50,18 @@ def example_cms_schema( context_schema = nil )
                derived  :z, lambda {|role| role.parents}
             end
          end
+         
+         key :name
       end
 
+      
       define_entity :Capabilities do
          each :Capability do
             required :name, String, :length => 40
             # derived  :used_in, lamda {|capability| capability.find_matching(:Roles, :parents)}
          end
+         
+         key :name
       end
 
 
@@ -69,7 +74,7 @@ def example_cms_schema( context_schema = nil )
             required :email_address  , String, :length => 50
             required :display_name   , String, :length => 50
             required :safe_name      , String, :length => 50
-            # required :role           , member_of(:Roles)
+            required :role           , member_of(:Roles)
             required :lockedout_until, Time, :default => Time.at(0)
             # TODO: field :hashed_password, SHA1 -- what to we want this to do; should it be excluded from retrieve?
          end
@@ -80,11 +85,12 @@ def example_cms_schema( context_schema = nil )
 
       define_entity :AuthenticationAttempts do
          each :AuthenticationAttempt do
-            # required :account, member_of(:Accounts)
+            required :account, member_of(:Accounts)
             required :time   , Time
             required :from   , IPAddr
-            # required :result , member_of(:AuthenticationResults)
+            required :result , member_of(:AuthenticationResults)
          end
+         key :account, :time
       end
 
       define_entity :AuthenticationResults do

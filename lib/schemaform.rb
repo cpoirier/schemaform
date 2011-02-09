@@ -129,10 +129,11 @@ private
    # Loads all Schemaform code into memory.
    
    def self.load_all()
-      require locate("schemaform/sundry.rb"            )
-      require locate("schemaform/definition.rb"        )
-      require locate("schemaform/expressions.rb"       )
-      require locate("schemaform/runtime/connection.rb")
+      require locate("schemaform/sundry.rb"     )
+      require locate("schemaform/definition.rb" )
+      require locate("schemaform/expressions.rb")
+      require locate("schemaform/adapters.rb"   )
+      require locate("schemaform/runtime.rb"    )
    end
    
    

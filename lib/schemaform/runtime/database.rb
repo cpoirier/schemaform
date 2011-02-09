@@ -28,7 +28,7 @@ module Schemaform
 module Runtime
 class Database
    
-   attr_reader   :url
+   attr_reader   :url, :adapter
    attr_accessor :master_account
    
    
@@ -82,6 +82,7 @@ private
       @master_account    = master_account
       @couplings         = {}
       @couplings_monitor = Monitor.new()
+      @adapter           = Adapters.adaptor_for( url )
    end
 
    @@monitor   = Monitor.new()

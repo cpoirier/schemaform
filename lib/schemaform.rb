@@ -32,15 +32,24 @@ module Schemaform
    
    
    #
-   # Creates a Schema and Package in one step, and calls your block to fill in the Package.
-   # You can define additional packages using the returned schema, if you need to.
-   # With this method, your block can treat the Package::DefinitionLanguage as a DSL.
+   # Creates a Schema and calls your block to fill it in (see Schema::DefinitionLanguage).
 
    def self.define( name, context_schema = nil, &block )
       load_all()
       Definitions::Schema.new( name, context_schema, &block )
    end
    
+   
+   #
+   # Connects your Schema to a Database in one step.  What you get back is a Connection, 
+   # ready to go.
+   
+   def self.connect( schema, database_url, prefix = nil, user = nil, password = nil )
+      account  = user ? Runtime::Account.new( user, password ) : nil
+      database = Runtime::Database.for( database_url, account )
+      coupling = database.couple_with( schema, "sqlite://cms.rb", "cms", account )
+      coupling.connect( account )
+   end
    
    
    # ==========================================================================================

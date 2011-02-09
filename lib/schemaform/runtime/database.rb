@@ -27,6 +27,8 @@ require 'monitor'
 module Schemaform
 module Runtime
 class Database
+   include QualityAssurance
+   extend QualityAssurance
    
    attr_reader   :url, :adapter
    attr_accessor :master_account
@@ -37,14 +39,19 @@ class Database
    # to one Database, if you use a different name prefix for each.  Once you have a Coupling, you can 
    # connect() it any number of times to provide separate transaction scopes (and user credentials).
    
-   def couple_with( schema, prefix = nil, coupling_account = nil )
+   def couple_with( schema, prefix = nil, coupling_account = nil, replace_coupling_account = false )
       schema = schema.root
       prefix = nil if prefix.to_s == ""
       
       @couplings_monitor.synchronize do
          @couplings[schema.name] = {} unless @couplings.member?(schema.name)
          if @couplings[schema.name].member?(prefix) then
-            @couplings[schema.name][prefix].coupling_account = coupling_account
+            if coupling_account then
+               coupling = @coupling[schema.name][prefix]
+               if replace_coupling_account or coupling.coupling_account.nil? then
+                  coupling.coupling_account = coupling_account 
+               end
+            end
          else
             @couplings[schema.name][prefix] = Coupling.new( self, schema, prefix, coupling_account )
          end
@@ -61,12 +68,17 @@ class Database
    # maintaining the schema within the database.  It should have full privileges in the database.  It will
    # additionally be used as the default account for downstream objects (Couplings and Connections).
    
-   def self.for( url, master_account )
+   def self.for( url, master_account = nil, replace_master_account = false )
       assert( url !~ /(\/\/[^\/@]+@)|\?/, "database URL cannot cantain a user name or other parameters" )
       
       @@monitor.synchronize do
          if @@databases.member?(url) then
-            @@databases[url.downcase].master_account = master_account
+            if master_account then 
+               database = @@databases[url.downcase]
+               if replace_master_account or database.master_account.nil? then
+                  database.master_account = master_account 
+               end
+            end
          else
             @@databases[url.downcase] = new(url, master_account)
          end
@@ -82,7 +94,7 @@ private
       @master_account    = master_account
       @couplings         = {}
       @couplings_monitor = Monitor.new()
-      @adapter           = Adapters.adaptor_for( url )
+      @adapter_class     = Adapters.adapter_class_for(url)
    end
 
    @@monitor   = Monitor.new()

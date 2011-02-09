@@ -25,6 +25,7 @@
 module Schemaform
 module Runtime
 class Coupling
+   include QualityAssurance
 
    def connect( account = nil, for_reading = false )
       assert( !for_reading, "read-only support not yet implemented" )

@@ -56,6 +56,7 @@ class ScalarType < Type
       return storage_type.exists? && mapped_type.exists?
    end
    
+      
    def resolve()
       self
    end

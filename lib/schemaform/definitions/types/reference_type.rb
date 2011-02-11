@@ -24,17 +24,24 @@
 
 module Schemaform
 module Definitions
-class ReferenceType < ScalarType
+class ReferenceType < Type
 
    def initialize( entity )
-      super( entity.has_base_entity? ? entity.base_entity.reference_type : entity.schema.any_type )
-      self.name = entity.name
+      super( entity.context, entity.name )
+      @entity = entity
    end
    
-   def description()
-      return name.to_s + " reference"
+   def type_info()
+      TypeInfo::TUPLE
    end
    
+   def resolve()
+      supervisor.monitor(self) do
+         annotate_errors( :check => "be sure the primary key of #{@entity.full_name} doesn't reference an entity which references [#{@entity.full_name}] in its primary key" ) do
+            @entity.primary_key.resolve()
+         end
+      end
+   end
 
 end # ReferenceType
 end # Definitions

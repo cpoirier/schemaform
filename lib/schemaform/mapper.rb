@@ -18,6 +18,8 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("schemaform/runtime.rb")
+
 
 #
 # A base class for machinery that maps a defined schema into one that can be used at
@@ -27,16 +29,33 @@ module Schemaform
 class Mapper
    include QualityAssurance
    extend QualityAssurance
-   include Runtime::Schema
 
 
    def initialize()
    end
    
    
-   def map( schema )
-      schema.entities.each do |entity|
-         entity.primary_key
+   def make_name( *elements )
+      elements.flatten.join("__")
+   end
+   
+   
+   def map( defined_schema, naming_prefix = [], runtime_schema = Schema.new() )
+      
+      #
+      # First up, ensure all primary key fields are key worthy: ie. that they can be represented
+      # in a scalar field and used in a database key.  Primary keys are used when creating 
+      # references, and so must be known before we can process any such fields.
+      #
+      # CAE: what happens if a reference is part of a key?
+      
+      defined_schema.entities.each do |entity|
+         table = Table.new( make_name(entity.name, naming_prefix) )
+         entity.primary_key.each_field do |field|
+            field_type = field.resolve()
+            ensure_key_worthy( field_type )
+            
+         end
       end
    end
 

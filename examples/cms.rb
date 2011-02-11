@@ -58,6 +58,7 @@ def example_cms_schema( context_schema = nil )
       define_entity :Capabilities do
          each :Capability do
             required :name, String, :length => 40
+            required :role, member_of(:Roles)
             # derived  :used_in, lamda {|capability| capability.find_matching(:Roles, :parents)}
          end
          

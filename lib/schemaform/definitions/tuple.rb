@@ -27,7 +27,7 @@ module Definitions
 class Tuple < Type
    
    def initialize( context, type_name = nil, extends = nil, loader = nil, storer = nil, &block )
-      super( context )
+      super( context, type_name.nil? ? false : type_name )
       
       warn_once( "base type and modifiers not yet supported for Tuple types" )
       
@@ -147,7 +147,7 @@ class Tuple < Type
       end
       
       @fields[name] = field
-      field.name = name
+      field.name = name unless field.named?
       field
    end
 
@@ -172,7 +172,7 @@ class Tuple < Type
    def resolve()
       unless @closed
          @closed = true
-         supervisor.monitor(self) do
+         supervisor.monitor(self, named?) do
             each_field do |field|
                field.resolve()
             end

@@ -19,38 +19,18 @@
 # =============================================================================================
 
 
+#
+# The anchor for the Runtime Schema.  This is a vastly simplified data structure that shows how
+# the defined Schema is *actually* managed at the database level.
+
 module Schemaform
-module Definitions
-class Key < Definition
+module Runtime
+class Schema
+
+   def initialize()
       
-   def initialize( entity, name, field_names )
-      super( entity, name )
-      @fields = Tuple.new( self )
-      field_names.each do |name|
-         @fields.add_field( name, entity.heading.fields[name] )
-      end
-      # @fields = field_names
-   end
-   
-   alias entity context
-
-   def each_field()
-      @fields.each do |name|
-         yield( context.heading.fields[name] )
-      end
-   end
-   
-   def resolve()
-      supervisor.monitor(self) do
-         @fields.resolve()
-      end
    end
 
-   def description()
-      @fields.description
-   end
-   
-end # Key
-end # Definitions
+end # Schema
+end # Runtime
 end # Schemaform
-

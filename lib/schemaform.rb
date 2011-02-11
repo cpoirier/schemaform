@@ -141,7 +141,7 @@ private
       require locate("schemaform/sundry.rb"     )
       require locate("schemaform/definition.rb" )
       require locate("schemaform/expressions.rb")
-      require locate("schemaform/adapters.rb"   )
+      require locate("schemaform/mapper.rb"     )
       require locate("schemaform/runtime.rb"    )
    end
    

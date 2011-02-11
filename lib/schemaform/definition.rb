@@ -30,22 +30,28 @@ class Definition
    def initialize( context, name = nil )
       @context = context
       @name    = name
+      @path    = nil     # Defer path creation until needed, as some objects are created in the constructors of their contexts . . . . 
    end
 
    attr_reader :context
-   
+
    def schema()
-      if @schema.nil? then
-         @schema = self.is_a?(Definitions::Schema) ? self : context.schema
-         self.name = @name if @name
-      end
-      @schema
+      self.is_a?(Definitions::Schema) ? self : context.schema
    end
    
    def path()
-      return @path if defined?(@path) && @path.exists?
-      return @context.path if @context.exists?
-      return nil
+      if @path.nil? then
+         case @name
+         when Symbol, String, Class
+            @path = (context.nil? ? [] : context.path) + [@name]
+         when FalseClass
+            @path = context.path
+         else
+            fail( "name has not been set for object of class [#{self.class.name}]" + (@context ? " in #{@context.full_name}]" : "") )
+         end
+      end
+      
+      return @path
    end
    
    def path=( path )
@@ -53,11 +59,10 @@ class Definition
    end
    
    def name=( name )
-      self.path = context.nil? ? [name] : [context.path, name]
+      @name = name
    end
    
    def name()
-      return nil if path.nil? || path.empty?
       return path.last
    end
       
@@ -67,7 +72,7 @@ class Definition
    end
    
    def named?()
-      !name().nil? 
+      @name
    end
    
    def root()
@@ -81,7 +86,7 @@ class Definition
    def supervisor()
       schema.supervisor()
    end
-
+   
 end # Definition
 end # Schemaform
 

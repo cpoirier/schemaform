@@ -103,7 +103,7 @@ class Schema < Definition
             check do
                assert_and_warn_once( parent.nil?, "TODO: derived class support" )
             end
-            
+
             register_entity Entity.new( name, parent, self, &block )
          end
       end
@@ -196,7 +196,7 @@ class Schema < Definition
       type_check( :name, name, Symbol )
       
       return @entities[name] if @entities.member?(name)
-      return schema.find_entity(name, fail_if_messing) if schema
+      return schema.find_entity(name, fail_if_missing) if schema
       return nil unless fail_if_missing
       fail( "unrecognized entity [#{name}]" )
    end
@@ -254,14 +254,16 @@ class Schema < Definition
          @entries = []
       end
       
-      def monitor( scope )
+      def monitor( scope, report_worthy = true )
          description = scope_description(scope)
+         annotation  = report_worthy ? { :scope => description } : {}
+         
          assert( !@entries.member?(scope), "detected loop while trying to resolve #{description}" )
-         return annotate_errors( :scope => description ) do
+         return annotate_errors( annotation ) do
             check( @entries.push_and_pop(scope) { yield() } ) do |type|
                assert( type.exists?, "unable to resolve type for [#{class_name_for(scope)} #{scope.full_name}]" )
                type_check( :type, type, Type )
-               warn_once( "DEBUG: #{description} resolved to #{class_name_for(type)} #{type.description}" ) unless scope.is_a?(TypeReference)
+               warn_once( "DEBUG: #{description} resolved to #{class_name_for(type)} #{type.description}" ) if report_worthy
             end
          end
       end
@@ -339,7 +341,7 @@ protected
    
    def register_type( name, named_type )
       check do
-         assert( !@types.member?(name), "schema [#{@path.join(".")}] already has a type named [#{name}]" )
+         assert( !@types.member?(name), "schema [#{full_name}] already has a type named [#{name}]" )
       end
       
       named_type.name = name

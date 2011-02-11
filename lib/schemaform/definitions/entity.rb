@@ -62,7 +62,7 @@ class Entity < Relation
    end
    
    def primary_key()
-      return @primary_key unless @primary_key.nil?
+      return @keys[@primary_key] unless @primary_key.nil?
       return @base_entity.primary_key unless @base_entity.nil?
       return nil
    end

@@ -56,7 +56,7 @@ class ConstrainedType < Type
    end
 
    def description()
-      @underlying_type.description()
+      resolve().description()
    end
    
    def each_constraint( &block )

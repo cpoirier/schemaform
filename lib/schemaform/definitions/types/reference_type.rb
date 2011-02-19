@@ -31,6 +31,10 @@ class ReferenceType < Type
       @entity = entity
    end
    
+   def tuple_name()
+      @entity.heading.name
+   end
+   
    def type_info()
       TypeInfo::TUPLE
    end

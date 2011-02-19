@@ -37,6 +37,18 @@ class Type < Definition
       fail_unless_overridden( self, :type_info )
    end
    
+   def has_heading?()
+      type_info.has_heading?
+   end
+   
+   def multi_valued?()
+      type_info.multi_valued?
+   end
+   
+   def single_valued?()
+      type_info.single_valued?
+   end
+   
 
    #
    # Returns a human-readable summary of the type, for inclusion in diagnostic output.

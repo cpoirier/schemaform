@@ -115,18 +115,17 @@ protected
 
       multivalued_attributes = []
       entity.each_attribute do |attribute|
-         if attribute.resolve.type_info.multi_valued? then
+         if attribute.resolve.multi_valued? then
             multivalued_attributes << attribute
          elsif entity.primary_key.member?(attribute) then
             map_attribute( attribute, table ) do |pass, specific, field|
                if pass == :pre then
                   check do 
                      attribute_type = specific.resolve
-                     type_info = attribute_type.type_info
       
-                     assert( specific.required?         , "entity primary keys can contain only required attributes"                        )
-                     assert( type_info.single_valued?   , "entity primary keys can contain only single-valued attributes"                   )
-                     assert( key_worthy?(attribute_type), "[#{specific.full_name}] cannot be used in a primary key in [#{@connection_url}]" )
+                     assert( specific.required?           , "entity primary keys can contain only required attributes"                        )
+                     assert( attribute_type.single_valued?, "entity primary keys can contain only single-valued attributes"                   )
+                     assert( key_worthy?(attribute_type)  , "[#{specific.full_name}] cannot be used in a primary key in [#{@connection_url}]" )
                   end
                elsif field then
                   table.primary_key.add( field )
@@ -195,18 +194,28 @@ protected
    # Flattens a Set attribute into a subtable.
    
    def map_set_attribute( attribute, table, base_name, &block )
-      Table.new( self, table.row_name + base_name + attribute.name ).tap do |set_table|
+      Table.new( self, table.name + base_name + attribute.name ).tap do |set_table|
+
+         #
+         # Copy of the primary key fields from the master table.
+         
+         owner_field_base_name = Name.new( self, "key_" + table.row_name.to_s )
          table.primary_key.fields.each do |field|
-            Field.new( set_table, field.name, field.type, field.allow_nulls? )
+            Field.new( set_table, owner_field_base_name + field.name, field.type, field.allow_nulls? )
          end
          
+         #
+         # Sets are restricted to scalar and reference types.  Because the member type isn't
+         # in an attribute, we'll have to process it directly.
+           
          member_type = attribute.resolve.member_type.resolve
-         if member_type.type_info.has_heading? then
-            member_type.each_attribute do |sub_attribute|
-               map_attribute( sub_attribute, set_table, base_name + attribute.name )
+         if member_type.has_heading? then
+            owned_field_base_name = Name.new( self, "referenced_" + member_type.context.context.heading.name )
+            member_type.resolve.each_attribute do |sub_attribute|
+               map_attribute( sub_attribute, set_table, owned_field_base_name )
             end
          else
-            Field.new( set_table, base_name + attribute.name, map_scalar_type(attribute.resolve) )
+            Field.new( set_table, Name.new(self, "member_value"), map_scalar_type(attribute.resolve) )
          end
       end
    end

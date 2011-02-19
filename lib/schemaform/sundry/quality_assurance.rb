@@ -283,11 +283,7 @@ class Exception
          path, rest = line.split(":", 2)
          absolute_path = File.expand_path(path)
          
-         if relative_backtrace.length <= 2 && skip_qa_routines && absolute_path == __FILE__ && rest =~ /check|assert/ then
-            relative_backtrace.clear
-         else
-            relative_backtrace << (absolute_path.start_with?(relative_to) ? absolute_path[(relative_to.length)..-1] : absolute_path) + ":" + rest
-         end
+         relative_backtrace << (absolute_path.start_with?(relative_to) ? absolute_path[(relative_to.length)..-1] : absolute_path) + ":" + rest
       end
       
       relative_backtrace

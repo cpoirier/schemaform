@@ -113,10 +113,6 @@ if $0 == __FILE__ then
    begin
       require "../lib/schemaform.rb"
       connection = Schemaform.connect( example_cms_schema(), "sqlite://cms.rb", "cms" )
-      
-      
-      
-      # connection = schema.connect( ARGV.empty? ? "sqlite:///tmp/example_cms.db" : ARGV.shift )
    
    rescue SystemExit ; raise
    rescue Interrupt, Errno::EPIPE ; exit

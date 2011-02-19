@@ -28,14 +28,14 @@ module Schemaform
 module Expressions
 class Tuple < Expression
 
-   attr_reader :fields
+   attr_reader :attributes
    
 
    #
    # Returns a subset of some relation for which the first (or specified) reference
-   # field refers to this tuple (if identifiable).
+   # attribute refers to this tuple (if identifiable).
 
-   def find_matching( relation, on_field = nil )
+   def find_matching( relation, on_attribute = nil )
       relation_definition = @definition.schema.find_relation(relation)
       assert( relation_definition, "unable to find relation [#{relation}]" )
       return relation_definition.expression
@@ -52,7 +52,7 @@ class Tuple < Expression
    def initialize( definition )
       super()
       @definition = definition
-      @fields     = {}
+      @attributes     = {}
    end
    
    def resolve()
@@ -60,13 +60,13 @@ class Tuple < Expression
    end
 
    def method_missing( symbol, *args, &block )
-      if @definition.field?(symbol) then
-         field_definition = @definition.fields[symbol]
-         field_expression = field_definition.expression
-         @fields[symbol]  = field_expression
+      if @definition.attribute?(symbol) then
+         attribute_definition = @definition.attributes[symbol]
+         attribute_expression = attribute_definition.expression
+         @attributes[symbol]  = attribute_expression
          instance_class.class_eval do
             define_method symbol do |*args|
-               return field_expression
+               return attribute_expression
             end
          end
          return send( symbol, *args, &block )

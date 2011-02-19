@@ -20,33 +20,32 @@
 
 
 #
-# A Field in a Tuple.
+# Represents a field in a SQL Table.
 
 module Schemaform
-module Definitions
-class Field < Definition
-   def initialize( tuple )
-      type_check( :tuple, tuple, Tuple )
-      super( tuple )
-      @expression = Expressions::Field.new(self)
+module Mapping
+class Field
+
+   def initialize( table, name, type, allow_nulls = false )
+      @table       = table
+      @name        = name
+      @type        = type
+      @allow_nulls = allow_nulls
+      
+      @table.add_field( self )
    end
    
-   attr_reader :expression
+   attr_reader :name, :type
    
-   alias tuple context
-   
-   def root_tuple()
-      tuple.root_tuple
+   def allow_nulls?()
+      @allow_nulls
    end
    
-   def resolve()
-      fail_unless_overridden( self, :resolve )
+   def to_sql( name_width = 0 )
+      @name.to_s.ljust(name_width) + " " + @type + " " + (@allow_nulls ? "" : "not") + " null"
    end
    
-   
+
 end # Field
-end # Definitions
+end # Mapping
 end # Schemaform
-
-
-Dir[Schemaform.locate("field_types/*.rb")].each {|path| require path}

@@ -19,20 +19,22 @@
 # =============================================================================================
 
 
-require Schemaform.locate("original_field.rb")
-
-
 #
-# An optional field -- one that will show a default value if not specifically set.
+# Selects a Map class for a connection URL if the supplied block returns true.
 
 module Schemaform
-module Definitions
-class OptionalField < OriginalField
+module Mapping
+class BlockBasedSelector
 
-   def initialize( container, type = nil )
-      super( container, type )
+   def initialize( map_class, &block )
+      super( map_class )
+      @tester = block
+   end
+   
+   def matches?( connection_url )
+      !!(@tester.call(connection_url))
    end
 
-end # OptionalField
-end # Definitions
+end # BlockBasedSelector
+end # Mapping
 end # Schemaform

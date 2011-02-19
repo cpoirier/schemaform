@@ -74,7 +74,16 @@ class Type < Definition
    def each_effective_type()
       yield( self )
    end
-
+   
+   
+   #
+   # Calls your block once for each constraint.  Pass a name to restrict.
+   
+   def each_constraint( &block )
+   end
+   
+   
+   
    
 end # Type
 end # Definitions

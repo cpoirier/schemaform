@@ -48,6 +48,10 @@ class Relation < Type
       end
    end
    
+   def each_attribute( &block )
+      @heading.each_attribute( &block )
+   end
+   
 
 end # Relation
 end # Definitions

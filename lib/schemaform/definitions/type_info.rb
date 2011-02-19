@@ -46,9 +46,34 @@ public
       @is_multi_valued
    end
    
+   def single_valued?()
+      !@is_multi_valued
+   end
+   
    def ===( type )
       info = type.respond_to?(:has_heading?) ? type : type.type_info
       @has_heading == info.has_heading? && @is_multi_valued == info.multi_valued?
+   end
+
+   def specialize( prefix = nil, suffix = nil )
+      version = case self
+      when SCALAR   ; "scalar"
+      when TUPLE    ; "tuple"
+      when SET      ; "set"
+      when RELATION ; "relation"
+      else
+         fail
+      end
+      
+      name = if suffix and prefix then
+         format( "%s_%s_%s", prefix, version, suffix )
+      elsif prefix
+         format( "%s_%s", prefix, version )
+      else
+         format( "%s_%s", version, suffix )
+      end
+      
+      name.intern
    end
    
 

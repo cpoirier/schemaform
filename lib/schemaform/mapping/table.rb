@@ -19,24 +19,42 @@
 # =============================================================================================
 
 
+#
+# Represents a standard SQL table.
+
 module Schemaform
-class Schema
-class AttributeIsEqual
+module Mapping
+class Table
+
+   attr_reader :name, :row_name, :fields, :primary_key
    
-   class TupleExpression
-      def initialize( type, source = nil )
-         @type   = type
-         @source = source
-      end
+   def initialize( map, name, row_name = nil )
+      @map         = map
+      @name        = name
+      @row_name    = row_name || name
+      @fields      = []
+      @keys        = []
+      @primary_key = Key.new( self )
       
-      
+      @map.add_table( self )
+   end
+
+   def add_field( field )
+      puts "DEBUG: added field #{field.name} #{field.type} to table #{@name}"
+      @fields << field
    end
 
 
-   def initialize( attribute, value )
+   def add_key( key )
+      @keys << key
+   end
    
-end # Schema
+   def to_sql()
+      name_length       = @fields.inject(0){|current, field| [current, field.name.to_s.length].max}
+      field_definitions = @fields.collect{|field| field.to_sql(name_length)}.join("\n   ")
+      "create table #{@name}\n(\n   #{field_definitions}\n);"
+   end
+
+end # Table
+end # Mapping
 end # Schemaform
-
-
-   

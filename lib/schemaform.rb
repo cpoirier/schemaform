@@ -45,6 +45,9 @@ module Schemaform
    # ready to go.
    
    def self.connect( schema, database_url, prefix = nil, user = nil, password = nil )
+      map = Mapping::Map.build( schema, database_url )
+      fail
+      
       account  = user ? Runtime::Account.new( user, password ) : nil
       database = Runtime::Database.for( database_url, account )
       coupling = database.couple_with( schema, "sqlite://cms.rb", "cms", account )
@@ -141,7 +144,7 @@ private
       require locate("schemaform/sundry.rb"     )
       require locate("schemaform/definition.rb" )
       require locate("schemaform/expressions.rb")
-      require locate("schemaform/mapper.rb"     )
+      require locate("schemaform/mapping.rb"    )
       require locate("schemaform/runtime.rb"    )
    end
    

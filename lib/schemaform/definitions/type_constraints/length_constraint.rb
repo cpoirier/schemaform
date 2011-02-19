@@ -28,6 +28,8 @@ class LengthConstraint
       @length = length
    end
    
+   attr_reader :length
+   
    def accepts?( value )
       return value.length <= @length
    end

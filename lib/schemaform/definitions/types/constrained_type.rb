@@ -43,14 +43,14 @@ class ConstrainedType < Type
       constraints.empty? ? underlying_type : new( underlying_type, constraints )      
    end
    
+   def type_info()
+      @underlying_type.type_info
+   end
+   
    def method_missing( symbol, *args, &block )
       @underlying_type.send( symbol, *args, &block )
    end
    
-   def dimensionality()
-      @underlying_type.dimensionality()
-   end
-
    def resolve()
       @underlying_type.resolve()
    end
@@ -58,6 +58,15 @@ class ConstrainedType < Type
    def description()
       @underlying_type.description()
    end
+   
+   def each_constraint( &block )
+      @constraints.each do |constraint|
+         yield( constraint )
+      end
+      
+      @underlying_type.resolve.each_constraint( &block )
+   end
+   
    
 
 end # ConstrainedType

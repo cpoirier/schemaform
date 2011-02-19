@@ -58,6 +58,8 @@ class Schema < Definition
             define_type :boolean   , :integer, :range  => 0..1
             define_type :identifier, :text   , :length => 80, :check => lambda {|i| !!i.to_sym && i.to_sym.inspect !~ /"/}
       
+            define_type Float     , :real
+            define_type Integer   , :integer
             define_type String    , :text
             define_type Symbol    , :identifier, :load => lambda {|s| s.intern}
             define_type IPAddr    , :text, :length => 40
@@ -81,6 +83,18 @@ class Schema < Definition
       return find_type(:any)
    end
       
+      
+   def each_entity() 
+      @entities.each do |name, entity|
+         yield( entity )
+      end
+   end
+   
+   def each_subschema()
+      @subschemas.each do |name, subschema|
+         yield( subschema )
+      end
+   end
    
    
    
@@ -212,7 +226,7 @@ class Schema < Definition
 
    
    #
-   # Resolves types for all fields within the Schema.
+   # Resolves types for all attributes within the Schema.
    
    def resolve_types()
       return if @types_are_resolved

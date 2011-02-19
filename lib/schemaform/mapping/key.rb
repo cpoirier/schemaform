@@ -19,24 +19,27 @@
 # =============================================================================================
 
 
+#
+# Represents a key on a Table.
+
 module Schemaform
-class Schema
-class AttributeIsEqual
+module Mapping
+class Key
+
+   def initialize( table, name = nil )
+      @table  = table
+      @name   = name
+      @fields = []
+      
+      table.add_key( self )
+   end
    
-   class TupleExpression
-      def initialize( type, source = nil )
-         @type   = type
-         @source = source
-      end
-      
-      
+   attr_reader :name, :fields
+   
+   def add( field )
+      @fields << field
    end
 
-
-   def initialize( attribute, value )
-   
-end # Schema
+end # Key
+end # Mapping
 end # Schemaform
-
-
-   

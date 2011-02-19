@@ -23,7 +23,7 @@
 #
 # The SF equivalent of an array type -- but one that does not support duplicates, in keeping with
 # the zeitgeist of set math.  If you need a non-unique set (ie. an actual array), you'll need to
-# make an entity with an index field.
+# make an entity with an index attribute.
 
 module Schemaform
 module Definitions
@@ -37,13 +37,15 @@ class SetType < Type
       @member_type = member_type
    end
    
+   attr_reader :member_type
+   
    def type_info()
       TypeInfo::SET  
    end
    
    def description()
       # return name.to_s if named?
-      return "[ #{@member_type.resolve.description} ]"
+      return "[#{@member_type.resolve.description}]"
    end
 
    def resolve()

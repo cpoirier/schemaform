@@ -19,25 +19,13 @@
 # =============================================================================================
 
 
-
-#
-# An original (as opposed to derived) field.
-
 module Schemaform
-module Definitions
-class OriginalField < Field
+module Mapping
 
-   def initialize( container, type = nil )
-      super( container )
-      @type = type
-   end
    
-   attr_accessor :type
-   
-   def resolve()
-      supervisor.monitor(self) { @type.resolve() }
-   end
+end
+end
 
-end # OriginalField
-end # Definitions
-end # Schemaform
+Dir[Schemaform.locate("mapping/*.rb")].each do |path| 
+   require path
+end

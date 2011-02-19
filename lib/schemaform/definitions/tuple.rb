@@ -31,7 +31,7 @@ class Tuple < Type
       
       warn_once( "base type and modifiers not yet supported for Tuple types" )
       
-      @fields     = {}                       
+      @attributes = {}                       
       @expression = Expressions::Tuple.new(self)
       @closed     = false
       @definer    = DefinitionLanguage.new(self)
@@ -39,26 +39,37 @@ class Tuple < Type
       define(&block) if block_given?
    end
    
-   attr_reader :expression, :root_tuple, :fields, :definer
+   attr_reader :expression, :root_tuple, :attributes, :definer
 
    def type_info()
       TypeInfo::TUPLE
    end
    
    def description()
-      pairs = @fields.collect{|name, field| ":" + name.to_s + " => " + field.resolve().description}
+      pairs = @attributes.collect{|name, attribute| ":" + name.to_s + " => " + attribute.resolve().description}
       "{" + pairs.join(", ") + "}"
    end
 
    def root_tuple()
-      return context.tuple.root_tuple if context.is_a?(Field)
+      return context.tuple.root_tuple if context.is_a?(Attribute)
       return self
    end
    
-   def define( &block )
+   def define( name = nil, &block )
+      self.name = name if name
       @definer.instance_eval( &block )
    end
-      
+   
+   def each_attribute()
+      @attributes.each do |name, attribute|
+         yield( attribute )
+      end
+   end
+   
+   def member?( name )
+      name = name.name if name.is_an?(Attribute)
+      @attributes.member?(name)
+   end   
       
    
    # ==========================================================================================
@@ -73,26 +84,26 @@ class Tuple < Type
 
    
       #
-      # Defines a required field or subtuple within the entity.  To define a subtuple, supply a 
+      # Defines a required attribute or subtuple within the entity.  To define a subtuple, supply a 
       # block instead of a type.
    
       def required( name, base_type = nil, modifiers = {}, required = true, &block )
-         field_class = required ? RequiredField : OptionalField
+         attribute_class = required ? RequiredAttribute : OptionalAttribute
          @tuple.instance_eval do
-            field = add_field( name, field_class.new(self) )
+            attribute = add_attribute( name, attribute_class.new(self) )
             if block_given? then
-               assert( (type_name = base_type).exists?, "please name the tuple type for field [#{name}]" )
-               field.type = Tuple.new( field, type_name, modifiers.delete(:extends), modifiers.delete(:load), modifiers.delete(:store), &block )
+               assert( (type_name = base_type).exists?, "please name the tuple type for attribute [#{name}]" )
+               attribute.type = Tuple.new( attribute, type_name, modifiers.delete(:extends), modifiers.delete(:load), modifiers.delete(:store), &block )
             else
-               assert( base_type.exists?, "expected type for field [#{name}]")
-               field.type = TypeReference.build( field, base_type, modifiers )
+               assert( base_type.exists?, "expected type for attribute [#{name}]")
+               attribute.type = TypeReference.build( attribute, base_type, modifiers )
             end
          end
       end
 
       
       #
-      # Defines an optional field or subtuple within the entity.  To define a subtuple, supply
+      # Defines an optional attribute or subtuple within the entity.  To define a subtuple, supply
       # a block instead of a type.
       
       def optional( name, base_type = nil, modifiers = {}, &block )
@@ -101,12 +112,12 @@ class Tuple < Type
       
          
       #
-      # Defines a derived field within the entity.  Supply a Proc or a block.  
+      # Defines a derived attribute within the entity.  Supply a Proc or a block.  
    
       def derived( name, proc = nil, &block )
          @tuple.instance_eval do
             check { assert(proc.nil? ^ block.nil?, "expected a Proc or block") }
-            add_field name, DerivedField.new(self, proc.nil? ? block : proc)
+            add_attribute name, DerivedAttribute.new(self, proc.nil? ? block : proc)
          end
       end   
       
@@ -134,33 +145,33 @@ class Tuple < Type
    # ==========================================================================================
    
    
-   def each_field()
-      @fields.each do |name, field|
-         yield( field )
+   def each_attribute()
+      @attributes.each do |name, attribute|
+         yield( attribute )
       end
    end
    
-   def add_field( name, field )
+   def add_attribute( name, attribute )
       check do
-         assert( !@closed              , "fields cannot be added to a Tuple after type resolution has begun" )
-         assert( !@fields.member?(name), "a Tuple cannot contain two fields with the same name [#{name}]"    )
+         assert( !@closed              , "attributes cannot be added to a Tuple after type resolution has begun" )
+         assert( !@attributes.member?(name), "a Tuple cannot contain two attributes with the same name [#{name}]"    )
       end
       
-      @fields[name] = field
-      field.name = name unless field.named?
-      field
+      @attributes[name] = attribute
+      attribute.name = name unless attribute.named?
+      attribute
    end
 
-   def field?( name )
-      @fields.member?(name)
+   def attribute?( name )
+      @attributes.member?(name)
    end
    
    def empty?()
-      @fields.empty?
+      @attributes.empty?
    end
    
    def length()
-      @fields.count
+      @attributes.count
    end
 
 
@@ -173,8 +184,8 @@ class Tuple < Type
       unless @closed
          @closed = true
          supervisor.monitor(self, named?) do
-            each_field do |field|
-               field.resolve()
+            each_attribute do |attribute|
+               attribute.resolve()
             end
             self
          end
@@ -188,5 +199,5 @@ end # Tuple
 end # Definitions
 end # Schemaform
 
-require Schemaform.locate("field.rb")
+require Schemaform.locate("attribute.rb")
 require Schemaform.locate("schemaform/expressions/tuple.rb")

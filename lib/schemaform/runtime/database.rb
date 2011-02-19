@@ -94,7 +94,6 @@ private
       @master_account    = master_account
       @couplings         = {}
       @couplings_monitor = Monitor.new()
-      @mapper_class      = Mapper.class_for(url)
    end
 
    @@monitor   = Monitor.new()

@@ -20,19 +20,36 @@
 
 
 #
-# Provides all necessary machinery for mapping a Schema into a SQLLite database.
+# A Attribute in a Tuple.
 
 module Schemaform
-module Mappers
-class SQLite < Mapper
-   Mapper.register( self, /^sqlite:/ )
-   
-   def initialize()
-      
+module Definitions
+class Attribute < Definition
+   def initialize( tuple )
+      type_check( :tuple, tuple, Tuple )
+      super( tuple )
+      @expression = Expressions::Attribute.new(self)
    end
-
    
-end # SQLite
-end # Adapters
+   attr_reader :expression
+   
+   alias tuple context
+   
+   def root_tuple()
+      tuple.root_tuple
+   end
+   
+   def resolve()
+      fail_unless_overridden( self, :resolve )
+   end
+   
+   def required?()
+      false
+   end
+   
+end # Attribute
+end # Definitions
 end # Schemaform
 
+
+Dir[Schemaform.locate("attribute_types/*.rb")].each {|path| require path}

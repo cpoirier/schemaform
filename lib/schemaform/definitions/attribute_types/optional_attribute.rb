@@ -19,24 +19,20 @@
 # =============================================================================================
 
 
+require Schemaform.locate("original_attribute.rb")
+
+
+#
+# An optional attribute -- one that will show a default value if not specifically set.
+
 module Schemaform
-class Schema
-class AttributeIsEqual
-   
-   class TupleExpression
-      def initialize( type, source = nil )
-         @type   = type
-         @source = source
-      end
-      
-      
+module Definitions
+class OptionalAttribute < OriginalAttribute
+
+   def initialize( container, type = nil )
+      super( container, type )
    end
 
-
-   def initialize( attribute, value )
-   
-end # Schema
+end # OptionalAttribute
+end # Definitions
 end # Schemaform
-
-
-   

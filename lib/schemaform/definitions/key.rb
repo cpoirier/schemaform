@@ -23,31 +23,33 @@ module Schemaform
 module Definitions
 class Key < Definition
       
-   def initialize( entity, name, field_names )
+   def initialize( entity, name, attribute_names )
       super( entity, name )
-      @fields = Tuple.new( self )
-      field_names.each do |name|
-         @fields.add_field( name, entity.heading.fields[name] )
+      @attributes = Tuple.new( self )
+      attribute_names.each do |name|
+         @attributes.add_attribute( name, entity.heading.attributes[name] )
       end
-      # @fields = field_names
+      # @attributes = attribute_names
    end
    
    alias entity context
 
-   def each_field()
-      @fields.each do |name|
-         yield( context.heading.fields[name] )
-      end
+   def each_attribute( &block )
+      @attributes.each_attribute( &block )
+   end
+   
+   def member?( name )
+      @attributes.member?(name)
    end
    
    def resolve()
       supervisor.monitor(self) do
-         @fields.resolve()
+         @attributes.resolve()
       end
    end
 
    def description()
-      @fields.description
+      @attributes.description
    end
    
 end # Key

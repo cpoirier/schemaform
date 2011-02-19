@@ -67,7 +67,7 @@ class ScalarType < Type
    
    def storage_type()
       if !defined?(@storage_type) then
-         @storage_type = @base_type.nil? ? nil : @base_type.storage_type
+         @storage_type = @base_type.nil? ? nil : @base_type.resolve.storage_type
       end
       
       return @storage_type
@@ -78,7 +78,7 @@ class ScalarType < Type
    
    def mapped_type()
       if !defined?(@mapped_type) then
-         @mapped_type = @base_type.nil? ? nil : @base_type.mapped_type
+         @mapped_type = @base_type.nil? ? nil : @base_type.resolve.mapped_type
       end
    
       return @mapped_type
@@ -136,9 +136,20 @@ class ScalarType < Type
       current = self
       while current
          yield( current )
-         current = current.base_type.resolve()
+         current = current.base_type
+         current = current.resolve if current
       end
    end
+   
+   
+   #
+   # Calls your block once for each constraint.  Pass a name to restrict.
+   
+   def each_constraint( &block )
+      @base_type.resolve.each_constraint( &block ) if @base_type
+   end
+   
+   
    
 
 end # ScalarType

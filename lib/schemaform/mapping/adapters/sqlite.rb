@@ -19,20 +19,18 @@
 # =============================================================================================
 
 
-require Schemaform.locate("original_field.rb")
-
-
 #
-# A required field -- one that must be present within its context Tuple.
+# Provides all necessary machinery for mapping a Schema into a SQLLite database.
 
 module Schemaform
-module Definitions
-class RequiredField < OriginalField
-
-   def initialize( container, type = nil )
-      super( container, type )
-   end
-
-end # RequiredField
-end # Definitions
+module Mapping
+module Adapters
+class SQLite < Map
+   Map.register_adapter_class( self, /^sqlite:/ )
+   
+   
+end # SQLite
+end # Adapters
+end # Mapping
 end # Schemaform
+

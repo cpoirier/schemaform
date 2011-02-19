@@ -20,29 +20,29 @@
 
 
 #
-# An expression wrapper for a TupleField
+# An expression wrapper for a TupleAttribute
 
 module Schemaform
 module Expressions
-module Fields
+module Attributes
    
-class TupleField < Field
+class TupleAttribute < Attribute
 
    def initialize( definition )
       super( definition )
       @tuple = definition.tuple.expression
 
-      @tuple.fields.each do |name, field|
+      @tuple.attributes.each do |name, attribute|
          instance_class.class_eval do
-            define_method field.name do |*args|
-               return field
+            define_method attribute.name do |*args|
+               return attribute
             end
          end
       end
    end
 
-end # TupleField
+end # TupleAttribute
 
-end # Fields
+end # Attributes
 end # Expressions
 end # Schemaform

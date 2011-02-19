@@ -42,8 +42,8 @@ class Entity < Relation
       @reference_type = ReferenceType.new( self )
       
       if @base_entity then
-         @base_entity.heading.each_field do |field|
-            @tuple.add_field field
+         @base_entity.heading.each_attribute do |attribute|
+            @tuple.add_attribute attribute
          end
       end
       
@@ -69,10 +69,10 @@ class Entity < Relation
    
    
    #
-   # Returns true if the named field is defined in this or any base entity.
+   # Returns true if the named attribute is defined in this or any base entity.
    
-   def field?( name )
-      return @heading.field?(name)
+   def attribute?( name )
+      return @heading.attribute?(name)
    end
    
    #
@@ -116,7 +116,7 @@ class Entity < Relation
       # Triggers the inline definition of the Tuple for the Entity.
       
       def each( tuple_name, tuple_base = nil, &block )
-         @entity.heading.define(&block)
+         @entity.heading.define(tuple_name, &block)
       end
       
       
@@ -130,18 +130,18 @@ class Entity < Relation
       
    
       #
-      # Defines a candidate key on the entity -- a subset of fields that can uniquely identify
+      # Defines a candidate key on the entity -- a subset of attributes that can uniquely identify
       # a record within the set.  You can name the key by passing a one-entry hash instead of
-      # an array of field name.  If you supply no keys, the full set of stored fields is used
+      # an array of attribute name.  If you supply no keys, the full set of stored attributes is used
       # as the key.  Note: [:x, :y] is the same key as [:y, :x].  The system will not stop
       # you from making both, but there is likely no benefit to you for doing so.
       #
       # Examples:
-      #   key :field_name
-      #   key :field_name, :other_field_name
-      #   key :key_name => :field_name
-      #   key :key_name => [:field_name]
-      #   key :key_name => [:field_name, :other_field_name]
+      #   key :attribute_name
+      #   key :attribute_name, :other_attribute_name
+      #   key :key_name => :attribute_name
+      #   key :key_name => [:attribute_name]
+      #   key :key_name => [:attribute_name, :other_attribute_name]
    
       def key( *names )
          @entity.instance_eval do 
@@ -151,12 +151,12 @@ class Entity < Relation
                names = names[0][key_name].as_array
             end
       
-            key_name = names.collect{|name| name.to_s}.join("_and_") if key_name.nil?
+            key_name = names.collect{|name| name.to_s}.join("_and_").intern if key_name.nil?
       
             check do
                assert( !key?(key_name), "key name #{key_name} already exists in entity #{@name}" )
                names.each do |name|
-                  assert( field?(name), "key field #{name} is not a member of entity #{@name}" )
+                  assert( attribute?(name), "key attribute #{name} is not a member of entity #{@name}" )
                end
             end
             
@@ -175,8 +175,8 @@ class Entity < Relation
       #
       # Enumerates named values within a code table.  Most entities won't need this, but for
       # those few that do, it makes a lot of things more convenient.  The enumeration code
-      # will automatically create the necessary fields in an empty entity, or can use any
-      # pair of appropriately typed fields (specified with enumerate_into).  
+      # will automatically create the necessary attributes in an empty entity, or can use any
+      # pair of appropriately typed attributes (specified with enumerate_into).  
       #
       # Examples:
       #   entity :Codes do
@@ -184,16 +184,16 @@ class Entity < Relation
       #   end
       #
       #   entity :Codes do
-      #     field :a_name , identifier_type()
-      #     field :a_value, integer_type()   
+      #     attribute :a_name , identifier_type()
+      #     attribute :a_value, integer_type()   
       #     
       #     enumerate :first, :second, :fourth, 4, :fifth
       #   end
       #
       #   entity :Codes do
-      #     field :a_name , identifier_type()
-      #     field :a_value, integer_type()   
-      #     field :public , boolean_type()
+      #     attribute :a_name , identifier_type()
+      #     attribute :a_value, integer_type()   
+      #     attribute :public , boolean_type()
       #
       #     enumerate do
       #       define :first , 1, true
@@ -211,16 +211,16 @@ class Entity < Relation
             
             if @heading.empty? then
                @heading.define do 
-                  required :name , :identifier
-                  required :value, :integer
+                  required :name , Symbol
+                  required :value, Integer
                end
                dsl.key :name
             else
                check do
-                  assert( @fields.length >= 2, "an enumerated entity needs at least name and value fields" )
+                  assert( @attributes.length >= 2, "an enumerated entity needs at least name and value attributes" )
                end
                
-               # TODO type check the first two fields, once you figure out how best to do it
+               # TODO type check the first two attributes, once you figure out how best to do it
             end
       
             @enumeration = Enumeration.new( self )
@@ -229,7 +229,7 @@ class Entity < Relation
                @enumeration.fill(block)
             else
                check do
-                  assert( @heading.length == 2, "to use the simple enumeration form, the entity must have only two fields" )
+                  assert( @heading.length == 2, "to use the simple enumeration form, the entity must have only two attributes" )
                end
 
                @enumeration.fill do

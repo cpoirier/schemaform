@@ -19,25 +19,22 @@
 # =============================================================================================
 
 
+#
+# Selects a Map class for a connection URL based on a Regexp.
 
 module Schemaform
-module Definitions
-class DerivedField < Field
-   def initialize( tuple, block )
-      super( tuple )
-      @block = block
+module Mapping
+class PatternBasedSelector < Selector
+
+   def initialize( map_class, url_pattern )
+      super( map_class )
+      @url_pattern = url_pattern
    end
    
-   def resolve()
-      supervisor.monitor(self) do
-         annotate_errors( :field => full_name() ) do 
-            result_expression = @block.call( root_tuple.expression )
-            type_check( :result_expression, result_expression, Expressions::Expression )
-            result_expression.resolve()
-         end
-      end   
+   def matches?( connection_url )
+      !!(@url_pattern =~ connection_url)
    end
-end
-end # Definitions
-end # Schemaform
 
+end # PatternBasedSelector
+end # Mapping
+end # Schemaform

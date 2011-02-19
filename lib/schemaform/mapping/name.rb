@@ -20,18 +20,32 @@
 
 
 #
-# Represents a standard SQL table.
+# Provides easily flattened "dotted" naming for Map objects.
 
 module Schemaform
-module Runtime
-module Schema
-class Table
+module Mapping
+class Name
 
-   def initialize()
-      
+   def initialize( map, *components )
+      @map        = map
+      @components = components
+   end
+   
+   def empty?()
+      @components.empty?
+   end
+   
+   def to_s()
+      @map.map_name( @components )
+   end
+   
+   def +( component )
+      self.class.new( @map, @components + (component.is_a?(Name) ? component.components : [component]) )
    end
 
-end # Table
-end # Schema
-end # Runtime
+protected
+   attr_reader :components
+
+end # Name
+end # Mapping
 end # Schemaform

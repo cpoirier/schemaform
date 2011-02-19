@@ -19,24 +19,29 @@
 # =============================================================================================
 
 
+#
+# Base class for things that pick the appropriate Map class for a database connection URL.
+
 module Schemaform
-class Schema
-class AttributeIsEqual
+module Mapping
+class Selector
+   include QualityAssurance
    
-   class TupleExpression
-      def initialize( type, source = nil )
-         @type   = type
-         @source = source
-      end
-      
-      
+   attr_reader :adapter_class
+   
+   def initialize( adapter_class )
+      @adapter_class = adapter_class
+   end
+   
+   def matches?( connection_url )
+      fail_unless_overriden( self, :matches? )
    end
 
-
-   def initialize( attribute, value )
-   
-end # Schema
+end # Selector
+end # Mapping
 end # Schemaform
 
 
-   
+Dir[Schemaform.locate("selectors/*.rb")].each do |path| 
+   require path
+end

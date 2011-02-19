@@ -57,7 +57,7 @@ class Relation < Expression
    # # you must specify which to consider.  If the target relation contains no reference to
    # # this type, of this type doesn't have a key, the empty set will be returned.
    # 
-   # def find_matching( target, id_field = nil )
+   # def find_matching( target, id_attribute = nil )
    # end
    # 
    # 
@@ -104,7 +104,7 @@ class Relation < Expression
    # 
    # #
    # # Returns a relation containing the join of this relation and another along all common
-   # # fields.
+   # # attributes.
    # 
    # def join( rhs )
    # end
@@ -114,7 +114,7 @@ class Relation < Expression
    # # Returns a relation containing a transitive closure of the target relation, starting
    # # from records in this one.
    # 
-   # def follow( target, from_field, to_field )
+   # def follow( target, from_attribute, to_attribute )
    # end
    # 
    # 
@@ -146,22 +146,22 @@ class Relation < Expression
    # def add_summary( name, over_relation, seed = 0 )
    # end
    # 
-   # def add_count( name, over_relation, field )
+   # def add_count( name, over_relation, attribute )
    # end
    # 
-   # def add_avg( name, over_relation, field )
+   # def add_avg( name, over_relation, attribute )
    # end
    # 
-   # def add_max( name, over_relation, field )
+   # def add_max( name, over_relation, attribute )
    # end
    # 
-   # def add_min( name, over_relation, field )
+   # def add_min( name, over_relation, attribute )
    # end
    # 
-   # def add_sum( name, over_relation, field )
+   # def add_sum( name, over_relation, attribute )
    # end
    # 
-   # def add_concatenation( name, over_relation, field )
+   # def add_concatenation( name, over_relation, attribute )
    # end
    # 
    # 

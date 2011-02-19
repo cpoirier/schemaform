@@ -19,24 +19,24 @@
 # =============================================================================================
 
 
+require Schemaform.locate("original_attribute.rb")
+
+
+#
+# A required attribute -- one that must be present within its context Tuple.
+
 module Schemaform
-class Schema
-class AttributeIsEqual
+module Definitions
+class RequiredAttribute < OriginalAttribute
+
+   def initialize( container, type = nil )
+      super( container, type )
+   end
    
-   class TupleExpression
-      def initialize( type, source = nil )
-         @type   = type
-         @source = source
-      end
-      
-      
+   def required?()
+      true
    end
 
-
-   def initialize( attribute, value )
-   
-end # Schema
+end # RequiredAttribute
+end # Definitions
 end # Schemaform
-
-
-   

@@ -38,11 +38,11 @@ class Enumeration < Definition
    end
    
    #
-   # Defines a single record for the enumeration.  Fields must match the entity.
+   # Defines a single record for the enumeration.  Attributes must match the entity.
    
-   def define( *fields )
+   def define( *attributes )
       warn_once( "TODO: type check and count the enumeration values" )
-      @definitions << fields
+      @definitions << attributes
    end
 
 end # Enumeration

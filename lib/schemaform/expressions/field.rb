@@ -22,11 +22,11 @@
 require Schemaform.locate("expression.rb")
 
 #
-# Represents a Field as an expression.
+# Represents a Attribute as an expression.
 
 module Schemaform
 module Expressions
-class Field < Expression
+class Attribute < Expression
 
    def initialize( definition )
       super()
@@ -42,8 +42,8 @@ class Field < Expression
    end
    
 
-end # Field
+end # Attribute
 end # Expressions
 end # Schemaform
 
-Dir[Schemaform.locate("fields/*.rb")].each {|path| require path}
+Dir[Schemaform.locate("attributes/*.rb")].each {|path| require path}

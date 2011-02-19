@@ -19,24 +19,25 @@
 # =============================================================================================
 
 
+
 module Schemaform
-class Schema
-class AttributeIsEqual
-   
-   class TupleExpression
-      def initialize( type, source = nil )
-         @type   = type
-         @source = source
-      end
-      
-      
+module Definitions
+class DerivedAttribute < Attribute
+   def initialize( tuple, block )
+      super( tuple )
+      @block = block
    end
-
-
-   def initialize( attribute, value )
    
-end # Schema
+   def resolve()
+      supervisor.monitor(self) do
+         annotate_errors( :attribute => full_name() ) do 
+            result_expression = @block.call( root_tuple.expression )
+            type_check( :result_expression, result_expression, Expressions::Expression )
+            result_expression.resolve()
+         end
+      end   
+   end
+end
+end # Definitions
 end # Schemaform
 
-
-   

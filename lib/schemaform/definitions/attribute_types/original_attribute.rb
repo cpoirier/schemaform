@@ -19,24 +19,33 @@
 # =============================================================================================
 
 
+
+#
+# An original (as opposed to derived) attribute.
+
 module Schemaform
-class Schema
-class AttributeIsEqual
+module Definitions
+class OriginalAttribute < Attribute
+
+   def initialize( container, type = nil )
+      super( container )
+      @type = type
+   end
    
-   class TupleExpression
-      def initialize( type, source = nil )
-         @type   = type
-         @source = source
+   attr_accessor :type
+   
+   def resolve()
+      supervisor.monitor(self) do
+         @type.resolve.tap do |type|
+            check do
+               if type.type_info == TypeInfo::SCALAR then
+                  assert( type.complete?, "scalar optional and required attributes must be of a complete type -- one that has both a Schemaform and a Ruby representation" )
+               end
+            end
+         end
       end
-      
-      
    end
 
-
-   def initialize( attribute, value )
-   
-end # Schema
+end # OriginalAttribute
+end # Definitions
 end # Schemaform
-
-
-   

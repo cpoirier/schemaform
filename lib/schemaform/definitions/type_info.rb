@@ -50,6 +50,23 @@ public
       !@is_multi_valued
    end
    
+   def scalar?()
+      !@has_heading && !@is_multi_valued
+   end
+   
+   def tuple?()
+      @has_heading && !@is_multi_valued
+   end
+   
+   def set?()
+      !@has_heading && @is_multi_valued
+   end
+   
+   def relation?()
+      @has_heading && @is_multi_valued
+   end
+   
+   
    def ===( type )
       info = type.respond_to?(:has_heading?) ? type : type.type_info
       @has_heading == info.has_heading? && @is_multi_valued == info.multi_valued?

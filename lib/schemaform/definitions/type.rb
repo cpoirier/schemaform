@@ -49,6 +49,22 @@ class Type < Definition
       type_info.single_valued?
    end
    
+   def scalar_type?()
+      type_info.scalar?
+   end
+   
+   def tuple_type?()
+      type_info.tuple?
+   end
+   
+   def set_type?()
+      type_info.set?
+   end
+   
+   def relation_type?()
+      type_info.relation?
+   end
+   
 
    #
    # Returns a human-readable summary of the type, for inclusion in diagnostic output.

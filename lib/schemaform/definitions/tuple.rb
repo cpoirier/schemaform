@@ -70,6 +70,10 @@ class Tuple < Type
       name = name.name if name.is_an?(Attribute)
       @attributes.member?(name)
    end   
+   
+   def width()
+      @attributes.length
+   end   
       
    
    # ==========================================================================================

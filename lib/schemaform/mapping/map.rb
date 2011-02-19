@@ -165,9 +165,17 @@ protected
    # specific type (scalar, tuple, set, relation).  You can pass a block if you need to 
    # perform additional processing on each (sub-)attribute.
    
-   def map_attribute( attribute, table, base_name = Name.new(self), &block ) 
+   def map_attribute( attribute, table, base_name = Name.new(self), elide_name = false, &block ) 
       block.call( :pre, attribute, nil ) if block_given?     
-      field = send( attribute.resolve.type_info.specialize("map", "attribute"), attribute, table, base_name, &block )
+
+      field = nil
+      attribute_type = attribute.resolve
+      if attribute_type.scalar_type? then
+         field = map_scalar_attribute( attribute, table, base_name, elide_name, &block )
+      else
+         send( attribute_type.type_info.specialize("map", "attribute"), attribute, table, base_name, &block )
+      end
+      
       block.call( :post, attribute, field ) if block_given?
    end
 
@@ -175,8 +183,8 @@ protected
    #
    # Maps a scalar attribute to a SQL field.  
    
-   def map_scalar_attribute( attribute, table, base_name, &block )
-      Field.new( table, base_name + attribute.name, map_scalar_type(attribute.resolve) )
+   def map_scalar_attribute( attribute, table, base_name, elide_name, &block )
+      Field.new( table, elide_name ? base_name : base_name + attribute.name, map_scalar_type(attribute.resolve) )
    end
 
 
@@ -184,8 +192,9 @@ protected
    # Flattens a Tuple attribute into a table.
 
    def map_tuple_attribute( attribute, table, base_name, &block )
-      attribute.resolve.each_attribute do |sub_attribute|
-         map_attribute( sub_attribute, table, base_name + attribute.name )
+      tuple = attribute.resolve
+      tuple.each_attribute do |sub_attribute|
+         map_attribute( sub_attribute, table, base_name + attribute.name, tuple.length == 1, &block ) 
       end
    end
 
@@ -200,8 +209,9 @@ protected
          # Copy of the primary key fields from the master table.
          
          owner_field_base_name = Name.new( self, "key_" + table.row_name.to_s )
-         table.primary_key.fields.each do |field|
-            Field.new( set_table, owner_field_base_name + field.name, field.type, field.allow_nulls? )
+         fields_to_copy = table.primary_key.fields         
+         fields_to_copy.each do |field|
+            Field.new( set_table, fields_to_copy.length == 1 ? owner_field_base_name : owner_field_base_name + field.name, field.type, field.allow_nulls? )
          end
          
          #
@@ -211,8 +221,8 @@ protected
          member_type = attribute.resolve.member_type.resolve
          if member_type.has_heading? then
             owned_field_base_name = Name.new( self, "referenced_" + member_type.context.context.heading.name )
-            member_type.resolve.each_attribute do |sub_attribute|
-               map_attribute( sub_attribute, set_table, owned_field_base_name )
+            member_type.each_attribute do |sub_attribute|
+               map_attribute( sub_attribute, set_table, owned_field_base_name, member_type.length == 1, &block )
             end
          else
             Field.new( set_table, Name.new(self, "member_value"), map_scalar_type(attribute.resolve) )

@@ -38,7 +38,7 @@ class OriginalAttribute < Attribute
       supervisor.monitor(self) do
          @type.resolve.tap do |type|
             check do
-               if type.type_info == TypeInfo::SCALAR then
+               if type.scalar_type? then
                   assert( type.complete?, "scalar optional and required attributes must be of a complete type -- one that has both a Schemaform and a Ruby representation" )
                end
             end

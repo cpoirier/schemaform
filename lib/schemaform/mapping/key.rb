@@ -36,8 +36,17 @@ class Key
    
    attr_reader :name, :fields
    
-   def add( field )
+   def add_field( field )
       @fields << field
+   end
+   
+   def to_sql( name_override = nil )
+      name = name_override || "unique index #{@name}"
+      "#{name} (#{@fields.collect{|f| f.name.to_s}.join(", ")})"
+   end
+   
+   def empty?
+      @fields.empty?
    end
 
 end # Key

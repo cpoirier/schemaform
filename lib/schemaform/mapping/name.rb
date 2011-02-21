@@ -36,7 +36,8 @@ class Name
    end
    
    def to_s()
-      @map.map_name( @components )
+      @s = @map.map_name( @components ) if @s.nil?
+      @s
    end
    
    def +( component )

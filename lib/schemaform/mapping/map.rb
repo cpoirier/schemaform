@@ -128,7 +128,7 @@ protected
                      assert( key_worthy?(attribute_type)  , "[#{specific.full_name}] cannot be used in a primary key in [#{@connection_url}]" )
                   end
                elsif field then
-                  table.primary_key.add( field )
+                  table.primary_key.add_field( field )
                end
             end
          else
@@ -218,7 +218,7 @@ protected
          owner_field_base_name = Name.new( self, "key_" + table.row_name.to_s )
          fields_to_copy = table.primary_key.fields         
          fields_to_copy.each do |field|
-            Field.new( set_table, fields_to_copy.length == 1 ? owner_field_base_name : owner_field_base_name + field.name, field.type, field.allow_nulls? )
+            set_table.primary_key.add_field Field.new( set_table, fields_to_copy.length == 1 ? owner_field_base_name : owner_field_base_name + field.name, field.type, field.allow_nulls? )
          end
          
          #
@@ -229,10 +229,15 @@ protected
          if member_type.has_heading? then
             owned_field_base_name = Name.new( self, "referenced_" + member_type.context.context.heading.name )
             member_type.each_attribute do |sub_attribute|
-               map_attribute( sub_attribute, set_table, owned_field_base_name, member_type.length == 1, &block )
+               map_attribute( sub_attribute, set_table, owned_field_base_name, member_type.length == 1 ) do |pass, attribute, field|
+                  yield( pass, attribute, field ) if block_given?
+                  if pass == :post && field then
+                     set_table.primary_key.add_field field
+                  end
+               end
             end
          else
-            Field.new( set_table, Name.new(self, "member_value"), map_scalar_type(attribute.resolve) )
+            set_table.primary_key.add_field Field.new( set_table, Name.new(self, "member_value"), map_scalar_type(attribute.resolve) )
          end
       end
    end

@@ -49,9 +49,27 @@ class Table
    end
    
    def to_sql()
-      name_length       = @fields.inject(0){|current, field| [current, field.name.to_s.length].max}
-      field_definitions = @fields.collect{|field| field.to_sql(name_length)}.join("\n   ")
-      "create table #{@name}\n(\n   #{field_definitions}\n);"
+
+      #
+      # Produce field definitions.
+      
+      name_width        = @fields.max_by{|f| f.name.to_s.length}.name.to_s.length
+      type_width        = @fields.max_by{|f| f.type.length}.type.length
+      field_definitions = @fields.collect{|field| field.to_sql(name_width, type_width)}
+      
+      #
+      # Produce primary and unique keys.
+      
+      key_definitions = []
+      key_definitions << @primary_key.to_sql("primary key") if @primary_key && !@primary_key.empty?
+      
+      #
+      # Complete the SQL.
+      
+      lines = (field_definitions + key_definitions).collect{|line| "   #{line}"}
+      line_width = lines.max_by{|l| l.length}.length
+      
+      "create table #{@name}\n(\n#{lines.collect{|l| l.ljust(line_width)}.join(",\n")}\n);"
    end
 
 end # Table

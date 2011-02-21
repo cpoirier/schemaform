@@ -41,8 +41,8 @@ class Field
       @allow_nulls
    end
    
-   def to_sql( name_width = 0 )
-      @name.to_s.ljust(name_width) + " " + @type + " " + (@allow_nulls ? "" : "not") + " null"
+   def to_sql( name_width = 0, type_width = 0 )
+      @name.to_s.ljust(name_width) + " " + @type.ljust(type_width) + " " + (@allow_nulls ? "" : "not") + " null"
    end
    
 

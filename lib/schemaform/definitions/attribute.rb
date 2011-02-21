@@ -47,6 +47,14 @@ class Attribute < Definition
       false
    end
    
+   def derived?()
+      false
+   end
+   
+   def optional?()
+      false
+   end
+   
 end # Attribute
 end # Definitions
 end # Schemaform

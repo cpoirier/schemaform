@@ -45,7 +45,11 @@ class OriginalAttribute < Attribute
          end
       end
    end
-
+   
+   def optional?()
+      !required?
+   end 
+   
 end # OriginalAttribute
 end # Definitions
 end # Schemaform

@@ -178,13 +178,16 @@ protected
       
       block.call( :post, attribute, field ) if block_given?
    end
-
+   
    
    #
    # Maps a scalar attribute to a SQL field.  
    
    def map_scalar_attribute( attribute, table, base_name, elide_name, &block )
-      Field.new( table, elide_name ? base_name : base_name + attribute.name, map_scalar_type(attribute.resolve) )
+      field_name = elide_name ? base_name : base_name + attribute.name
+      add_present_flag( table, field_name ) if attribute.optional?
+      
+      Field.new( table, field_name, map_scalar_type(attribute.resolve) )
    end
 
 
@@ -192,6 +195,10 @@ protected
    # Flattens a Tuple attribute into a table.
 
    def map_tuple_attribute( attribute, table, base_name, &block )
+      if attribute.optional? then
+         add_present_flag( table, base_name + attribute.name )
+      end
+
       tuple = attribute.resolve
       tuple.each_attribute do |sub_attribute|
          map_attribute( sub_attribute, table, base_name + attribute.name, tuple.length == 1, &block ) 
@@ -237,6 +244,12 @@ protected
    def map_relation_attribute( attribute, table, base_name, &block )
 
    end
+   
+   
+   def add_present_flag( table, name ) 
+      Field.new( table, name + "" + "present", map_integer_type_for_range(0..1) )
+   end
+      
 
 
    

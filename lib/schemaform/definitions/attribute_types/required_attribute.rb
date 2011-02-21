@@ -36,6 +36,7 @@ class RequiredAttribute < OriginalAttribute
    def required?()
       true
    end
+   
 
 end # RequiredAttribute
 end # Definitions

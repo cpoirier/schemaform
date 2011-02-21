@@ -40,7 +40,6 @@ class Table
    end
 
    def add_field( field )
-      puts "DEBUG: added field #{field.name} #{field.type} to table #{@name}"
       @fields << field
    end
 

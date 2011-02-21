@@ -37,6 +37,11 @@ class DerivedAttribute < Attribute
          end
       end   
    end
+   
+   def derived?()
+      true
+   end
+   
 end
 end # Definitions
 end # Schemaform

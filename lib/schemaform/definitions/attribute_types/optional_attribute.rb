@@ -32,6 +32,7 @@ class OptionalAttribute < OriginalAttribute
    def initialize( container, type = nil )
       super( container, type )
    end
+   
 
 end # OptionalAttribute
 end # Definitions

@@ -34,9 +34,9 @@ module Schemaform
    #
    # Creates a Schema and calls your block to fill it in (see Schema::DefinitionLanguage).
 
-   def self.define( name, context_schema = nil, &block )
+   def self.define( name, &block )
       load_all()
-      Definitions::Schema.new( name, context_schema, &block )
+      Definitions::Schema.new( name, &block )
    end
    
    

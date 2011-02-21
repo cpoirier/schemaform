@@ -24,8 +24,8 @@ require 'ipaddr'
 #
 # An example Schema definition: a schema for a content management system.
 
-def example_cms_schema( context_schema = nil )
-   Schemaform.define :CMS, context_schema do
+def example_cms_schema()
+   Schemaform.define :CMS do
       
       
       #=== Access Control =====================================================================

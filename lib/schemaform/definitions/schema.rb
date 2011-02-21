@@ -31,50 +31,45 @@ module Schemaform
 module Definitions
 class Schema < Definition
    
-   def initialize( name, context_schema = nil, &block )
-      super( context_schema, name )
+   def initialize( name, &block )
+      super( nil, name )
       
       @dsl        = DefinitionLanguage.new( self )
       @types      = {}
-      @subschemas = {}
       @relations  = {}
       @entities   = {}
-      @supervisor = context_schema ? context_schema.supervisor : TypeResolutionSupervisor.new( self )
+      @supervisor = TypeResolutionSupervisor.new( self )
          
       @types_are_resolved = false
 
-      if root == self then
-         register_type :all     , ScalarType.new(   nil, self     )
-         register_type :any     , ScalarType.new(   @types[:all]  )
-         register_type :void    , ScalarType.new(   @types[:all]  )
-         
-         register_type :binary  , BinaryType.new(   @types[:any ] )   
-         register_type :text    , TextType.new(     @types[:any ] ) 
-         register_type :datetime, DateTimeType.new( @types[:text] ) 
-         register_type :real    , NumericType.new(  @types[:any ] )    
-         register_type :integer , IntegerType.new(  @types[:real] )    
-
-         @dsl.instance_eval do
-            define_type :boolean   , :integer, :range  => 0..1
-            define_type :identifier, :text   , :length => 80, :check => lambda {|i| !!i.to_sym && i.to_sym.inspect !~ /"/}
+      register_type :all     , ScalarType.new(   nil, self     )
+      register_type :any     , ScalarType.new(   @types[:all]  )
+      register_type :void    , ScalarType.new(   @types[:all]  )
       
-            define_type Float     , :real
-            define_type Integer   , :integer
-            define_type String    , :text
-            define_type Symbol    , :identifier, :load => lambda {|s| s.intern}
-            define_type IPAddr    , :text, :length => 40
-            define_type TrueClass , :boolean, :store => 1, :load => lambda {|v| !!v }
-            define_type FalseClass, :boolean, :store => 0, :load => lambda {|v| !!v }
-            define_type Time      , :datetime,
-                                    :store => lambda {|t| utc = t.getutc; utc.strftime("%Y-%m-%d %H:%M:%S") + (utc.usec > 0 ? ".#{utc.usec}" : "") },
-                                    :load  => lambda {|s| year, month, day, hour, minute, second, micros = *s.split(/[:\-\.] /); Time.utc(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i, micros.to_i)}  
-         end
-      else
-         context_schema.register_subschema( self )
+      register_type :binary  , BinaryType.new(   @types[:any ] )   
+      register_type :text    , TextType.new(     @types[:any ] ) 
+      register_type :datetime, DateTimeType.new( @types[:text] ) 
+      register_type :real    , NumericType.new(  @types[:any ] )    
+      register_type :integer , IntegerType.new(  @types[:real] )    
+
+      @dsl.instance_eval do
+         define_type :boolean   , :integer, :range  => 0..1
+         define_type :identifier, :text   , :length => 80, :check => lambda {|i| !!i.to_sym && i.to_sym.inspect !~ /"/}
+   
+         define_type Float     , :real
+         define_type Integer   , :integer
+         define_type String    , :text
+         define_type Symbol    , :identifier, :load => lambda {|s| s.intern}
+         define_type IPAddr    , :text, :length => 40
+         define_type TrueClass , :boolean, :store => 1, :load => lambda {|v| !!v }
+         define_type FalseClass, :boolean, :store => 0, :load => lambda {|v| !!v }
+         define_type Time      , :datetime,
+                                 :store => lambda {|t| utc = t.getutc; utc.strftime("%Y-%m-%d %H:%M:%S") + (utc.usec > 0 ? ".#{utc.usec}" : "") },
+                                 :load  => lambda {|s| year, month, day, hour, minute, second, micros = *s.split(/[:\-\.] /); Time.utc(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i, micros.to_i)}  
       end
       
       @dsl.instance_eval(&block) if block_given?
-      resolve_types() if context_schema.nil? || context_schema.types_are_resolved?
+      resolve_types()
    end
    
    attr_reader :supervisor
@@ -90,11 +85,6 @@ class Schema < Definition
       end
    end
    
-   def each_subschema()
-      @subschemas.each do |name, subschema|
-         yield( subschema )
-      end
-   end
    
    
    
@@ -246,13 +236,6 @@ class Schema < Definition
          entity.resolve()
       end
       
-      #
-      # Pass the call down the chain.
-      
-      @subschemas.each do |subschema|
-         subschema.resolve_types()
-      end
-      
       @types_are_resolved = true
    end
    
@@ -339,16 +322,6 @@ protected
    # ==========================================================================================
    #                                          Internals
    # ==========================================================================================
-
-   def register_subschema( schema )
-      check do
-         assert( !@subschemas.member?(schema.name), "schema [#{@path.join(".")}] already has a subschema named [#{schema.name}]" )
-      end
-      
-      @subschemas[schema.name] = schema
-      return schema
-   end
-   
 
    #
    # Registers a named type with the schema.

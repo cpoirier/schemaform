@@ -84,14 +84,12 @@ protected
    # Maps a single Schema definition into the database.
    
    def map_schema( schema, base_name = Name.new(self) )
+      warn_once( "TODO: add foreign key references to table definitions" )
+      
       schema_name = base_name.empty? ? Name.new(self) : base_name + schema.name
       
       schema.each_entity do |entity|
          map_entity( entity, schema_name )
-      end
-      
-      schema.each_subschema do |subschema|
-         map_schema( subschema, schema_name )
       end
       
       @tables.each do |table|

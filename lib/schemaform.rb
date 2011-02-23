@@ -32,11 +32,24 @@ module Schemaform
    
    
    #
+   # Returns the named Schema definition.
+   
+   def self.[]( name )
+      @@schemas = {} unless defined?(@@schemas)
+      @@schemas[name]
+   end
+   
+   
+   
+   #
    # Creates a Schema and calls your block to fill it in (see Schema::DefinitionLanguage).
 
    def self.define( name, &block )
       load_all()
-      Definitions::Schema.new( name, &block )
+      @@schemas = {} unless defined?(@@schemas)
+      Definitions::Schema.new( name, &block ).tap do |schema|
+         @@schemas[name] = schema
+      end
    end
    
    

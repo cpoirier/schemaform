@@ -30,34 +30,10 @@ class Database
    include QualityAssurance
    extend QualityAssurance
    
-   attr_reader   :url, :adapter
-   attr_accessor :master_account
+   attr_reader :url, :adapter, :connections, :master_account
    
-   
-   #
-   # Couples the Database with a Schema for use.  You can couple multiple copies of the same Schema
-   # to one Database, if you use a different name prefix for each.  Once you have a Coupling, you can 
-   # connect() it any number of times to provide separate transaction scopes (and user credentials).
-   
-   def couple_with( schema, prefix = nil, coupling_account = nil, replace_coupling_account = false )
-      schema = schema.root
-      prefix = nil if prefix.to_s == ""
-      
-      @couplings_monitor.synchronize do
-         @couplings[schema.name] = {} unless @couplings.member?(schema.name)
-         if @couplings[schema.name].member?(prefix) then
-            if coupling_account then
-               coupling = @coupling[schema.name][prefix]
-               if replace_coupling_account or coupling.coupling_account.nil? then
-                  coupling.coupling_account = coupling_account 
-               end
-            end
-         else
-            @couplings[schema.name][prefix] = Coupling.new( self, schema, prefix, coupling_account )
-         end
-      end      
-      
-      @couplings[schema.name][prefix]
+   def read_only_connections()
+      @read_only_connections || @connections
    end
    
    
@@ -68,36 +44,52 @@ class Database
    # maintaining the schema within the database.  It should have full privileges in the database.  It will
    # additionally be used as the default account for downstream objects (Couplings and Connections).
    
-   def self.for( url, master_account = nil, replace_master_account = false )
-      assert( url !~ /(\/\/[^\/@]+@)|\?/, "database URL cannot cantain a user name or other parameters" )
+   def self.for( connection_string, configuration = {} )
+      url = connection_string.split("?").shift
+      key = url.downcase
       
       @@monitor.synchronize do
-         if @@databases.member?(url) then
-            if master_account then 
-               database = @@databases[url.downcase]
-               if replace_master_account or database.master_account.nil? then
-                  database.master_account = master_account 
-               end
-            end
+         if @@databases.member?(key) then
+            @@databases[key].configure( configuration )
          else
-            @@databases[url.downcase] = new(url, master_account)
+            @@databases[key] = new( connection_string, configuration )
          end
       end
       
-      @@databases[url.downcase]
+      @@databases[key]
+   end
+   
+      
+   #
+   # Sets configuration parameters on the Database.
+   
+   def configure( configuration = {} )
+      if configuration.member?(:connection_pool) then
+         @connections.reconfigure( configuration[:connection_pool] ) 
+      end
+      
+      if configuration.member?(:read_only_connection_pool) then
+         @read_only_connections = ConnectionPool.new( self, [true] ) if @read_only_connections.nil?
+         @read_only_connections.reconfigure( configuration[:read_only_connection_pool] )
+      end
    end
    
    
 private
-   def initialize( url, master_account )
-      @url               = url      
-      @master_account    = master_account
-      @couplings         = {}
-      @couplings_monitor = Monitor.new()
+   def initialize( connection_string, properties = {} )
+      @connection_string     = connection_string      
+      @connections           = ConnectionPool.new( self, [] )
+      @read_only_connections = nil
+
+      configure( properties )
    end
 
    @@monitor   = Monitor.new()
    @@databases = {} 
+   
+   def connect( owner, read_only = false )
+      Connection.new( owner, @connection_string, read_only )
+   end
 
 end # Database
 end # Runtime

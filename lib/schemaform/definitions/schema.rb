@@ -70,19 +70,7 @@ class Schema < Definition
       
       @dsl.instance_eval(&block) if block_given?
       resolve_types()
-   end
-   
-   attr_reader :supervisor
-   
-   def any_type()
-      return find_type(:any)
-   end
-      
-      
-   def each_entity() 
-      @entities.each do |name, entity|
-         yield( entity )
-      end
+      generate_classes()
    end
    
    
@@ -139,12 +127,25 @@ class Schema < Definition
    #                                      Public Interface
    # ==========================================================================================
    
-   
+
    def types_are_resolved?()
       @types_are_resolved
    end
    
    
+   attr_reader :supervisor
+   
+   def any_type()
+      return find_type(:any)
+   end
+      
+   def each_entity() 
+      @entities.each do |name, entity|
+         yield( entity )
+      end
+   end
+
+      
    #
    # Returns the Type for a name (Symbol or Class), or nil.
    
@@ -280,7 +281,30 @@ class Schema < Definition
    
    
    # ==========================================================================================
-   #                                       Type Constraints
+   #                                      Class Generation
+   # ==========================================================================================
+
+
+   def generate_classes()
+      container = Object.const_set( @name, Module.new() )
+      container.extend( Runtime::SchemaMixin )
+      
+      # each_tuple() do |tuple|
+      #    tuple_class = container.const_set( tuple.name, Class.new() )
+      #    tuple_class.include( Runtime::TupleMixin )
+      # end
+      # each_entity() do |entity|
+      #    entity_class = container.const_set( entity.name, Class.new() )
+      #    entity_class.include( Runtime::EntityMixin )
+      # end
+   end
+   
+   
+   
+   
+   
+   # ==========================================================================================
+   #                                      Type Constraints
    # ==========================================================================================
 
 

@@ -23,31 +23,73 @@ require 'sequel'
 
 
 #
-# Provides the primary bridge between a Schema and the physical storage in which is lives.  
+# Provides a query execution context for a database.  Be sure to set the idle_limit explicitly, 
+# if you expect to leave the connection alone for a while, or the ConnectionPool may close it
+# out from under you.  
+#
+# Note that, in Schemaform, it is absolutely, positively, 100% ILLEGAL to do any work in the 
+# database (read or write) without a valid, explicit transaction.  If you attempt any action 
+# without one, expect an AssertionFailure.
+#
+# Finally, as a rule, you should never have cause to directly execute a query against a connection: 
+# that is what the Schemaform classes are for.
 
 module Schemaform
 module Runtime
 class Connection
+   
+   attr_reader   :owner, :read_only, :idle_limit
+   attr_accessor :holder
 
-   def initialize( schema, connection_string, properties = {} )
-      assert( !properties.member?(:server), "in order to maintain proper transaction protection, the Sequel :servers parameter cannot be used with Schemaform" )
-
-      @schema    = schema.root
-      @read_only = !!properties.delete(:read_only)
-      @prefix    = properties.delete(:prefix)
-      @sequel    = Sequel.connect( connection_string, properties )
-      
-      update_database_structures
+   def idle_limit=( seconds )
+      @idle_limit = seconds
+      @last_query = Time.now()
+   end
+   
+   def closed?()
+      !@connected
+   end
+   
+   def unused?()
+      Time.now() - @last_query > @idle_limit
+   end
+   
+   def initialize( owner, connection_string, read_only = false )
+      @owner        = owner
+      @holder       = nil
+      @read_only    = read_only
+      @idle_limit   = 0
+      @last_query   = Time.now()
+      @sequel       = Sequel.connect( connection_string )
+      @connected    = @sequel.exists?
+      @transactions = 0
+   end
+   
+   def assign_to( holder, idle_limit = 0 )
+      @holder     = holder
+      @idle_limit = idle_limit
+      @last_query = Time.now()
+   end
+   
+   def close()
+      @sequel.disconnect()
+      @connected = false
    end
    
    
-   
-   
-   def update_database_structures()
-      @sequel[]
+   def transaction()
+      @sequel.transaction( :isolation => @read_only ? :committed : :serializable ) do
+         begin
+            @transactions += 1
+            yield
+         ensure
+            @transactions -= 1
+         end
+      end
    end
    
 
-end # Runtime
+
 end # Connection
+end # Runtime
 end # Schemaform

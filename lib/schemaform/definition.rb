@@ -76,7 +76,7 @@ class Definition
    end
    
    def named?()
-      @name
+      @name || @path
    end
    
    def root()

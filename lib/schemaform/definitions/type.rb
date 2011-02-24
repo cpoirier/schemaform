@@ -34,8 +34,11 @@ class Type < Definition
       self.name = name if name
    end
    
+   #
+   # All Types are top level names, and should be registered with the Schema.
+   
    def name=( name )
-      super( name )
+      self.path = schema.path + [name]
       schema.register_type( self )
    end
    

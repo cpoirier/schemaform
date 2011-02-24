@@ -44,7 +44,6 @@ class ScalarType < Type
    
    def description()
       return name.to_s if named?
-      return "hi"
       return @base_type.resolve.description if @base_type.exists? && @base_type.is_a?(Type)
       return super
    end

@@ -40,11 +40,6 @@ class Tuple < Type
    end
    
    attr_reader :expression, :root_tuple, :attributes, :definer
-
-   def name=( value )
-      self.path = schema.path + [value]
-      schema.register_type( self )
-   end
    
    def type_info()
       TypeInfo::TUPLE

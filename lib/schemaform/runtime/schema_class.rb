@@ -64,7 +64,7 @@ class SchemaClass
                end
             end
             
-            const_set( camelize(tuple_type.name.to_s), tuple_type )
+            const_set( camelize(tuple_type.name.to_s), tuple_class )
          end
          
          #

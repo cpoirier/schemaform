@@ -114,6 +114,7 @@ if $0 == __FILE__ then
       require "../lib/schemaform.rb"
       define_example_cms_schema()
       p CMS.ancestors
+      p CMS::Role.ancestors
       p CMS::AuthenticationAttempts.ancestors
       # connection = Schemaform.connect( example_cms_schema(), "sqlite://cms.rb", "cms" )
    

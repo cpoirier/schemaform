@@ -92,7 +92,7 @@ class Entity < Relation
    end
    
    def resolve( preferred = nil )
-      supervisor.monitor([self, preferred]) do
+      supervisor.monitor( preferred ? [self, preferred] : self) do
          warn_once( "TODO: key resolution and other entity-level resolution jobs" )
          warn_once( "TODO: create a relation type" )
          case preferred

@@ -24,7 +24,8 @@ require 'ipaddr'
 #
 # An example Schema definition: a schema for a content management system.
 
-def example_cms_schema()
+def define_example_cms_schema()
+   
    Schemaform.define :CMS do
       
       
@@ -111,7 +112,10 @@ if $0 == __FILE__ then
    
    begin
       require "../lib/schemaform.rb"
-      connection = Schemaform.connect( example_cms_schema(), "sqlite://cms.rb", "cms" )
+      define_example_cms_schema()
+      p CMS.ancestors
+      p CMS::AuthenticationAttempts.ancestors
+      # connection = Schemaform.connect( example_cms_schema(), "sqlite://cms.rb", "cms" )
    
    rescue SystemExit ; raise
    rescue Interrupt, Errno::EPIPE ; exit

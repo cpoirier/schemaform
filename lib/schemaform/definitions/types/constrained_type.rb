@@ -51,8 +51,8 @@ class ConstrainedType < Type
       @underlying_type.send( symbol, *args, &block )
    end
    
-   def resolve()
-      @underlying_type.resolve()
+   def resolve( preferred = nil )
+      @underlying_type.resolve( preferred )
    end
 
    def description()
@@ -64,7 +64,7 @@ class ConstrainedType < Type
          yield( constraint )
       end
       
-      @underlying_type.resolve.each_constraint( &block )
+      @underlying_type.resolve().each_constraint( &block )
    end
    
    

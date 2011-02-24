@@ -37,8 +37,8 @@ class Attribute < Expression
       @definition.name
    end
    
-   def resolve()
-      @definition.resolve()
+   def resolve( preferred = nil )
+      @definition.resolve( preferred )
    end
    
 

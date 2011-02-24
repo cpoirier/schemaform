@@ -68,8 +68,20 @@ public
    
    
    def ===( type )
+      return false if type.nil?
       info = type.respond_to?(:has_heading?) ? type : type.type_info
       @has_heading == info.has_heading? && @is_multi_valued == info.multi_valued?
+   end
+   
+   def to_s()
+      case self
+      when SCALAR   ; "scalar"
+      when TUPLE    ; "tuple"
+      when SET      ; "set"
+      when RELATION ; "relation"
+      else
+         fail
+      end
    end
 
    def specialize( prefix = nil, suffix = nil )

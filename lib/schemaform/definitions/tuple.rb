@@ -41,6 +41,11 @@ class Tuple < Type
    
    attr_reader :expression, :root_tuple, :attributes, :definer
 
+   def name=( value )
+      self.path = schema.path + [value]
+      schema.register_type( self )
+   end
+   
    def type_info()
       TypeInfo::TUPLE
    end
@@ -56,7 +61,7 @@ class Tuple < Type
    end
    
    def define( name = nil, &block )
-      self.name = name if name
+      self.name = name if name      
       @definer.instance_eval( &block )
    end
    
@@ -184,12 +189,12 @@ class Tuple < Type
    #                                       Type Operations
    # ==========================================================================================
 
-   def resolve()
+   def resolve( preferred = nil )
       unless @closed
          @closed = true
          supervisor.monitor(self, named?) do
             each_attribute do |attribute|
-               attribute.resolve()
+               attribute.resolve( preferred )
             end
             self
          end

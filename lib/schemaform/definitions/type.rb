@@ -30,7 +30,13 @@ module Definitions
 class Type < Definition
    
    def initialize( context, name = nil )
-      super( context, name )
+      super( context, name === false ? false : nil )
+      self.name = name if name
+   end
+   
+   def name=( name )
+      super( name )
+      schema.register_type( self )
    end
    
    def type_info()
@@ -91,7 +97,7 @@ class Type < Definition
    #
    # Resolves any deferred typing information within the Type.
    
-   def resolve()
+   def resolve( preferred = nil )
       fail_unless_overridden( self, :resolve )
    end
 

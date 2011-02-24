@@ -42,9 +42,9 @@ class Relation < Type
       "[" + @heading.description + "]"
    end
    
-   def resolve()
+   def resolve( preferred = nil )
       supervisor.monitor(self) do
-         @heading.resolve()
+         @heading.resolve( preferred )
       end
    end
    

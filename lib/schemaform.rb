@@ -35,10 +35,18 @@ module Schemaform
    # Returns the named Schema definition.
    
    def self.[]( name )
-      @@schemas = {} unless defined?(@@schemas)
-      @@schemas[name]
+      load_all()
+      Definitions::Schema[name]
    end
    
+   
+   #
+   # Returns true if the named Schema is already defined.
+   
+   def self.defined?( name )
+      load_all()
+      Definitions::Schema.defined?( name )
+   end
    
    
    #
@@ -46,9 +54,8 @@ module Schemaform
 
    def self.define( name, &block )
       load_all()
-      @@schemas = {} unless defined?(@@schemas)
-      Definitions::Schema.new( name, &block ).tap do |schema|
-         @@schemas[name] = schema
+      Definitions::Schema.define( name, &block ).tap do |schema|
+         Runtime::SchemaClass.build( schema )
       end
    end
    

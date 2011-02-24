@@ -30,7 +30,7 @@ module Definitions
 class Entity < Relation
       
    def initialize( name, base_entity, schema, &block )
-      super( base_entity || schema, Tuple.new(self), name )
+      super( base_entity || schema, Tuple.new(schema), name )
 
       @base_entity = base_entity
       @keys        = {}
@@ -38,7 +38,7 @@ class Entity < Relation
       @enumeration = nil
       @dsl         = DefinitionLanguage.new( self )
       @expression  = Expressions::Relations::Entity.new( self )
-
+      
       @reference_type = ReferenceType.new( self )
       
       if @base_entity then
@@ -50,7 +50,7 @@ class Entity < Relation
       @dsl.instance_eval(&block) if block_given?
    end
    
-   attr_reader :keys, :reference_type, :expression
+   attr_reader :keys, :expression
    attr_accessor :enumeration
 
    def has_base_entity?()
@@ -91,12 +91,20 @@ class Entity < Relation
       @enumeration.exists?
    end
    
-   def resolve()
-      supervisor.monitor(self) do
+   def resolve( preferred = nil )
+      supervisor.monitor([self, preferred]) do
          warn_once( "TODO: key resolution and other entity-level resolution jobs" )
          warn_once( "TODO: create a relation type" )
-         @heading.resolve()
-         self
+         case preferred
+         when TypeInfo::SCALAR
+            @reference_type.resolve()
+            # annotate_errors( :check => "be sure the primary key of #{full_name} doesn't reference an entity which references [#{full_name}] in its primary key" ) do
+            #    ConstrainedType.new( primary_key.resolve( preferred ), [TypeConstraints::MembershipConstraint.new(self)] )
+            # end
+         else
+            @heading.resolve( preferred )
+            self
+         end
       end
    end
    

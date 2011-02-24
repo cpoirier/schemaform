@@ -60,7 +60,7 @@ class Connection
       @read_only    = read_only
       @idle_limit   = 0
       @last_query   = Time.now()
-      @sequel       = Sequel.connect( connection_string )
+      @sequel       = Sequel.connect( connection_string, :max_connections => 1 )
       @connected    = @sequel.exists?
       @transactions = 0
    end

@@ -30,21 +30,15 @@ class Database
    include QualityAssurance
    extend QualityAssurance
    
-   attr_reader :url, :adapter, :connections, :master_account
-   
-   def read_only_connections()
-      @read_only_connections || @connections
-   end
+   attr_reader :connection_string
    
    
    #
    # Returns the (global) Database object for the specified database URL.  The URL will be passed to the
-   # Sequel library as a connection string, but must not contain account credentials or any other parameters,
-   # due to the way Schemaform uses the Sequel library.  You must also provide a master account for use in 
-   # maintaining the schema within the database.  It should have full privileges in the database.  It will
-   # additionally be used as the default account for downstream objects (Couplings and Connections).
+   # Sequel library as a connection string.
    
-   def self.for( connection_string, configuration = {} )
+   def self.connect( connection_string, configuration = {} )
+      assert( connection_string !~ /@/, "the user@ connection string syntax is not compatible with Schemaform; please use the paramter format" )
       url = connection_string.split("?").shift
       key = url.downcase
       
@@ -59,28 +53,42 @@ class Database
       @@databases[key]
    end
    
+   
+   #
+   # Begins a transaction, in which you can do work.  You cannot do Schemaform work without one.
+   # Note that transactions are thread-local -- you cannot share a single transaction between 
+   # multiple threads, due to the way the Sequel library works.
+   
+   def transaction()
+      @sequel.transaction do
+         yield
+      end
+   end
+   
+   
+   #
+   # Returns the connected Schema for the specified schema name.  The Schema must already be
+   # defined.
+   
+   def []( name, prefix = nil )
+      @connected_schemas[name] = {} unless @connected_schema.member?(name)
+      @connected_schemas[name][prefix] = ConnectedSchema.build( self, Definitions::Schema[name] ) unless @connected_schema[name].member?(prefix)
+      @connected_schemas[name][prefix]
+   end
+   
       
    #
    # Sets configuration parameters on the Database.
    
    def configure( configuration = {} )
-      if configuration.member?(:connection_pool) then
-         @connections.reconfigure( configuration[:connection_pool] ) 
-      end
-      
-      if configuration.member?(:read_only_connection_pool) then
-         @read_only_connections = ConnectionPool.new( self, [true] ) if @read_only_connections.nil?
-         @read_only_connections.reconfigure( configuration[:read_only_connection_pool] )
-      end
    end
    
    
 private
    def initialize( connection_string, properties = {} )
-      @connection_string     = connection_string      
-      @connections           = ConnectionPool.new( self, [] )
-      @read_only_connections = nil
-
+      @connection_string = connection_string      
+      @sequel            = Sequel.connect( connection_string, :test => true )
+      @connected_schemas = {}
       configure( properties )
    end
 

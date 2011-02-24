@@ -58,7 +58,7 @@ class ScalarType < Type
    end
    
       
-   def resolve()
+   def resolve( preferred = nil )
       self
    end
    
@@ -68,7 +68,7 @@ class ScalarType < Type
    
    def storage_type()
       if !defined?(@storage_type) then
-         @storage_type = @base_type.nil? ? nil : @base_type.resolve.storage_type
+         @storage_type = @base_type.nil? ? nil : @base_type.resolve().storage_type
       end
       
       return @storage_type
@@ -79,7 +79,7 @@ class ScalarType < Type
    
    def mapped_type()
       if !defined?(@mapped_type) then
-         @mapped_type = @base_type.nil? ? nil : @base_type.resolve.mapped_type
+         @mapped_type = @base_type.nil? ? nil : @base_type.resolve().mapped_type
       end
    
       return @mapped_type
@@ -138,7 +138,7 @@ class ScalarType < Type
       while current
          yield( current )
          current = current.base_type
-         current = current.resolve if current
+         current = current.resolve() if current
       end
    end
    

@@ -59,7 +59,11 @@ class Definition
    end
    
    def name=( name )
-      @name = name
+      if @path then
+         path = [self.path.slice(0..-2), name]
+      else
+         @name = name
+      end
    end
    
    def name()

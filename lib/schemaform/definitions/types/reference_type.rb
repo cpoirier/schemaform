@@ -27,23 +27,25 @@ module Definitions
 class ReferenceType < Type
 
    def initialize( entity )
-      super( entity.context, entity.name )
+      super( entity.context, false )
       @entity = entity
-   end
-   
-   def tuple_name()
-      @entity.heading.name
+      @effective_type = nil
    end
    
    def type_info()
       TypeInfo::TUPLE
    end
    
-   def resolve()
+   def resolve( preferred = nil )
       supervisor.monitor(self) do
          annotate_errors( :check => "be sure the primary key of #{@entity.full_name} doesn't reference an entity which references [#{@entity.full_name}] in its primary key" ) do
-            @entity.primary_key.resolve()
+            if @effective_type.nil? then
+               @effective_type = ConstrainedType.new( @entity.primary_key.resolve(), [TypeConstraints::MembershipConstraint.new(@entity)] )
+            end
+            
+            @effective_type
          end
+            
       end
    end
 

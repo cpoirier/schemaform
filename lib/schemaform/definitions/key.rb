@@ -42,9 +42,9 @@ class Key < Definition
       @attributes.member?(name)
    end
    
-   def resolve()
+   def resolve( preferred = nil )
       supervisor.monitor(self) do
-         @attributes.resolve()
+         @attributes.resolve( preferred )
       end
    end
 

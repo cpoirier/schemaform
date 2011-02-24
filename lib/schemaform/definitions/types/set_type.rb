@@ -48,8 +48,8 @@ class SetType < Type
       return "[#{@member_type.resolve.description}]"
    end
 
-   def resolve()
-      @member_type.resolve()
+   def resolve( preferred = nil )
+      @member_type.resolve( TypeInfo::SCALAR )
       self
    end
    

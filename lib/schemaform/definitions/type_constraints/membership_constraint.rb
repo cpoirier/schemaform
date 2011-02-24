@@ -19,30 +19,20 @@
 # =============================================================================================
 
 
-
 module Schemaform
 module Definitions
-class DerivedAttribute < Attribute
-   def initialize( tuple, block )
-      super( tuple )
-      @block = block
+module TypeConstraints
+class MembershipConstraint
+
+   def initialize( entity )
+      @entity = entity
    end
    
-   def resolve( preferred = nil )
-      supervisor.monitor(self) do
-         annotate_errors( :attribute => full_name() ) do 
-            result_expression = @block.call( root_tuple.expression )
-            type_check( :result_expression, result_expression, Expressions::Expression )
-            result_expression.resolve( preferred )
-         end
-      end   
+   def accepts?( value )
+      fail
    end
-   
-   def derived?()
-      true
-   end
-   
-end
+
+end # RangeConstraint
+end # TypeConstraints
 end # Definitions
 end # Schemaform
-

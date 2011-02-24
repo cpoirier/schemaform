@@ -20,17 +20,16 @@
 
 
 #
-# The anchor for the Runtime Schema.  This is a vastly simplified data structure that shows how
-# the defined Schema is *actually* managed at the database level.
+# Provides the runtime representation of a defined Entity.
 
 module Schemaform
 module Runtime
-class Schema
+class EntityClass
 
    def initialize()
       
    end
 
-end # Schema
+end # EntityClass
 end # Runtime
 end # Schemaform

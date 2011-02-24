@@ -18,41 +18,18 @@
 #             limitations under the License.
 # =============================================================================================
 
-require "monitor"
-
 
 #
-# Wraps up basic functionality for objects that need account credentials.
+# Provides the runtime representation of a defined Tuple type. 
 
 module Schemaform
 module Runtime
-class Account
-   include QualityAssurance
+class TupleClass
 
-   def initialize( name, password )
-      @name     = name
-      @password = password
+   def initialize()
+      
    end
-   
-   #
-   # Returns the account name.
-   
-   def name( fallback_account = nil )
-      return @name         unless @name.nil?
-      return fallback.name unless fallback.nil?
-      return nil
-   end
-   
-   #
-   # Returns the account password.
-   
-   def password( fallback_account = nil )
-      return @password         unless @name.nil?      # We don't default just password -- they go as a pair
-      return fallback.password unless fallback.nil?
-      return nil
-   end
-   
-   
-end # Account
+
+end # TupleClass
 end # Runtime
 end # Schemaform

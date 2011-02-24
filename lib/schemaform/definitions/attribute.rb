@@ -39,7 +39,7 @@ class Attribute < Definition
       tuple.root_tuple
    end
    
-   def resolve()
+   def resolve( preferred = nil )
       fail_unless_overridden( self, :resolve )
    end
    

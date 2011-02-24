@@ -54,16 +54,17 @@ class TypeReference < Definition
       @type        = nil
    end
    
-   def resolve()
+   def resolve( preferred = nil )
       return @type unless @type.nil?
+      warn_once( "TODO: reconsider TypeReference::resolve() in the light of preferred" )
       
       @type = supervisor.monitor( self, false ) do
          case @restriction
          when :entity
-            schema.find_entity(@type_name).reference_type.resolve()
+            schema.find_entity(@type_name).resolve(TypeInfo::SCALAR)
          when :scalar
             if entity = schema.find_entity(@type_name, false) then
-               entity.reference_type.resolve()
+               entity.resolve(TypeInfo::SCALAR)
             else
                ConstrainedType.build( schema.find_type(@type_name), @modifiers )
             end

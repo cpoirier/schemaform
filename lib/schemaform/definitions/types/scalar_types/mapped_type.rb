@@ -28,12 +28,10 @@ module Definitions
 class MappedType < ScalarType
 
    def initialize( ruby_type, base_type, loader = nil, storer = nil, schema = nil )
-      super( base_type, schema )
+      super( base_type, schema, ruby_type )
       @ruby_type = ruby_type
       @loader    = loader
       @storer    = storer
-      
-      self.path = [ruby_type.name]
    end
    
    def mapped_type()

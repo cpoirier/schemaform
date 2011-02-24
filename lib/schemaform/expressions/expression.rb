@@ -27,7 +27,7 @@ class Expression
    def initialize()
    end
    
-   def resolve()
+   def resolve( preferred = nil )
       fail_unless_overridden( self, :resolve )
    end
 

@@ -31,49 +31,24 @@ module Schemaform
 module Definitions
 class Schema < Definition
    
-   def initialize( name, &block )
-      super( nil, name )
-      
-      @dsl        = DefinitionLanguage.new( self )
-      @types      = {}
-      @relations  = {}
-      @entities   = {}
-      @supervisor = TypeResolutionSupervisor.new( self )
-         
-      @types_are_resolved = false
+   @@schemas = {}
+   @@monitor = Monitor.new()
 
-      register_type :all     , ScalarType.new(   nil, self     )
-      register_type :any     , ScalarType.new(   @types[:all]  )
-      register_type :void    , ScalarType.new(   @types[:all]  )
-      
-      register_type :binary  , BinaryType.new(   @types[:any ] )   
-      register_type :text    , TextType.new(     @types[:any ] ) 
-      register_type :datetime, DateTimeType.new( @types[:text] ) 
-      register_type :real    , NumericType.new(  @types[:any ] )    
-      register_type :integer , IntegerType.new(  @types[:real] )    
-
-      @dsl.instance_eval do
-         define_type :boolean   , :integer, :range  => 0..1
-         define_type :identifier, :text   , :length => 80, :check => lambda {|i| !!i.to_sym && i.to_sym.inspect !~ /"/}
-   
-         define_type Float     , :real
-         define_type Integer   , :integer
-         define_type String    , :text
-         define_type Symbol    , :identifier, :load => lambda {|s| s.intern}
-         define_type IPAddr    , :text, :length => 40
-         define_type TrueClass , :boolean, :store => 1, :load => lambda {|v| !!v }
-         define_type FalseClass, :boolean, :store => 0, :load => lambda {|v| !!v }
-         define_type Time      , :datetime,
-                                 :store => lambda {|t| utc = t.getutc; utc.strftime("%Y-%m-%d %H:%M:%S") + (utc.usec > 0 ? ".#{utc.usec}" : "") },
-                                 :load  => lambda {|s| year, month, day, hour, minute, second, micros = *s.split(/[:\-\.] /); Time.utc(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i, micros.to_i)}  
-      end
-      
-      @dsl.instance_eval(&block) if block_given?
-      resolve_types()
-      generate_classes()
+   def self.[]( name )
+      @@monitor.synchronize { @@schemas[name] }
    end
    
+   def self.defined?( name )
+      @@monitor.synchronize { @@schemas.member?(name) }
+   end
    
+   def self.define( name, &block )
+      @@monitor.synchronize do
+         new( name, &block ).tap do |schema|
+            @@schemas[name] = schema
+         end
+      end
+   end
    
    
    # ==========================================================================================
@@ -96,7 +71,7 @@ class Schema < Definition
                assert_and_warn_once( parent.nil?, "TODO: derived class support" )
             end
 
-            register_entity Entity.new( name, parent, self, &block )
+            register_type Entity.new( name, parent, self, &block )
          end
       end
    
@@ -113,9 +88,11 @@ class Schema < Definition
 
             base_type = TypeReference.new(self, base_name, modifiers)
             if name.is_a?(Class) then
-               register_type name, MappedType.new(name, base_type, modifiers.delete(:load), modifiers.delete(:store), @schema)
+               register_type MappedType.new(name, base_type, modifiers.delete(:load), modifiers.delete(:store), @schema)
             else
-               register_type name, base_type
+               type = base_type
+               type.name = name
+               register_type type
             end
          end
       end
@@ -127,11 +104,34 @@ class Schema < Definition
    #                                      Public Interface
    # ==========================================================================================
    
+   
+   #
+   # Registers a named type with the schema.
+   
+   def register_type( type )
+      type_check( :type, type, [Type, TypeReference] )
+      return if @types.member?(type.name) && @types[type.name].object_id == type.object_id
+      
+      if type.is_an?(Entity) then
+         check { assert( !@entities.member?(type.name), "schema [#{full_name}] already has an entity named [#{type.name}]" ) }
+         @entities[type.name] = type
+      end
+      
+      if type.is_a?(Relation) then
+         check { assert( !@relations.member?(type.name), "schema [#{full_name}] already has a relation named [#{type.name}]" ) }
+         @relations[type.name] = type      
+      end
+
+      check { assert( !@types.member?(type.name), "schema [#{full_name}] already has a type named [#{type.name}]" ) }
+
+      @types[type.name] = type
+      return type
+   end
+
 
    def types_are_resolved?()
       @types_are_resolved
    end
-   
    
    attr_reader :supervisor
    
@@ -144,39 +144,35 @@ class Schema < Definition
          yield( entity )
       end
    end
+   
+   def each_tuple_type()
+      @types.each do |name, type|
+         resolved = type.resolve()
+         yield( resolved ) if resolved.tuple_type?
+      end
+   end
 
       
    #
    # Returns the Type for a name (Symbol or Class), or nil.
    
-   def find_type( name, fail_if_missing = true, simple_check = false )
+   def find_type( name, preferred = nil, fail_if_missing = true )
       return name if name.is_a?(Type)
       check { type_check(:name, name, [Symbol, Class]) }
 
-      
-      #
-      # If attempting to resolve a Class, we will try for the requested Class or any of its
-      # base classes.  Otherwise, we are doing a simple check of just the specified name in 
-      # this or a context Schema.
-      
-      type = nil
-      if name.is_a?(Class) and !simple_check then
-         name.ancestors.each do |current|
-            break if type = find_type(current, false, true)
-         end
-      else
-         if @types.member?(name) then
-            type = @types[name]
-         elsif @schema.exists? then
-            type = schema.find_type(name, false, true)
-         end
-      end   
-
-      if fail_if_missing then
-         assert( type.exists?, name.is_a?(Symbol) ? "unrecognized type [#{name}]" : "no type mapping for class [#{name.name}]" )
+      type    = nil
+      current = name
+      while current && type.nil?
+         type    = @types[current] if @types.member?(current)
+         current = current.is_a?(Class) ? current.superclass : nil
       end
-      
-      return type.resolve()
+
+      if type.nil? then
+         fail( name.is_a?(Symbol) ? "unrecognized type [#{name}]" : "no type mapping for class [#{name.name}]" ) if fail_if_missing
+         return nil
+      else
+         return type.resolve( preferred )
+      end
    end
    
    
@@ -211,98 +207,6 @@ class Schema < Definition
    
 
 
-   # ==========================================================================================
-   #                                      Type Resolution
-   # ==========================================================================================
-
-   
-   #
-   # Resolves types for all attributes within the Schema.
-   
-   def resolve_types()
-      return if @types_are_resolved
-
-
-      #
-      # Resolve any defined types first.
-      
-      @types.each do |name, type|
-         type.resolve()
-      end
-   
-      #
-      # Resolve entities next.
-      
-      @entities.each do |name, entity|
-         entity.resolve()
-      end
-      
-      @types_are_resolved = true
-   end
-   
-
-   #
-   # A helper class that ensures type resolution errors are noticed and reported.
-   
-   class TypeResolutionSupervisor
-      include QualityAssurance
-      
-      def initialize( schema )
-         @schema  = schema
-         @entries = []
-      end
-      
-      def monitor( scope, report_worthy = true )
-         description = scope_description(scope)
-         annotation  = report_worthy ? { :scope => description } : {}
-         
-         assert( !@entries.member?(scope), "detected loop while trying to resolve #{description}" )
-         return annotate_errors( annotation ) do
-            check( @entries.push_and_pop(scope) { yield() } ) do |type|
-               assert( type.exists?, "unable to resolve type for [#{class_name_for(scope)} #{scope.full_name}]" )
-               type_check( :type, type, Type )
-               warn_once( "DEBUG: #{description} resolved to #{class_name_for(type)} #{type.description}" ) if report_worthy
-            end
-         end
-      end
-
-   private
-      def class_name_for( object )
-         object.class.name.gsub("Schemaform::Definitions::", "")
-      end
-      
-      def scope_description( scope )
-         "#{class_name_for(scope)} #{scope.full_name}"
-      end
-      
-   end # TypeResolutionSupervisor
-
-   
-   
-   
-   # ==========================================================================================
-   #                                      Class Generation
-   # ==========================================================================================
-
-
-   def generate_classes()
-      container = Object.const_set( @name, Module.new() )
-      container.extend( Runtime::SchemaMixin )
-      
-      # each_tuple() do |tuple|
-      #    tuple_class = container.const_set( tuple.name, Class.new() )
-      #    tuple_class.include( Runtime::TupleMixin )
-      # end
-      # each_entity() do |entity|
-      #    entity_class = container.const_set( entity.name, Class.new() )
-      #    entity_class.include( Runtime::EntityMixin )
-      # end
-   end
-   
-   
-   
-   
-   
    # ==========================================================================================
    #                                      Type Constraints
    # ==========================================================================================
@@ -347,46 +251,114 @@ protected
    #                                          Internals
    # ==========================================================================================
 
-   #
-   # Registers a named type with the schema.
+   def initialize( name, &block )
+      super( nil, name )
+      
+      @dsl        = DefinitionLanguage.new( self )
+      @types      = {}
+      @relations  = {}
+      @entities   = {}
+      @supervisor = TypeResolutionSupervisor.new( self )
+         
+      @types_are_resolved = false
+
+      register_type ScalarType.new(   nil          , self, :all      )
+      register_type ScalarType.new(   @types[:all ], nil , :any      )
+      register_type ScalarType.new(   @types[:all ], nil , :void     )
+                    
+      register_type BinaryType.new(   @types[:any ], nil , :binary   )   
+      register_type TextType.new(     @types[:any ], nil , :text     ) 
+      register_type DateTimeType.new( @types[:text], nil , :datetime ) 
+      register_type NumericType.new(  @types[:any ], nil , :real     )    
+      register_type IntegerType.new(  @types[:real], nil , :integer  )    
+
+      @dsl.instance_eval do
+         define_type :boolean   , :integer, :range  => 0..1
+         define_type :identifier, :text   , :length => 80, :check => lambda {|i| !!i.to_sym && i.to_sym.inspect !~ /"/}
    
-   def register_type( name, named_type )
-      check do
-         assert( !@types.member?(name), "schema [#{full_name}] already has a type named [#{name}]" )
+         define_type Float     , :real
+         define_type Integer   , :integer
+         define_type String    , :text
+         define_type Symbol    , :identifier, :load => lambda {|s| s.intern}
+         define_type IPAddr    , :text, :length => 40
+         define_type TrueClass , :boolean, :store => 1, :load => lambda {|v| !!v }
+         define_type FalseClass, :boolean, :store => 0, :load => lambda {|v| !!v }
+         define_type Time      , :datetime,
+                                 :store => lambda {|t| utc = t.getutc; utc.strftime("%Y-%m-%d %H:%M:%S") + (utc.usec > 0 ? ".#{utc.usec}" : "") },
+                                 :load  => lambda {|s| year, month, day, hour, minute, second, micros = *s.split(/[:\-\.] /); Time.utc(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i, micros.to_i)}  
       end
       
-      named_type.name = name
-      @types[name] = named_type
-      return named_type
+      @dsl.instance_eval(&block) if block_given?
+      resolve_types()
    end
    
    
-   #
-   # Registers a named relation with the schema.
    
-   def register_relation( relation )
-      check do
-         assert( !@relations.member?(relation.name), "schema [#{@path.join(".")}] already has a relation named [#{relation.name}]" )
-      end
-      
-      @relations[relation.name] = relation      
-      return relation
-   end
+   # ==========================================================================================
+   #                                      Type Resolution
+   # ==========================================================================================
 
    
    #
-   # Registers an entity with the schema.
+   # Resolves types for all attributes within the Schema.
    
-   def register_entity( entity )
-      check do
-         assert( !@entities.member?(entity.name), "schema [#{@path.join(".")}] already has an entity named [#{entity.name}]" )
+   def resolve_types()
+      return if @types_are_resolved
+
+
+      #
+      # Resolve any defined types first.
+      
+      @types.each do |name, type|
+         type.resolve()
+      end
+   
+      @types_are_resolved = true
+   end
+   
+
+   #
+   # A helper class that ensures type resolution errors are noticed and reported.
+   
+   class TypeResolutionSupervisor
+      include QualityAssurance
+      
+      def initialize( schema )
+         @schema  = schema
+         @entries = []
       end
       
-      register_type( entity.name, entity.reference_type )
-      register_relation( entity )
-      @entities[entity.name] = entity      
-      return entity
-   end
+      def monitor( scope, report_worthy = true )
+         description = scope_description(scope)
+         annotation  = report_worthy ? { :scope => description } : {}
+         
+         assert( !@entries.member?(scope), "detected loop while trying to resolve #{description}" )
+         return annotate_errors( annotation ) do
+            check( @entries.push_and_pop(scope) { yield() } ) do |type|
+               assert( type.exists?, "unable to resolve type for [#{description}]" )
+               type_check( :type, type, Type )
+               warn_once( "DEBUG: #{description} resolved to #{class_name_for(type)} #{type.description}" ) if report_worthy
+            end
+         end
+      end
+
+   private
+      def class_name_for( object )
+         object.class.name.gsub("Schemaform::Definitions::", "")
+      end
+      
+      def scope_description( scope )
+         if scope.is_an?(Array) then
+            [scope_description( scope.first ), "(" + scope.slice(1..-1).collect{|v| v.to_s}.join(" ") + ")"].join( " " )
+         else
+            "#{class_name_for(scope)} #{scope.full_name}"
+         end
+      end
+      
+   end # TypeResolutionSupervisor
+
+   
+   
    
    
    

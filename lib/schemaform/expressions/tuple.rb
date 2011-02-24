@@ -55,8 +55,8 @@ class Tuple < Expression
       @attributes     = {}
    end
    
-   def resolve()
-      @definition.resolve()
+   def resolve( preferred = nil )
+      @definition.resolve( preferred )
    end
 
    def method_missing( symbol, *args, &block )

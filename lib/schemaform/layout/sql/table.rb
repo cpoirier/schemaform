@@ -23,24 +23,24 @@
 # Represents a standard SQL table.
 
 module Schemaform
-module Mapping
+module Layout
+module SQL
 class Table
 
-   attr_reader :name, :row_name, :fields, :primary_key
+   attr_reader :name, :fields, :primary_key
    
-   def initialize( map, name, row_name = nil )
-      @map         = map
+   def initialize( master, name )
+      @master      = master
       @name        = name
-      @row_name    = row_name || name
       @fields      = []
       @keys        = []
       @primary_key = Key.new( self )
       
       @map.add_table( self )
    end
-
-   def add_field( field )
-      @fields << field
+   
+   def define_field( name, type, allow_nulls = false )
+      @fields << Field.new( self, name, type, allow_nulls )
    end
 
 
@@ -73,5 +73,6 @@ class Table
    end
 
 end # Table
-end # Mapping
+end # SQL
+end # Layout
 end # Schemaform

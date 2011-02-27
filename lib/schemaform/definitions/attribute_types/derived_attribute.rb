@@ -42,6 +42,14 @@ class DerivedAttribute < Attribute
       true
    end
    
+   def maintained?()
+      false
+   end
+   
+   def volatile?()
+      false
+   end
+   
 end
 end # Definitions
 end # Schemaform

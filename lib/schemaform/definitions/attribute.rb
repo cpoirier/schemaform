@@ -55,6 +55,39 @@ class Attribute < Definition
       false
    end
    
+   
+   
+   # ==========================================================================================
+   #                                           Conversion
+   # ==========================================================================================
+
+   
+   def lay_out( builder )
+      attribute_type = attribute.resolve()
+      send( attribute_type.type_info.specialize("lay_out", "type"), builder, attribute_type )
+   end
+
+protected
+
+   def lay_out_scalar_type( builder, attribute_type )
+      fail_unless_overridden
+   end
+   
+   
+   def lay_out_set_type( builder, attribute_type )
+      fail_unless_overridden
+   end
+   
+   
+   def lay_out_tuple_type( builder, attribute_type )
+      fail_unless_overridden
+   end
+   
+   
+   def lay_out_relation_type( builder, attribute_type )
+      fail_unless_overridden
+   end
+   
 end # Attribute
 end # Definitions
 end # Schemaform

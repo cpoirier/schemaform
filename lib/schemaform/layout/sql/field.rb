@@ -19,39 +19,25 @@
 # =============================================================================================
 
 
-
 #
-# An original (as opposed to derived) attribute.
+# Represents a single field in a table.  Name and type are complex objects, to be flattened
+# once the adapter is known.
 
 module Schemaform
-module Definitions
-class OriginalAttribute < Attribute
+module Layout
+module SQL
+class Field
 
-   def initialize( container, type = nil )
-      super( container )
-      @type = type
+   def initialize( table, name, type, allow_nulls = false )
+      @table = table
+      @name  = name
+      @type  = type
+      @allow_nulls = allow_nulls
    end
    
-   attr_accessor :type
-   
-   def resolve( preferred = TypeInfo::SCALAR )
-      supervisor.monitor(self) do
-         @type.resolve(preferred).tap do |type|
-            check do
-               if type.scalar_type? then
-                  assert( type.complete?, "scalar optional and required attributes must be of a complete type -- one that has both a Schemaform and a Ruby representation" )
-               end
-            end
-         end
-      end
-   end
-   
-   def optional?()
-      !required?
-   end 
-   
-   
-   
-end # OriginalAttribute
-end # Definitions
+   attr_reader :table, :name, :type, :allow_nulls
+
+end # Field
+end # SQL
+end # Layout
 end # Schemaform

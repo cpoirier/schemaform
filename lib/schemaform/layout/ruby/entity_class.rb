@@ -20,28 +20,30 @@
 
 
 #
-# Base class for things that pick the appropriate Map class for a database connection URL.
+# Provides the runtime representation of a defined Entity.
 
 module Schemaform
-module Mapping
-class Selector
-   include QualityAssurance
+module Layout
+module Ruby
+class EntityClass
+
+   #
+   # Creates a subclass with the specified name and definition. 
    
-   attr_reader :adapter_class
-   
-   def initialize( adapter_class )
-      @adapter_class = adapter_class
-   end
-   
-   def matches?( connection_url )
-      fail_unless_overriden( self, :matches? )
+   def self.subclass( name )
+      subclass = Class.new(self) do
+      end
+      
+      Object.const_set( name, subclass )
    end
 
-end # Selector
-end # Mapping
+
+
+   def initialize()
+      
+   end
+
+end # EntityClass
+end # Ruby
+end # Layout
 end # Schemaform
-
-
-Dir[Schemaform.locate("selectors/*.rb")].each do |path| 
-   require path
-end

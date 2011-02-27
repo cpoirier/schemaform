@@ -17,6 +17,9 @@ class Object
       class << self ; self ; end
    end
    
+   alias is_an? is_a?
+   alias responds_to? respond_to?
+
    def each()
       yield( self ) 
    end
@@ -27,9 +30,50 @@ class Object
    
    alias set? exists?
    
-   alias is_an? is_a?
-   alias responds_to? respond_to?
+   #
+   # Sets the named instance variable to a value, and enters the supplied block, passing
+   # this object.  Restores the instance variable to its original value before returning.
+   # Do not include the @ in the variable name.
+   
+   def with_value( name, value, &block )
+      result   = nil
+      
+      name     = "@#{name.to_s}"
+      previous = instance_variable_get( name )
+      begin
+         instance_variable_set( name, value )
+         result = block.call( self )
+      ensure
+         instance_variable_set( name, previous )
+      end
+      
+      result
+   end
+   
+   
+   #
+   # Equivalent to with_value(), but accepts multiple name/value pairs.
+   
+   def with_values( pairs = {}, &block )
+      result   = nil
+      previous = {}
+      begin
+         pairs.each do |name, value|
+            variable = "@#{name.to_s}"
+            previous[name] = instance_variable_get( variable )
+            instance_variable_set( variable, value )
+         end
 
+         result = yield( self )
+      ensure
+         previous.each do |name, value|
+            instance_variable_set( "@#{name.to_s}", value )
+         end
+      end
+      
+      result
+   end
+   
    
    #
    # Returns a specialized Symbol version of the supplied name, base on this object's class name.

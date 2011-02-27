@@ -60,8 +60,27 @@ class Database
    # multiple threads, due to the way the Sequel library works.
    
    def transaction()
-      @sequel.transaction do
-         yield
+      thread    = Thread.current
+      handle    = @transaction_handles.fetch( thread, nil )
+      outermost = handle.nil?
+
+      begin
+         @sequel_database.transaction do |connection|
+            if outermost then
+               @transaction_handles[thread] = handle = TransactionHandle.new( self, connection )
+            end
+            
+            yield( handle )
+            
+            if outermost then
+               warn_once( "TODO: deal with transaction constraint checks" )
+            end
+         end
+      ensure
+         if outermost then
+            handle.close()
+            @transaction_handles[thread] = nil
+         end
       end
    end
    
@@ -86,19 +105,16 @@ class Database
    
 private
    def initialize( connection_string, properties = {} )
-      @connection_string = connection_string      
-      @sequel            = Sequel.connect( connection_string, :test => true )
-      @connected_schemas = {}
+      @connection_string   = connection_string      
+      @sequel_database     = Sequel.connect( connection_string, :test => true )
+      @connected_schemas   = {}      
+      @transaction_handles = {}
       configure( properties )
    end
 
    @@monitor   = Monitor.new()
    @@databases = {} 
    
-   def connect( owner, read_only = false )
-      Connection.new( owner, @connection_string, read_only )
-   end
-
 end # Database
 end # Runtime
 end # Schemaform

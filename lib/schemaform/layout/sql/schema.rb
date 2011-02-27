@@ -20,16 +20,18 @@
 
 
 #
-# Provides the runtime representation of a defined Entity.
+# General (database-independent) SQL Schema for a Schema Definition.
 
 module Schemaform
-module Runtime
-class EntityClass
+module Layout
+module SQL
+class Schema
 
-   def initialize()
+   def initialize( name, master )
       
    end
 
-end # EntityClass
-end # Runtime
+end # Schema
+end # SQL
+end # Layout
 end # Schemaform

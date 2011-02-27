@@ -360,6 +360,21 @@ protected
    
    
    
+   # ==========================================================================================
+   #                                           Mapping
+   # ==========================================================================================
+   
+   #
+   # Maps the Schema into runtime representation.
+   
+   def lay_out()
+      @master = Layout::Master.build(@name) do |builder|
+         @entities.each do |entity|
+            entity.lay_out( builder )
+         end
+      end
+   end
+   
    
    
    

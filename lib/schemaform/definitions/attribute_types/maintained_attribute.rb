@@ -19,36 +19,25 @@
 # =============================================================================================
 
 
+require Schemaform.locate("derived_attribute.rb")
+
+
 #
-# Represents a key on a Table.
+# A derived attribute that is kept always up to date in the database.
 
 module Schemaform
-module Mapping
-class Key
+module Definitions
+class MaintainedAttribute < DerivedAttribute
 
-   def initialize( table, name = nil )
-      @table  = table
-      @name   = name
-      @fields = []
-      
-      table.add_key( self )
+   def initialize( tuple, block )
+      super( tuple, block )
    end
    
-   attr_reader :name, :fields
-   
-   def add_field( field )
-      @fields << field
+   def maintained?()
+      return true
    end
    
-   def to_sql( name_override = nil )
-      name = name_override || "unique index #{@name}"
-      "#{name} (#{@fields.collect{|f| f.name.to_s}.join(", ")})"
-   end
-   
-   def empty?
-      @fields.empty?
-   end
 
-end # Key
-end # Mapping
+end # MaintainedAttribute
+end # Definitions
 end # Schemaform

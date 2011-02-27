@@ -29,9 +29,28 @@ require Schemaform.locate("tuple_class.rb" )
 # Provides the database-backed Schema functionality at runtime.
 
 module Schemaform
-module Runtime
+module Layout
+module Ruby
 class SchemaClass
    extend Sequel::Inflections
+   
+   #
+   # Creates a subclass with the specified name and definition. 
+   
+   def self.subclass( name )
+      subclass = Class.new(self) do
+      end
+      
+      Object.const_set( name, subclass )
+   end
+   
+   
+   
+   
+   
+   
+   
+   
    
    #
    # Instantiate the SchemaClass, linking it to an actual database, possibly with a table name prefix.
@@ -91,5 +110,6 @@ class SchemaClass
    
 
 end # SchemaClass
-end # Runtime
+end # Ruby
+end # Layout
 end # Schemaform

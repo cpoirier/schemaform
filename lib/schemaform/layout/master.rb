@@ -20,33 +20,49 @@
 
 
 #
-# Provides easily flattened "dotted" naming for Map objects.
+# The anchor for the layout of a Schema definition into a working system.
 
 module Schemaform
-module Mapping
-class Name
-
-   def initialize( map, *components )
-      @map        = map
-      @components = components
-   end
+module Layout
+class Master < Layout
    
-   def empty?()
-      @components.empty?
-   end
-   
-   def to_s()
-      @s = @map.map_name( @components ) if @s.nil?
-      @s
-   end
-   
-   def +( component )
-      self.class.new( @map, @components + (component.is_a?(Name) ? component.components : [component]) )
+   def self.build( name )
+      Builder.new(name).tap{|builder| yield(builder)}.master
    end
 
-protected
-   attr_reader :components
+   attr_reader :name, :sql_schema, :schema_class
+   
+   def initialize( name )
+      @name           = name
+      @sql_schema     = SQL::Schema.new( @name )
+      @schema_class   = Ruby::SchemaClass.define_subclass( @name )
+      @tuple_classes  = {}
+      @entity_classes = {}
+   end   
 
-end # Name
-end # Mapping
+
+   def entity_class_for( name )
+      unless @entity_classes.member?(name)
+         @entity_classes[name] = Ruby::EntityClass.define( name, @schema_class )
+      end
+      
+      @entity_classes[name]
+   end
+   
+   
+   def tuple_class_for( name )
+      unless @tuple_classes.member?(name)
+         @tuple_classes[name] = Ruby::TupleClass.define( name, @schema_class )
+      end
+      
+      @tuple_classes[name]
+   end
+
+
+end # Master
+end # Layout
 end # Schemaform
+
+
+Dir[Schemaform.locate("sql/*.rb" )] {|path| require path}
+Dir[Schemaform.locate("ruby/*.rb")] {|path| require path}

@@ -20,21 +20,27 @@
 
 
 #
-# Selects a Map class for a connection URL if the supplied block returns true.
+# Represents a single transaction on a Database.  
 
 module Schemaform
-module Mapping
-class BlockBasedSelector
+module Runtime
+class TransactionHandle
 
-   def initialize( map_class, &block )
-      super( map_class )
-      @tester = block
+   def initialize( database, sequel_connection )
+      @database          = database
+      @sequel_connection = sequel_connection
+      @thread            = Thread.current
    end
    
-   def matches?( connection_url )
-      !!(@tester.call(connection_url))
+   def close()
+      @sequel_connection = nil
    end
+   
+   def closed?()
+      @sequel_connection.nil?
+   end
+   
 
-end # BlockBasedSelector
-end # Mapping
+end # Transaction
+end # Runtime
 end # Schemaform

@@ -20,32 +20,37 @@
 
 
 #
-# Represents a field in a SQL Table.
+# Provides easily flattened "dotted" naming.
 
 module Schemaform
-module Mapping
-class Field
+module Layout
+module SQL
+class DottedName
+   
+   def self.build( *components )
+      components.inject(new()){|result, current| result + current}
+   end
 
-   def initialize( table, name, type, allow_nulls = false )
-      @table       = table
-      @name        = name
-      @type        = type
-      @allow_nulls = allow_nulls
-      
-      @table.add_field( self )
+   def initialize( *components )
+      @components = components
    end
    
-   attr_reader :name, :type
-   
-   def allow_nulls?()
-      @allow_nulls
+   def empty?()
+      @components.empty?
    end
    
-   def to_sql( name_width = 0, type_width = 0 )
-      @name.to_s.ljust(name_width) + " " + @type.ljust(type_width) + " " + (@allow_nulls ? "" : "not") + " null"
+   def to_s( adapter = nil )
+      return adapter ? adapter.flatten_name(@components) : @components.join(".")
    end
    
+   def +( component )
+      self.class.new( *(@components + (component.is_a?(DottedName) ? component.components : [component])) )
+   end
 
-end # Field
-end # Mapping
+protected
+   attr_reader :components
+
+end # DottedName
+end # SQL
+end # Layout
 end # Schemaform

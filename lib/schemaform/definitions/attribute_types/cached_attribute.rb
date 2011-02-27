@@ -19,13 +19,21 @@
 # =============================================================================================
 
 
+require Schemaform.locate("derived_attribute.rb")
+
+
+#
+# A derived attribute that is cached in the database when convenient, but calculated otherwise.
+
 module Schemaform
-module Mapping
+module Definitions
+class CachedAttribute < DerivedAttribute
 
+   def initialize( tuple, block )
+      super( tuple, block )
+   end
    
-end
-end
 
-Dir[Schemaform.locate("mapping/*.rb")].each do |path| 
-   require path
-end
+end # CachedAttribute
+end # Definitions
+end # Schemaform

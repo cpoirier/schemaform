@@ -20,21 +20,52 @@
 
 
 #
-# Selects a Map class for a connection URL based on a Regexp.
+# Provides the runtime representation of a defined Tuple.
 
 module Schemaform
-module Mapping
-class PatternBasedSelector < Selector
-
-   def initialize( map_class, url_pattern )
-      super( map_class )
-      @url_pattern = url_pattern
+module Layout
+module Ruby
+class TupleClass
+   
+   #
+   # Defines a subclass and associates it with the Layout::Master.
+   
+   def self.define( name, master )
+      define_subclass( name, master.schema_class ) do
+         @@master = master
+         def self.master()
+            @@master
+         end
+      end
    end
    
-   def matches?( connection_url )
-      !!(@url_pattern =~ connection_url)
+
+   #
+   # Defines an attribute reader for the specified name.
+   
+   def self.define_attribute_reader( name, &preamble )
+      define_instance_method( name, preamble ) do
+         instance_variable_get( "@#{name.to_s}" )
+      end
+   end
+   
+   #
+   # Defines an attribute writer for the specified name
+   
+   def self.define_attribute_writer( name, &preamble )
+      define_instance_method( "#{name.to_s}=", preamble ) do |value|
+         @_dirty = true
+         instance_variable_set( "@#{name.to_s}", value )
+      end
    end
 
-end # PatternBasedSelector
-end # Mapping
+
+
+   def initialize()
+      @_dirty = false
+   end
+
+end # TupleClass
+end # Ruby
+end # Layout
 end # Schemaform

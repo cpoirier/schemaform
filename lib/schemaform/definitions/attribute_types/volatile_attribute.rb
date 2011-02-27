@@ -19,18 +19,25 @@
 # =============================================================================================
 
 
+require Schemaform.locate("derived_attribute.rb")
+
+
 #
-# Provides all necessary machinery for mapping a Schema into a SQLLite database.
+# A derived attribute that is never stored in the database.
 
 module Schemaform
-module Mapping
-module Adapters
-class SQLite < Map
-   Map.register_adapter_class( self, /^sqlite:/ )
-   
-   
-end # SQLite
-end # Adapters
-end # Mapping
-end # Schemaform
+module Definitions
+class VolatileAttribute < DerivedAttribute
 
+   def initialize( tuple, block )
+      super( tuple, block )
+   end
+   
+   def volatile?()
+      return true
+   end
+   
+
+end # MaintainedAttribute
+end # Definitions
+end # Schemaform

@@ -118,10 +118,32 @@ class Tuple < Type
       #
       # Defines a derived attribute within the entity.  Supply a Proc or a block.  
    
-      def derived( name, proc = nil, &block )
+      def cached( name, proc = nil, &block )
          @tuple.instance_eval do
             check { assert(proc.nil? ^ block.nil?, "expected a Proc or block") }
-            add_attribute name, DerivedAttribute.new(self, proc.nil? ? block : proc)
+            add_attribute name, CachedAttribute.new(self, proc.nil? ? block : proc)
+         end
+      end   
+      
+      
+      #
+      # Defines a derived attribute within the entity.  Supply a Proc or a block.  
+   
+      def maintained( name, proc = nil, &block )
+         @tuple.instance_eval do
+            check { assert(proc.nil? ^ block.nil?, "expected a Proc or block") }
+            add_attribute name, MaintainedAttribute.new(self, proc.nil? ? block : proc)
+         end
+      end   
+      
+      
+      #
+      # Defines a derived attribute within the entity.  Supply a Proc or a block.  
+   
+      def volatile( name, proc = nil, &block )
+         @tuple.instance_eval do
+            check { assert(proc.nil? ^ block.nil?, "expected a Proc or block") }
+            add_attribute name, VolatileAttribute.new(self, proc.nil? ? block : proc)
          end
       end   
       
@@ -197,6 +219,26 @@ class Tuple < Type
       
       self
    end
+   
+   
+   # ==========================================================================================
+   #                                           Conversion
+   # ==========================================================================================
+
+
+   def lay_out( builder, &attribute_condition )
+      builder.in_tuple_class( @name ) do
+         each_attribute do |attribute|
+            if attribute_condition.nil? || attribute_condition.call(attribute) then 
+               attribute.lay_out( builder )
+            end
+         end
+      end
+   end
+   
+
+
+   
    
 
 end # Tuple

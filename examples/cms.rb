@@ -39,16 +39,17 @@ def define_example_cms_schema()
       
       define_entity :Roles do
          each :Role do
-            required :name                  , String, :length => 40
-            required :capabilities          , set_of(:Capabilities)
-            required :parents               , set_of(:Roles       )
-            # derived  :ancestors             , lambda {|role| role.parents.follow(:Roles, :parents).as_set() }
-            # derived  :inherited_capabilities, lambda {|role| role.ancestors.capabilities }
-            # derived  :all_capabilities      , lambda {|role| role.capabilities + role.inherited_capabilities }
+            required   :name                  , String, :length => 40
+            required   :capabilities          , set_of(:Capabilities)
+            required   :parents               , set_of(:Roles       )
+            maintained :ancestors             , lambda {|role| role.parents.follow(:Roles, :parents).as_set() }
+            maintained :ancestors_alt         , lambda {|role| role.parents + role.parents.ancestors_alt }
+            maintained :inherited_capabilities, lambda {|role| role.ancestors.capabilities }
+            maintained :all_capabilities      , lambda {|role| role.capabilities + role.inherited_capabilities }
             optional :something, :RoleSomething do
-               required :x, String
-               optional :y, String
-               derived  :z, lambda {|role| role.parents}
+               required   :x, String
+               optional   :y, String
+               maintained :z, lambda {|role| role.parents}
             end
          end
          
@@ -58,8 +59,8 @@ def define_example_cms_schema()
       
       define_entity :Capabilities do
          each :Capability do
-            required :name, String, :length => 40
-            # derived  :used_in, lamda {|capability| capability.find_matching(:Roles, :parents)}
+            required   :name   , String, :length => 40
+            maintained :used_in, lamda {|capability| capability.find_matching(:Roles, :parents)}
          end
          
          key :name

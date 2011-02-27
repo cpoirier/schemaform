@@ -19,17 +19,6 @@
 # =============================================================================================
 
 
-#
-# Provides the runtime representation of a defined Tuple type. 
-
-module Schemaform
-module Runtime
-class TupleClass
-
-   def initialize()
-      
-   end
-
-end # TupleClass
-end # Runtime
-end # Schemaform
+Dir[Schemaform.locate("layout/*.rb")].each do |path| 
+   require path
+end

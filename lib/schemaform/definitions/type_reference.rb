@@ -58,7 +58,7 @@ class TypeReference < Definition
       return @type unless @type.nil?
       warn_once( "TODO: reconsider TypeReference::resolve() in the light of preferred" )
       
-      @type = supervisor.monitor( self, false ) do
+      base_type = supervisor.monitor( self, false ) do
          case @restriction
          when :entity
             schema.find_entity(@type_name).resolve(TypeInfo::SCALAR)
@@ -66,12 +66,14 @@ class TypeReference < Definition
             if entity = schema.find_entity(@type_name, false) then
                entity.resolve(TypeInfo::SCALAR)
             else
-               ConstrainedType.build( schema.find_type(@type_name), @modifiers )
+               schema.find_type(@type_name)
             end
          else
-            ConstrainedType.build( schema.find_type(@type_name), @modifiers )
+            schema.find_type(@type_name)
          end
       end
+      
+      @type = ConstrainedType.build( base_type, @modifiers, @modifiers.fetch(:default, nil) )
    end
 
 end # TypeReference

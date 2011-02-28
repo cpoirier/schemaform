@@ -46,6 +46,17 @@ class WritableAttribute < Attribute
       end
    end
    
+
+   # ==========================================================================================
+   #                                           Conversion
+   # ==========================================================================================
+
+   
+   def lay_out( builder )
+      builder.define_attribute_default( name, resolve().default )
+      super( builder )
+   end
+
    
    
 end # WritableAttribute

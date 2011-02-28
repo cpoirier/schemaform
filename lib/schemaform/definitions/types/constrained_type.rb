@@ -26,13 +26,14 @@ module Schemaform
 module Definitions
 class ConstrainedType < Type
 
-   def initialize( underlying_type, constraints )
+   def initialize( underlying_type, constraints, default = nil )
       super( underlying_type.schema )
       @underlying_type = underlying_type
       @constraints     = constraints
+      @default         = default
    end
    
-   def self.build( underlying_type, modifiers )
+   def self.build( underlying_type, modifiers, default = nil )
       constraints = []
       modifiers.each do |name, value|
          if constraint = underlying_type.schema.build_constraint(name, value, underlying_type) then
@@ -40,7 +41,12 @@ class ConstrainedType < Type
          end
       end
       
-      constraints.empty? ? underlying_type : new( underlying_type, constraints )      
+      constraints.empty? ? underlying_type : new( underlying_type, constraints, default )      
+   end
+   
+   def default()
+      return @default unless @default.nil?
+      return @underlying_type.resolve(TypeInfo::SCALAR).default
    end
    
    def type_info()

@@ -33,6 +33,25 @@ class OptionalAttribute < WritableAttribute
       super( container, type )
    end
    
+   
+   # ==========================================================================================
+   #                                           Conversion
+   # ==========================================================================================
+
+
+   def lay_out( builder )
+      builder.
+      attribute_type = attribute.resolve()
+      send( attribute_type.type_info.specialize("lay_out", "type"), builder, attribute_type )
+   end
+
+protected
+
+   def lay_out_scalar_type( builder, attribute_type )
+      fail_unless_overridden
+   end
+
+   
 
 end # OptionalAttribute
 end # Definitions

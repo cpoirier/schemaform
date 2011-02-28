@@ -118,6 +118,17 @@ class Builder
    def define_tuple_writer( name, type, &preamble )
    end
    
+   
+   #
+   # Defines a default value for a writable tuple attribute.  Value can alternatively
+   # be a block.
+   
+   def define_attribute_default( name, value )
+      tuple_class.define_attribute_
+   end
+   
+   
+   
 
 end # Builder
 end # Layout

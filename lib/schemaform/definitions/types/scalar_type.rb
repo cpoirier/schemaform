@@ -28,16 +28,19 @@
 module Schemaform
 module Definitions
 class ScalarType < Type
-
+   
    #
    # If you specify a Schema, it will be used.  If not, it will be pulled from the base Type.
    
-   def initialize( base_type = nil, schema = nil, name = nil )
+   def initialize( base_type = nil, schema = nil, name = nil, default = nil )
       super( schema || base_type.schema, name )
       warn_once( "ScalarType.new() interface seems wrong" )
       @base_type = base_type
+      @default   = default || base_type.default
    end
    
+   attr_reader :default
+
    def type_info()
       TypeInfo::SCALAR
    end

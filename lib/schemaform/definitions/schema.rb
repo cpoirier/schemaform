@@ -88,7 +88,7 @@ class Schema < Definition
 
             base_type = TypeReference.new(self, base_name, modifiers)
             if name.is_a?(Class) then
-               register_type MappedType.new(name, base_type, modifiers.delete(:load), modifiers.delete(:store), @schema)
+               register_type MappedType.new(name, base_type, modifiers.delete(:load), modifiers.delete(:store), modifiers.delete(:default), @schema)
             else
                type = base_type
                type.name = name
@@ -262,15 +262,15 @@ protected
          
       @types_are_resolved = false
 
-      register_type ScalarType.new(   nil          , self, :all      )
-      register_type ScalarType.new(   @types[:all ], nil , :any      )
-      register_type ScalarType.new(   @types[:all ], nil , :void     )
-                    
-      register_type BinaryType.new(   @types[:any ], nil , :binary   )   
-      register_type TextType.new(     @types[:any ], nil , :text     ) 
-      register_type DateTimeType.new( @types[:text], nil , :datetime ) 
-      register_type NumericType.new(  @types[:any ], nil , :real     )    
-      register_type IntegerType.new(  @types[:real], nil , :integer  )    
+      register_type ScalarType.new(   nil          , self, :all     , nil )
+      register_type ScalarType.new(   @types[:all ], nil , :any     , nil )
+      register_type ScalarType.new(   @types[:all ], nil , :void    , nil )
+                                                                     
+      register_type BinaryType.new(   @types[:any ], nil , :binary  , 0   )   
+      register_type TextType.new(     @types[:any ], nil , :text    , ""  ) 
+      register_type NumericType.new(  @types[:any ], nil , :real    , 0   )    
+      register_type IntegerType.new(  @types[:real], nil , :integer , 0   )    
+      register_type DateTimeType.new( @types[:text], nil , :datetime, "0000-01-01 00:00:00" ) 
 
       @dsl.instance_eval do
          define_type :boolean   , :integer, :range  => 0..1
@@ -280,12 +280,12 @@ protected
          define_type Integer   , :integer
          define_type String    , :text
          define_type Symbol    , :identifier, :load => lambda {|s| s.intern}
-         define_type IPAddr    , :text, :length => 40
-         define_type TrueClass , :boolean, :store => 1, :load => lambda {|v| !!v }
-         define_type FalseClass, :boolean, :store => 0, :load => lambda {|v| !!v }
+         define_type IPAddr    , :text, :length => 40, :default => "192.168.0.1"
+         define_type TrueClass , :boolean, :store => 1, :load => lambda {|v| !!v }, :default => 1
+         define_type FalseClass, :boolean, :store => 0, :load => lambda {|v| !!v }, :default => 0
          define_type Time      , :datetime,
                                  :store => lambda {|t| utc = t.getutc; utc.strftime("%Y-%m-%d %H:%M:%S") + (utc.usec > 0 ? ".#{utc.usec}" : "") },
-                                 :load  => lambda {|s| year, month, day, hour, minute, second, micros = *s.split(/[:\-\.] /); Time.utc(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i, micros.to_i)}  
+                                 :load  => lambda {|s| year, month, day, hour, minute, second, micros = *s.split(/[:\-\.] /); Time.utc(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i, micros.to_i)}                                   
       end
       
       @dsl.instance_eval(&block) if block_given?

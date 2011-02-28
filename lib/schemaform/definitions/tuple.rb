@@ -92,7 +92,7 @@ class Tuple < Type
       # block instead of a type.
    
       def required( name, base_type = nil, modifiers = {}, required = true, &block )
-         attribute_class = required ? RequiredAttribute : OptionalAttribute
+         attribute_class = required ? RequiredAttribute : OptionalAttribute         
          @tuple.instance_eval do
             attribute = add_attribute( name, attribute_class.new(self) )
             if block_given? then

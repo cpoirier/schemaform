@@ -34,6 +34,10 @@ class Type < Definition
       self.name = name if name
    end
    
+   def default()
+      nil
+   end
+   
    #
    # All Types are top level names, and should be registered with the Schema.
    

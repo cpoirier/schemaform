@@ -32,9 +32,15 @@ class TupleClass
    
    def self.define( name, master )
       define_subclass( name, master.schema_class ) do
-         @@master = master
+         @@master   = master
+         @@defaults = {}
          def self.master()
             @@master
+         end
+         def self.default_for( name )
+            return nil unless @@defaults.member?(name)
+            default = @@defaults[name]
+            default.is_a?(Proc) ? default.call() : default
          end
       end
    end
@@ -49,6 +55,7 @@ class TupleClass
       end
    end
    
+   
    #
    # Defines an attribute writer for the specified name
    
@@ -57,6 +64,15 @@ class TupleClass
          @_dirty = true
          instance_variable_set( "@#{name.to_s}", value )
       end
+   end
+   
+   
+   #
+   # Defines a default value (or value-producing Proc) for an attribute.  This is
+   # used if the value is not defined when the Tuple is instantiated.
+   
+   def self.define_attribute_default( name, value )
+      class_eval( "@@defaults[name] = value" )
    end
 
 

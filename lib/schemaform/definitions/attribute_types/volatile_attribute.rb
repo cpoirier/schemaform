@@ -33,10 +33,6 @@ class VolatileAttribute < DerivedAttribute
       super( tuple, block )
    end
    
-   def volatile?()
-      return true
-   end
-   
 
 end # MaintainedAttribute
 end # Definitions

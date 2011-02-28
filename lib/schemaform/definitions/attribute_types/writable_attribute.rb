@@ -25,7 +25,7 @@
 
 module Schemaform
 module Definitions
-class OriginalAttribute < Attribute
+class WritableAttribute < Attribute
 
    def initialize( container, type = nil )
       super( container )
@@ -46,12 +46,8 @@ class OriginalAttribute < Attribute
       end
    end
    
-   def optional?()
-      !required?
-   end 
    
    
-   
-end # OriginalAttribute
+end # WritableAttribute
 end # Definitions
 end # Schemaform

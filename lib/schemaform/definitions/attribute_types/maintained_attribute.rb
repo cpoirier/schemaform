@@ -33,10 +33,6 @@ class MaintainedAttribute < DerivedAttribute
       super( tuple, block )
    end
    
-   def maintained?()
-      return true
-   end
-   
 
 end # MaintainedAttribute
 end # Definitions

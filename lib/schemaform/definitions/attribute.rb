@@ -43,18 +43,6 @@ class Attribute < Definition
       fail_unless_overridden( self, :resolve )
    end
    
-   def required?()
-      false
-   end
-   
-   def derived?()
-      false
-   end
-   
-   def optional?()
-      false
-   end
-   
    
    
    # ==========================================================================================

@@ -19,7 +19,7 @@
 # =============================================================================================
 
 
-require Schemaform.locate("original_attribute.rb")
+require Schemaform.locate("writable_attribute.rb")
 
 
 #
@@ -27,7 +27,7 @@ require Schemaform.locate("original_attribute.rb")
 
 module Schemaform
 module Definitions
-class OptionalAttribute < OriginalAttribute
+class OptionalAttribute < WritableAttribute
 
    def initialize( container, type = nil )
       super( container, type )

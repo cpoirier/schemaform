@@ -227,13 +227,13 @@ def define_example_cms_schema()
       end
 
 
-      augment :Container do
-         optional :access_control, :default => lambda {|c| c.context.access_control } do
+      augment_tuple :Container do
+         optional :access_control, :default => lambda {|c| c.context.access_control } do  # Can this default be dynamic?
             required :stated_rules, list_of(:AccessRule)
             
-            volatile :effective_rules do |c|
+            maintained :effective_rules do |c|
                with c.access_control.stated_rules
-               ungroup :effective_capabilities => :effective_capability
+               ungroup :effective_capabilities => :effective_capability    # Note: the ordering of :stated_rules means the ungrouped result is ordered within each effective_capability
                
                add_volatile :effective_previous do |er|
                   er.previous.or(
@@ -259,13 +259,10 @@ def define_example_cms_schema()
                end
             end
             
-            volatile :tail_rules, {|c| c.access_control.effective_rules.last }
-            volatile :privileges, {|c| c.access_control.tail_rules.effective_members }
+            volatile   :tail_rules, {|c| c.access_control.effective_rules.last }
+            maintained :privileges, {|c| c.access_control.tail_rules.effective_members }
          end
       end
-
-
-
       
       
    end

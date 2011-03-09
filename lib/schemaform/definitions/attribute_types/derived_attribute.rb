@@ -27,6 +27,12 @@ class DerivedAttribute < Attribute
       super( tuple )
       @block = block
    end
+
+   def recreate_in( tuple )
+      self.class.new( tuple, @block ).tap do |recreation|
+         recreation.name = name
+      end
+   end
    
    def resolve( preferred = nil )
       supervisor.monitor(self) do

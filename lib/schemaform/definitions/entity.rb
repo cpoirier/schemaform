@@ -18,8 +18,8 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("relation.rb")
-require Schemaform.locate("tuple.rb"   )
+require Schemaform.locate("relation.rb"  )
+require Schemaform.locate("tuple_type.rb")
 
 
 #
@@ -30,7 +30,7 @@ module Definitions
 class Entity < Relation
       
    def initialize( name, base_entity, schema, &block )
-      super( base_entity || schema, Tuple.new(schema), name )
+      super( base_entity || schema, TupleType.new(schema), name )
 
       @base_entity = base_entity
       @keys        = {}
@@ -115,13 +115,14 @@ class Entity < Relation
    
    
    class DefinitionLanguage
+      include QualityAssurance 
+      
       def initialize( entity )
          @entity = entity
       end
-      
-      
+
       #
-      # Triggers the inline definition of the Tuple for the Entity.
+      # Triggers the inline definition of the TupleType for the Entity.
       
       def each( tuple_name, tuple_base = nil, &block )
          @entity.heading.define(tuple_name, &block)
@@ -129,10 +130,21 @@ class Entity < Relation
       
       
       #
-      # Defines the Entity heading in terms of a named Tuple.
+      # Defines the Entity heading in terms of a named TupleType.
       
-      def of( tuple_name )
-         @entity.change_heading( tuple_name )
+      def of( tuple_type_name )
+         @entity.change_heading( tuple_type_name )
+      end
+      
+
+      #
+      # Causes common fields to be stored in another entity.
+      
+      def overlay( entity_name )
+         warn_once( "TODO: overlay support" )
+         # if attribute.writable? then
+         #    assert( imported_type.attributes[attribute.name].writable?, "can't redefine read-only attribute [#{attribute.name}] as a writable attribute; consider making the base attribute optional with a calculated default" )
+         # end
       end
       
       

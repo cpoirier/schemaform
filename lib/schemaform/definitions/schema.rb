@@ -74,6 +74,18 @@ class Schema < Definition
             register_type Entity.new( name, parent, self, &block )
          end
       end
+      
+      
+      #
+      # Defins a tuple type within the Schema.
+      
+      def define_tuple( name, &block )
+         @schema.instance_eval do
+            check do
+               register_type TupleType.new( self, name, &block )
+            end
+         end
+      end
    
    
       #
@@ -111,6 +123,11 @@ class Schema < Definition
    def register_type( type )
       type_check( :type, type, [Type, TypeReference] )
       return if @types.member?(type.name) && @types[type.name].object_id == type.object_id
+      
+      if type.is_a?(TupleType) then
+         check { assert( !@tuple_types.member?(type.name), "schema [#{full_name}] already has a tuple type named [#{type.name}]" ) }
+         @tuple_types[type.name] = type
+      end
       
       if type.is_an?(Entity) then
          check { assert( !@entities.member?(type.name), "schema [#{full_name}] already has an entity named [#{type.name}]" ) }
@@ -160,7 +177,7 @@ class Schema < Definition
       return name if name.is_a?(Type)
       check { type_check(:name, name, [Symbol, Class]) }
       
-      warn_once( "TODO: We need a way to get from Tuple to Entity, when the relationship is unambiguous." )
+      warn_once( "TODO: We need a way to get from TupleType to Entity, when the relationship is unambiguous." )
 
       type    = nil
       current = name
@@ -179,6 +196,19 @@ class Schema < Definition
    
    
    #
+   # Returns the TupleType (type) for a name, or nil.
+   
+   def find_tuple_type( name, fail_if_missing = true )
+      return name if name.is_a?(TupleType)
+      type_check( :name, name, Symbol )
+      
+      return @tuple_types[name] if @tuple_types.member?(name)
+      return nil unless fail_if_missing
+      fail( "unrecognized tuple type [#{name}]" )
+   end
+   
+   
+   #
    # Returns an Entity or other named Relation for a name (Symbol), or nil.
    
    def find_relation( name, fail_if_missing = true )
@@ -186,7 +216,6 @@ class Schema < Definition
       type_check( :name, name, Symbol )
       
       return @relations[name] if @relations.member?(name)
-      return schema.find_relation(name, fail_if_messing) if schema
       return nil unless fail_if_missing
       fail( "unrecognized relation [#{name}]" )
    end
@@ -256,11 +285,12 @@ protected
    def initialize( name, &block )
       super( nil, name )
       
-      @dsl        = DefinitionLanguage.new( self )
-      @types      = {}
-      @relations  = {}
-      @entities   = {}
-      @supervisor = TypeResolutionSupervisor.new( self )
+      @dsl         = DefinitionLanguage.new( self )
+      @types       = {}
+      @tuple_types = {}
+      @relations   = {}
+      @entities    = {}
+      @supervisor  = TypeResolutionSupervisor.new( self )
          
       @types_are_resolved = false
 

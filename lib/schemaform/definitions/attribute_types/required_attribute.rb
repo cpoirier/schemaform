@@ -23,7 +23,7 @@ require Schemaform.locate("writable_attribute.rb")
 
 
 #
-# A required attribute -- one that must be present within its context Tuple.
+# A required attribute -- one that must be present within its context TupleType.
 
 module Schemaform
 module Definitions
@@ -77,9 +77,9 @@ protected
             
             #
             # We don't want to build a new TupleClass in this case, so we will have to lay out the
-            # Tuple attributes directly.
+            # TupleType attributes directly.
             
-            builder.with_name( "referenced_" + member_type.context.context.heading.name ) do # The referenced Entity's Tuple name
+            builder.with_name( "referenced_" + member_type.context.context.heading.name ) do # The referenced Entity's TupleType name
                member_type.each_attribute do |attribute|
                   attribute.lay_out( builder )
                end
@@ -91,6 +91,7 @@ protected
    end
 
 
+   extend QualityAssurance
    warn_once( "TODO: build the constructor for the TupleClass" )
    warn_once( "TODO: build a general runtime Tuple class that can wrap a hash" )
    

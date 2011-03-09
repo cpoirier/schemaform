@@ -33,6 +33,7 @@ class MaintainedAttribute < DerivedAttribute
       super( tuple, block )
    end
    
+   
 
 protected
 
@@ -75,9 +76,9 @@ protected
             
             #
             # We don't want to build a new TupleClass in this case, so we will have to lay out the
-            # Tuple attributes directly.
+            # TupleType attributes directly.
             
-            builder.with_name( "referenced_" + member_type.context.context.heading.name ) do # The referenced Entity's Tuple name
+            builder.with_name( "referenced_" + member_type.context.context.heading.name ) do # The referenced Entity's TupleType name
                member_type.each_attribute do |attribute|
                   attribute.lay_out( builder )
                end

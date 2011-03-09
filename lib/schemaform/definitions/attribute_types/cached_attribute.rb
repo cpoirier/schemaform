@@ -33,8 +33,6 @@ class CachedAttribute < DerivedAttribute
       super( tuple, block )
    end
    
-   
-
 end # CachedAttribute
 end # Definitions
 end # Schemaform

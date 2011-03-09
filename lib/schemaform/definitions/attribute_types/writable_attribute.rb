@@ -34,6 +34,12 @@ class WritableAttribute < Attribute
    
    attr_accessor :type
    
+   def recreate_in( tuple )
+      self.class.new( tuple, @type ).tap do |recreation|
+         recreation.name = name
+      end
+   end
+   
    def writable?()
       true
    end

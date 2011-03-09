@@ -49,7 +49,7 @@ class Path
    end
    
    def +( rhs )
-      Path.new( *@components, *rhs )
+      Path.new( *(@components + rhs.to_a) )
    end
 end
 
@@ -104,7 +104,7 @@ def define_example_cms_schema()
       
       define_entity :SystemAccounts do
          each :SystemAccount do 
-            import :Account
+            import   :Account
             required :owner, :Module
          end
          
@@ -113,10 +113,10 @@ def define_example_cms_schema()
       
       define_entity :UserAccounts do
          each :UserAccount do
-            import :Account
+            import   :Account
             required :can_login       , :boolean
             required :locked_out_until, Time, :default => Time.at(0)
-            optional :hashed_password , SHA1, :default => ""           # left blank if an OpenID
+            # optional :hashed_password , Digest::SHA1, :default => ""           # left blank if an OpenID
          end
          
          overlay :Accounts

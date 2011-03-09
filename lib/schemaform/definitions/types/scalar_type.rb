@@ -36,10 +36,14 @@ class ScalarType < Type
       super( schema || base_type.schema, name )
       warn_once( "ScalarType.new() interface seems wrong" )
       @base_type = base_type
-      @default   = default || base_type.default
+      @default   = default
    end
    
-   attr_reader :default
+   def default()
+      return @default if default
+      return @base_type.resolve.default if @base_type
+      return nil
+   end
 
    def type_info()
       TypeInfo::SCALAR

@@ -24,12 +24,12 @@
 
 module Schemaform
 module Definitions
-class Tuple < Type
+class TupleType < Type
    
-   def initialize( context, type_name = nil, extends = nil, loader = nil, storer = nil, &block )
+   def initialize( context, type_name = nil, loader = nil, storer = nil, &block )
       super( context, type_name.nil? ? false : type_name )
       
-      warn_once( "base type and modifiers not yet supported for Tuple types" )
+      warn_once( "modifiers not yet supported for TupleType" )
       
       @attributes = {}                       
       @expression = Expressions::Tuple.new(self)
@@ -39,7 +39,7 @@ class Tuple < Type
       define(&block) if block_given?
    end
    
-   attr_reader :expression, :root_tuple, :attributes, :definer
+   attr_reader :expression, :attributes, :definer
    
    def default()
       return @default unless @default.nil?
@@ -93,8 +93,37 @@ class Tuple < Type
    
    
    class DefinitionLanguage
+      include QualityAssurance
+      
       def initialize( tuple )
          @tuple = tuple
+      end
+      
+      
+      #
+      # Imports (and potentially redefines) attributes from another tuple type.  Redefinitions
+      # are provided as a block to the import command.
+      
+      def import( name, &block )
+
+         imported_type = @tuple.schema.find_tuple_type( name )
+         redefinitions = TupleType.new( @tuple, &block )
+         
+         check do
+            redefinitions.each_attribute do |attribute|
+               assert( imported_type.member?(attribute.name), "can't redefine attribute [#{attribute.name}], as it does not exist in the imported tuple [#{imported_type.full_name}]" )
+            end
+         end
+         
+         @tuple.instance_eval do
+            imported_type.each_attribute do |attribute|
+               @attributes[attribute.name] = if redefinitions.member?(attribute.name) then
+                  redefinitions.attributes[attribute.name].recreate_in( self )
+               else
+                  attribute.recreate_in( self )
+               end
+            end
+         end
       end
 
    
@@ -108,7 +137,7 @@ class Tuple < Type
             attribute = add_attribute( name, attribute_class.new(self) )
             if block_given? then
                assert( (type_name = base_type).exists?, "please name the tuple type for attribute [#{name}]" )
-               attribute.type = Tuple.new( attribute, type_name, modifiers.delete(:extends), modifiers.delete(:load), modifiers.delete(:store), &block )
+               attribute.type = TupleType.new( attribute, type_name, modifiers.delete(:load), modifiers.delete(:store), &block )
             else
                assert( base_type.exists?, "expected type for attribute [#{name}]")
                attribute.type = TypeReference.build( attribute, base_type, modifiers )
@@ -177,6 +206,7 @@ class Tuple < Type
    
    
    
+   
    # ==========================================================================================
    #                                          Operations
    # ==========================================================================================
@@ -190,8 +220,8 @@ class Tuple < Type
    
    def add_attribute( name, attribute )
       check do
-         assert( !@closed              , "attributes cannot be added to a Tuple after type resolution has begun" )
-         assert( !@attributes.member?(name), "a Tuple cannot contain two attributes with the same name [#{name}]"    )
+         assert( !@closed                  , "attributes cannot be added to a TupleType after type resolution has begun" )
+         assert( !@attributes.member?(name), "a TupleType cannot contain two attributes with the same name [#{name}]"    )
       end
       
       @attributes[name] = attribute
@@ -252,7 +282,7 @@ class Tuple < Type
    
    
 
-end # Tuple
+end # TupleType
 end # Definitions
 end # Schemaform
 

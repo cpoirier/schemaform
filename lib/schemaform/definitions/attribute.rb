@@ -20,13 +20,13 @@
 
 
 #
-# A Attribute in a Tuple.
+# An Attribute in a TupleType.
 
 module Schemaform
 module Definitions
 class Attribute < Definition
    def initialize( tuple )
-      type_check( :tuple, tuple, Tuple )
+      type_check( :tuple, tuple, TupleType )
       super( tuple )
       @expression = Expressions::Attribute.new(self)
    end
@@ -47,6 +47,10 @@ class Attribute < Definition
       false
    end
    
+   def recreate_in( tuple )
+      fail_unless_overridden( self, :recreate_in )
+   end
+   
    
    # ==========================================================================================
    #                                           Conversion
@@ -61,22 +65,22 @@ class Attribute < Definition
 protected
 
    def lay_out_scalar_type( builder, attribute_type )
-      fail_unless_overridden
+      fail_unless_overridden( self, :lay_out_scalar_type )
    end
    
    
    def lay_out_set_type( builder, attribute_type )
-      fail_unless_overridden
+      fail_unless_overridden( self, :lay_out_set_type )
    end
    
    
    def lay_out_tuple_type( builder, attribute_type )
-      fail_unless_overridden
+      fail_unless_overridden( self, :lay_out_tuple_type )
    end
    
    
    def lay_out_relation_type( builder, attribute_type )
-      fail_unless_overridden
+      fail_unless_overridden( self, :lay_out_relation_type )
    end
    
 end # Attribute

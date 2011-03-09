@@ -25,7 +25,7 @@ class Key < Definition
       
    def initialize( entity, name, attribute_names )
       super( entity, name )
-      @attributes = Tuple.new( self )
+      @attributes = TupleType.new( self )
       attribute_names.each do |name|
          @attributes.add_attribute( name, entity.heading.attributes[name] )
       end

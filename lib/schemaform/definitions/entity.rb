@@ -91,19 +91,18 @@ class Entity < Relation
       @enumeration.exists?
    end
    
-   def resolve( preferred = nil )
-      supervisor.monitor( preferred ? [self, preferred] : self) do
+   def resolve( as = :relation )
+      supervisor.monitor( as == :relation ? self : [self, as] ) do
          warn_once( "TODO: key resolution and other entity-level resolution jobs" )
          warn_once( "TODO: create a relation type" )
-         case preferred
-         when TypeInfo::SCALAR
-            @reference_type.resolve()
-            # annotate_errors( :check => "be sure the primary key of #{full_name} doesn't reference an entity which references [#{full_name}] in its primary key" ) do
-            #    ConstrainedType.new( primary_key.resolve( preferred ), [TypeConstraints::MembershipConstraint.new(self)] )
-            # end
-         else
-            @heading.resolve( preferred )
+         case as 
+         when :relation
+            @heading.resolve()
             self
+         when :tuple
+            @heading.resolve()
+         when :reference
+            @reference_type.resolve()
          end
       end
    end

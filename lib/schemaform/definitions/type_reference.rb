@@ -28,52 +28,34 @@ module Definitions
 class TypeReference < Definition
    extend QualityAssurance
    
-   def self.build( context, type_name, modifiers = {}, restriction = nil )
+   def self.build( context, type_name, modifiers = {} )
       case type_name
       when Type, TypeReference
          check do
-            assert( modifiers.empty?, "modifiers cannot be added to an existing Type or TypeReference"    )
-            assert( restriction.nil?, "restrictions cannot be added to an existing Type or TypeReference" )
+            assert( modifiers.empty?, "modifiers cannot be added to an existing Type or TypeReference" )
          end
          
          return type_name if Type === type_name
-         return new( context, type_name.type_name, type_name.modifiers, type_name.restriction )
+         return new( context, type_name.type_name, type_name.modifiers )
       else
-         return new( context, type_name, modifiers, restriction )
+         return new( context, type_name, modifiers )
       end
    end
    
    attr_reader :type_name, :modifiers, :restriction
 
-   def initialize( context, type_name, modifiers = {}, restriction = nil )
+   def initialize( context, type_name, modifiers = {} )
       type_check( :type_name, type_name, [Symbol, Class, Type] )
       super( context, type_name )
       @type_name   = type_name
       @modifiers   = modifiers
-      @restriction = restriction
       @type        = nil
    end
    
-   def resolve( preferred = nil )
-      return @type unless @type.nil?
-      warn_once( "TODO: reconsider TypeReference::resolve() in the light of preferred" )
-      
-      base_type = supervisor.monitor( self, false ) do
-         case @restriction
-         when :entity
-            schema.find_entity(@type_name).resolve(TypeInfo::SCALAR)
-         when :scalar
-            if entity = schema.find_entity(@type_name, false) then
-               entity.resolve(TypeInfo::SCALAR)
-            else
-               schema.find_type(@type_name)
-            end
-         else
-            schema.find_type(@type_name)
-         end
+   def resolve( relation_types_as = :reference )
+      supervisor.monitor( self, false ) do
+         ConstrainedType.build( schema.find_type(@type_name).resolve(relation_types_as), @modifiers, @modifiers.fetch(:default, nil) )
       end
-      
-      @type = ConstrainedType.build( base_type, @modifiers, @modifiers.fetch(:default, nil) )
    end
 
 end # TypeReference

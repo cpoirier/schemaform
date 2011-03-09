@@ -192,16 +192,24 @@ class TupleType < Type
       # Creates a reference type.
       
       def member_of( entity_name )
-         TypeReference.new( @tuple, entity_name, {}, :entity )
+         EntityReference.new( @tuple, entity_name )
       end
       
       
       #
-      # Creates a set
+      # Creates a set type.
       
       def set_of( type_name, modifiers = {} )
-         SetType.new( TypeReference.build(@tuple, type_name, modifiers, :scalar), @tuple.schema )
+         SetType.new( TypeReference.build(@tuple, type_name, modifiers), @tuple.schema )
       end
+      
+      #
+      # Create an (ordered) list type.
+      
+      def list_of( type_name, modifiers = {} )
+         ListType.new( TypeReference.build(@tuple, type_name, modifiers), @tuple.schema )
+      end
+      
    end
    
    
@@ -247,12 +255,12 @@ class TupleType < Type
    #                                       Type Operations
    # ==========================================================================================
 
-   def resolve( preferred = nil )
+   def resolve( relation_types_as = :reference )
       unless @closed
          @closed = true
          supervisor.monitor(self, named?) do
             each_attribute do |attribute|
-               attribute.resolve( preferred )
+               attribute.resolve(:reference)
             end
             self
          end

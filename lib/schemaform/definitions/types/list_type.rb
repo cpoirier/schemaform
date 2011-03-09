@@ -19,26 +19,44 @@
 # =============================================================================================
 
 
+
 #
-# A type that represents a reference to an entity.
+# Similar to a SetType, but with an ordering.
 
 module Schemaform
 module Definitions
-class ReferenceType < Type
+class ListType < Type
 
-   def initialize( entity )
-      super( entity.context, false )
-      @entity = entity
+   #
+   # If you specify a Schema, it will be used.  If not, it will be pulled from the base Type.
+   
+   def initialize( member_type = nil, schema = nil, name = nil )
+      super( schema || member_type.schema, name )
+      @member_type = member_type
    end
+   
+   attr_reader :member_type
    
    def type_info()
-      resolve.type_info
+      if @member_type.resolve.type_info.has_heading? then
+         TypeInfo::ENUMERATION
+      else
+         TypeInfo::SEQUENCE
+      end
    end
    
-   def resolve( relation_types_as = :reference )
-      return schema.rid_type
+   def description()
+      # return name.to_s if named?
+      return "[#{@member_type.resolve.description}]"
    end
 
-end # ReferenceType
+   def resolve( relation_types_as = :reference )
+      @member_type.resolve( :reference )
+      self
+   end
+   
+
+end # ListType
 end # Definitions
 end # Schemaform
+

@@ -34,7 +34,6 @@ class ScalarType < Type
    
    def initialize( base_type = nil, schema = nil, name = nil, default = nil )
       super( schema || base_type.schema, name )
-      warn_once( "ScalarType.new() interface seems wrong" )
       @base_type = base_type
       @default   = default
    end
@@ -64,7 +63,7 @@ class ScalarType < Type
    end
    
       
-   def resolve( preferred = nil )
+   def resolve( relation_types_as = :reference )
       self
    end
    

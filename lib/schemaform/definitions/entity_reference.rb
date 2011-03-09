@@ -18,27 +18,27 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("type_reference.rb")
+
 
 #
-# A type that represents a reference to an entity.
+# A TypeReference that only accepts an Entity type name.
 
 module Schemaform
 module Definitions
-class ReferenceType < Type
+class EntityReference < TypeReference
+   def initialize( context, entity_name )
+      type_check( :entity_name, entity_name, Symbol )
+      super( context, entity_name )
+   end
 
-   def initialize( entity )
-      super( entity.context, false )
-      @entity = entity
-   end
-   
-   def type_info()
-      resolve.type_info
-   end
-   
+
    def resolve( relation_types_as = :reference )
-      return schema.rid_type
+      supervisor.monitor( self, false ) do
+         schema.find_entity(@type_name).resolve(relation_types_as)
+      end
    end
 
-end # ReferenceType
+end # TypeReference
 end # Definitions
 end # Schemaform

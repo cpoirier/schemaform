@@ -77,7 +77,7 @@ class Schema < Definition
       
       
       #
-      # Defins a tuple type within the Schema.
+      # Defines a tuple type within the Schema.
       
       def define_tuple( name, &block )
          @schema.instance_eval do
@@ -107,6 +107,15 @@ class Schema < Definition
                register_type type
             end
          end
+      end
+      
+      
+      #
+      # Adds attributes to an existing tuple type.
+      
+      def augment_tuple( name, &block )
+         tuple_type = @schema.find_tuple_type(name) 
+         tuple_type.define( &block )
       end
    end
    
@@ -153,7 +162,11 @@ class Schema < Definition
    attr_reader :supervisor
    
    def any_type()
-      return find_type(:any)
+      return @types[:any]
+   end
+   
+   def rid_type()
+      return @types[:rid]
    end
       
    def each_entity() 
@@ -173,12 +186,10 @@ class Schema < Definition
    #
    # Returns the Type for a name (Symbol or Class), or nil.
    
-   def find_type( name, preferred = nil, fail_if_missing = true )
+   def find_type( name, fail_if_missing = true )
       return name if name.is_a?(Type)
       check { type_check(:name, name, [Symbol, Class]) }
       
-      warn_once( "TODO: We need a way to get from TupleType to Entity, when the relationship is unambiguous." )
-
       type    = nil
       current = name
       while current && type.nil?
@@ -186,12 +197,9 @@ class Schema < Definition
          current = current.is_a?(Class) ? current.superclass : nil
       end
 
-      if type.nil? then
-         fail( name.is_a?(Symbol) ? "unrecognized type [#{name}]" : "no type mapping for class [#{name.name}]" ) if fail_if_missing
-         return nil
-      else
-         return type.resolve( preferred )
-      end
+      return type.resolve(:reference) if type
+      return nil if fail_if_missing
+      fail( name.is_a?(Symbol) ? "unrecognized type [#{name}]" : "no type mapping for class [#{name.name}]" )
    end
    
    
@@ -297,17 +305,18 @@ protected
       register_type ScalarType.new(   nil          , self, :all     , nil )
       register_type ScalarType.new(   @types[:all ], nil , :any     , nil )
       register_type ScalarType.new(   @types[:all ], nil , :void    , nil )
-                                                                     
+      
       register_type BinaryType.new(   @types[:any ], nil , :binary  , 0   )   
       register_type TextType.new(     @types[:any ], nil , :text    , ""  ) 
       register_type NumericType.new(  @types[:any ], nil , :real    , 0   )    
       register_type IntegerType.new(  @types[:real], nil , :integer , 0   )    
       register_type DateTimeType.new( @types[:text], nil , :datetime, "0000-01-01 00:00:00" ) 
+                                                                     
 
       @dsl.instance_eval do
          define_type :boolean   , :integer, :range  => 0..1
          define_type :identifier, :text   , :length => 80, :check => lambda {|i| !!i.to_sym && i.to_sym.inspect !~ /"/}
-   
+
          define_type Float     , :real
          define_type Integer   , :integer
          define_type String    , :text
@@ -317,7 +326,10 @@ protected
          define_type FalseClass, :boolean, :store => 0, :load => lambda {|v| !!v }, :default => 0
          define_type Time      , :datetime,
                                  :store => lambda {|t| utc = t.getutc; utc.strftime("%Y-%m-%d %H:%M:%S") + (utc.usec > 0 ? ".#{utc.usec}" : "") },
-                                 :load  => lambda {|s| year, month, day, hour, minute, second, micros = *s.split(/[:\-\.] /); Time.utc(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i, micros.to_i)}                                   
+                                 :load  => lambda {|s| year, month, day, hour, minute, second, micros = *s.split(/[:\-\.] /); Time.utc(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i, micros.to_i)}
+                                 
+         define_type :rid      , Integer
+                                 
       end
       
       @dsl.instance_eval(&block) if block_given?
@@ -368,7 +380,7 @@ protected
          return annotate_errors( annotation ) do
             check( @entries.push_and_pop(scope) { yield() } ) do |type|
                assert( type.exists?, "unable to resolve type for [#{description}]" )
-               type_check( :type, type, Type )
+               type_check( :type, type, [Type, TypeReference] )
                warn_once( "DEBUG: #{description} resolved to #{class_name_for(type)} #{type.description}" ) if report_worthy
             end
          end

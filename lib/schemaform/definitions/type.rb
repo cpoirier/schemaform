@@ -62,20 +62,32 @@ class Type < Definition
       type_info.single_valued?
    end
    
-   def scalar_type?()
-      type_info.scalar?
+   def ordered?()
+      type_info.ordered?
    end
    
-   def tuple_type?()
-      type_info.tuple?
+   def scalar_type?()
+      type_info.scalar?
    end
    
    def set_type?()
       type_info.set?
    end
    
+   def sequence_type?()
+      type_info.sequence?
+   end
+   
+   def tuple_type?()
+      type_info.tuple?
+   end
+   
    def relation_type?()
       type_info.relation?
+   end
+   
+   def enumerated_type?()
+      type_info.enumeration?
    end
    
 
@@ -84,12 +96,7 @@ class Type < Definition
    
    def description()
       return full_name.to_s if named?
-      return "an unnamed " + case type_info
-         when TypeInfo::SCALAR   ; "scalar"
-         when TypeInfo::TUPLE    ; "tuple"            
-         when TypeInfo::RELATION ; "relation"
-         when TypeInfo::SET      ; "set of"
-      end + " type"
+      return "an unnamed " + type_info.to_s + " type"
    end
 
    
@@ -104,7 +111,7 @@ class Type < Definition
    #
    # Resolves any deferred typing information within the Type.
    
-   def resolve( preferred = nil )
+   def resolve( relation_types_as = :reference )
       fail_unless_overridden( self, :resolve )
    end
 

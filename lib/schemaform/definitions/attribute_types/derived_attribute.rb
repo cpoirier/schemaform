@@ -34,12 +34,12 @@ class DerivedAttribute < Attribute
       end
    end
    
-   def resolve( preferred = nil )
+   def resolve( relation_types_as = :reference )
       supervisor.monitor(self) do
          annotate_errors( :attribute => full_name() ) do 
             result_expression = @block.call( root_tuple.expression )
             type_check( :result_expression, result_expression, Expressions::Expression )
-            result_expression.resolve( preferred )
+            result_expression.resolve( relation_types_as )
          end
       end   
    end

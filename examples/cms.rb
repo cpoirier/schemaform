@@ -147,9 +147,9 @@ def define_example_cms_schema()
       define_entity :Containers do
          each :Container do
             maintained :path   , lambda {|container| container.context.path + container.name }
-            optional   :context, :Container
+            optional   :context, member_of(:Containers)
             required   :name   , Name, :length => 70
-            required   :type   , :ContainerType  
+            required   :type   , member_of(:ContainerType)
          end
          
          key :path
@@ -193,7 +193,7 @@ def define_example_cms_schema()
       
       define_entity :Groups do
          each :Group do
-            required   :owner             , :Account
+            required   :owner             , member_of(:Accounts)
             required   :name              , String, :length => 80
             required   :base_groups       , set_of(:Groups)
             required   :excluded_groups   , set_of(:Groups)
@@ -206,9 +206,9 @@ def define_example_cms_schema()
 
       define_entity :Capabilities do
          each :Capability do
-            required   :module   , :Module
+            required   :module   , member_of(:Modules)
             required   :name     , String, :length => 40
-            required   :parent   , :Capability
+            required   :parent   , member_of(:Capabilities)
             maintained :ancestors, lambda {|c| set(c.parent) + c.parent.ancestors }
             maintained :closure  , lambda {|c| set(c) + c.ancestors }
          end
@@ -218,8 +218,8 @@ def define_example_cms_schema()
       
       
       define_tuple :AccessRule do
-         required :capability , :Capability
-         required :group      , :Group
+         required :capability , member_of(:Capabilities)
+         required :group      , member_of(:Groups      )
          required :is_allowed , :boolean
          required :is_enforced, :boolean
 

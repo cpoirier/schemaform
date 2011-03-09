@@ -27,72 +27,64 @@ module Definitions
 class TypeInfo
    
 private
-   def initialize( has_heading, is_multi_valued )
-      @has_heading     = has_heading
-      @is_multi_valued = is_multi_valued
+   def initialize( has_heading, order )
+      @has_heading = has_heading
+      @order       = order
    end
 
 public
-   SCALAR   = new( false, false )
-   TUPLE    = new( true , false )
-   SET      = new( false, true  )
-   RELATION = new( true , true  )
+   SCALAR      = new( false, 0 )
+   SET         = new( false, 1 )
+   SEQUENCE    = new( false, 2 ) 
+   TUPLE       = new( true , 0 )
+   RELATION    = new( true , 1 )
+   ENUMERATION = new( true , 2 )   # Could be "list", but I like that the most complex type has the longest name.
    
    def has_heading?()
       @has_heading
    end
    
+   def ordered?()
+      @order == 2
+   end
+   
    def multi_valued?()
-      @is_multi_valued
+      @order > 0
    end
    
    def single_valued?()
-      !@is_multi_valued
+      @order == 0
    end
    
-   def scalar?()
-      !@has_heading && !@is_multi_valued
-   end
-   
-   def tuple?()
-      @has_heading && !@is_multi_valued
-   end
-   
-   def set?()
-      !@has_heading && @is_multi_valued
-   end
-   
-   def relation?()
-      @has_heading && @is_multi_valued
-   end
-   
+   def scalar?()      ; self == SCALAR      ; end
+   def set?()         ; self == SET         ; end
+   def sequence?()    ; self == SEQUENCE    ; end
+   def tuple?()       ; self == TUPLE       ; end
+   def relation?()    ; self == RELATION    ; end
+   def enumeration?() ; self == ENUMERATION ; end
+
    
    def ===( type )
       return false if type.nil?
       info = type.respond_to?(:has_heading?) ? type : type.type_info
-      @has_heading == info.has_heading? && @is_multi_valued == info.multi_valued?
+      @has_heading == info.has_heading? && multi_valued? == info.multi_valued? && ordered? == info.ordered?
    end
    
    def to_s()
       case self
-      when SCALAR   ; "scalar"
-      when TUPLE    ; "tuple"
-      when SET      ; "set"
-      when RELATION ; "relation"
+      when SCALAR      ; "scalar"
+      when SET         ; "set"
+      when SEQUENCE    ; "sequence"
+      when TUPLE       ; "tuple"
+      when RELATION    ; "relation"
+      when ENUMERATION ; "enumeration"
       else
          fail
       end
    end
 
    def specialize( prefix = nil, suffix = nil )
-      version = case self
-      when SCALAR   ; "scalar"
-      when TUPLE    ; "tuple"
-      when SET      ; "set"
-      when RELATION ; "relation"
-      else
-         fail
-      end
+      version = to_s
       
       name = if suffix and prefix then
          format( "%s_%s_%s", prefix, version, suffix )

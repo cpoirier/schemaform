@@ -42,9 +42,9 @@ class Key < Definition
       @attributes.member?(name)
    end
    
-   def resolve( preferred = nil )
+   def resolve( relation_types_as = :reference )
       supervisor.monitor(self) do
-         @attributes.resolve( preferred )
+         @attributes.resolve(:reference)
       end
    end
 

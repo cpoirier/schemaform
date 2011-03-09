@@ -42,9 +42,10 @@ class Relation < Type
       "[" + @heading.description + "]"
    end
    
-   def resolve( preferred = nil )
+   def resolve( relation_types_as = :reference )
       supervisor.monitor(self) do
-         @heading.resolve( preferred )
+         @heading.resolve()
+         self
       end
    end
    

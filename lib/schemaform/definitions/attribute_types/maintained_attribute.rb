@@ -66,7 +66,7 @@ protected
    # Required set attributes require a subtable.  However, at least the member type is always a scalar.
    
    def lay_out_set_type( tuple_class, table, field_prefix, attribute_type, &custom_processing )
-      member_type = attribute_type.member_type.resolve(TypeInfo::SCALAR)
+      member_type = attribute_type.member_type.resolve(:stored_attribute)
       
       builder.define_tuple_reader( name, attribute_type )
       builder.define_tuple_writer( name, attribute_type )

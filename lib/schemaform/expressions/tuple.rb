@@ -55,8 +55,8 @@ class Tuple < Expression
       @attributes     = {}
    end
    
-   def resolve( preferred = nil )
-      @definition.resolve( preferred )
+   def resolve( relation_types_as = :reference )
+      @definition.resolve( :reference )
    end
 
    def method_missing( symbol, *args, &block )

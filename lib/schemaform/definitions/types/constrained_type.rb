@@ -33,6 +33,11 @@ class ConstrainedType < Type
       @default         = default
    end
    
+   def path()
+      return @underlying_type.path if @path.nil? && @name.nil?
+      return super
+   end
+   
    def self.build( underlying_type, modifiers, default = nil )
       constraints = []
       modifiers.each do |name, value|
@@ -57,8 +62,8 @@ class ConstrainedType < Type
       @underlying_type.send( symbol, *args, &block )
    end
    
-   def resolve( preferred = nil )
-      @underlying_type.resolve( preferred )
+   def resolve( relation_types_as = :reference )
+      @underlying_type.resolve( relation_types_as )
    end
 
    def description()

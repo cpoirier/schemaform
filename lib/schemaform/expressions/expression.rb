@@ -27,7 +27,7 @@ class Expression
    def initialize()
    end
    
-   def resolve( preferred = nil )
+   def resolve( relation_types_as = :reference )
       fail_unless_overridden( self, :resolve )
    end
 

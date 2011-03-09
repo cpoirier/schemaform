@@ -44,12 +44,12 @@ class WritableAttribute < Attribute
       true
    end
    
-   def resolve( preferred = TypeInfo::SCALAR )
+   def resolve( relation_types_as = :reference )
       supervisor.monitor(self) do
-         @type.resolve(preferred).tap do |type|
+         @type.resolve(relation_types_as).tap do |type|
             check do
                if type.scalar_type? then
-                  assert( type.complete?, "scalar optional and required attributes must be of a complete type -- one that has both a Schemaform and a Ruby representation" )
+                  assert( type.complete?, "scalar optional and required attributes must be of a complete type -- one that has both a Schemaform and a Ruby representation; found incomplete type [#{type.full_name}]" )
                end
             end
          end

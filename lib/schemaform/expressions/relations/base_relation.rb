@@ -32,8 +32,8 @@ class BaseRelation < Relation
       @definition = definition
    end
 
-   def resolve( preferred = nil )
-      @definition.resolve( preferred )
+   def resolve( relation_types_as = :reference )
+      @definition.resolve( relation_types_as )
    end
 
 

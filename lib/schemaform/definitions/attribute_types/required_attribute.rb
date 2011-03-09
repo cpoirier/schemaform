@@ -91,7 +91,6 @@ protected
    end
 
 
-   warn_once( "TODO: build a Defaults collection of values and blocks for each TupleClass" )
    warn_once( "TODO: build the constructor for the TupleClass" )
    warn_once( "TODO: build a general runtime Tuple class that can wrap a hash" )
    

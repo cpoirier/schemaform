@@ -20,6 +20,39 @@
 
 require 'ipaddr'
 
+class Name < String
+   def +( rhs )
+      Path.new( self, rhs )
+   end
+   
+   def self.build( value )
+      value.is_a?(Name) ? value : Name.new(value)
+   end
+end
+
+class Path
+   
+   def self.parse( string )
+      new( *(string.split("/")) )
+   end
+   
+   def initialize( *components )
+      @components = components.flatten.collect{ |c| Name.build(c) }
+   end
+   
+   def to_a()
+      @components
+   end
+   
+   def to_s()
+      @components.join("/")
+   end
+   
+   def +( rhs )
+      Path.new( *@components, *rhs )
+   end
+end
+
 
 #
 # An example Schema definition: a schema for a content management system.
@@ -28,61 +61,65 @@ def define_example_cms_schema()
    
    Schemaform.define :CMS do
       
+      define_type Name, :text
+      define_type Path, :text, :load => lambda {|v| Path.parse(v)}
       
-      #=== Access Control =====================================================================
+      
+      
+      #=== System =============================================================================
       
       #
-      # Each Role has a set of direct capabilities, stored in RoleCapability.  Each Role can 
-      # also inherit additional capabilities from one or more parent roles (and their parents,
-      # and so on).  Each Account (below) has exactly one Role, and draws the Role's full 
-      # set of direct and inherited capabilities.
+      # Modules are providers of functionality and managers of names.
       
-      define_entity :Roles do
-         each :Role do
-            required   :name                  , String, :length => 40
-            required   :capabilities          , set_of(:Capabilities)
-            required   :parents               , set_of(:Roles       )
-            maintained :ancestors             , lambda {|role| role.parents.follow(:Roles, :parents).as_set() }
-            maintained :ancestors_alt         , lambda {|role| role.parents + role.parents.ancestors_alt }
-            maintained :inherited_capabilities, lambda {|role| role.ancestors.capabilities }
-            maintained :all_capabilities      , lambda {|role| role.capabilities + role.inherited_capabilities }
-            optional :something, :RoleSomething do
-               required   :x, String
-               optional   :y, String
-               maintained :z, lambda {|role| role.parents}
-            end
+      define_entity :Modules do
+         each :Module do
+            required :name, String, :length => 30
          end
-         
-         key :name
       end
 
       
-      define_entity :Capabilities do
-         each :Capability do
-            required   :name   , String, :length => 40
-            maintained :used_in, lamda {|capability| capability.find_matching(:Roles, :parents)}
+      #
+      # Languages.
+      
+      define_entity :Languages do
+         each :Language do
+            required :name  , :String  , :length => 5
+            optional :parent, :Language
          end
-         
-         key :name
       end
+      
 
-
-         
-
-      #=== Account management =================================================================
-
+      
+      #=== Identity ===========================================================================
+      
       define_entity :Accounts do
          each :Account do
-            required :email_address  , String, :length => 50
-            required :display_name   , String, :length => 50
-            required :safe_name      , String, :length => 50
-            required :role           , member_of(:Roles)
-            required :lockedout_until, Time, :default => Time.at(0)
-            # TODO: field :hashed_password, SHA1 -- what to we want this to do; should it be excluded from retrieve?
+            required :name  , String, :length => 50
+            required :handle, String, :length => 50
          end
          
-         key :safe_name
-         key :email_address
+         key :name
+         key :handle
+      end
+      
+      define_entity :SystemAccounts do
+         each :SystemAccount do 
+            import :Account
+            required :owner, :Module
+         end
+         
+         overlay :Accounts
+      end
+      
+      define_entity :UserAccounts do
+         each :UserAccount do
+            import :Account
+            required :can_login       , :boolean
+            required :locked_out_until, Time, :default => Time.at(0)
+            optional :hashed_password , SHA1, :default => ""           # left blank if an OpenID
+         end
+         
+         overlay :Accounts
       end
 
       define_entity :AuthenticationAttempts do
@@ -98,7 +135,137 @@ def define_example_cms_schema()
       define_entity :AuthenticationResults do
          enumerate :valid, :invalid
       end
+
+
+
+      #=== Structure ==========================================================================
+
+
+      #
+      # Addressable content containers provide the structure of your website.
       
+      define_entity :Containers do
+         each :Container do
+            maintained :path   , lambda {|container| container.context.path + container.name }
+            optional   :context, :Container
+            required   :name   , Name, :length => 70
+            required   :type   , :ContainerType  
+         end
+         
+         key :path
+         key :context, :name
+      end
+
+      
+      #
+      # The master list of container types.
+      
+      define_entity :ContainerTypes do
+         each :ContainerType do
+            required :module, :Module
+            required :name  , String, :length => 60
+         end
+         
+         key :module, :name
+      end
+      
+      
+      
+
+      #=== Access Control =====================================================================
+      #
+      # Provides cascading Access Control assignments on CMS Containers, such that you could 
+      # (for instance) create the following rules, and get instant (read: computationally 
+      # inexpensive, correct) answers:
+      #
+      # / enforce  "all privileges" for "administrators"
+      # / allow    "read"           for "all users"
+      # / prohibit "write"          for "read-only"
+      #
+      # /moderator-forum deny  "all privileges" for "all users"
+      # /moderator-forum allow "read"           for "moderators"
+      # /moderator-forum allow "write"          for "moderators"
+      #
+      # Note that any moderator in "read-only" will be unable to write to /moderator-forum.  
+      # Also, any administrator will still have full permissions on /moderator-forum, due to
+      # the "enforce" rule on /.
+      
+      
+      define_entity :Groups do
+         each :Group do
+            required   :owner             , :Account
+            required   :name              , String, :length => 80
+            required   :base_groups       , set_of(:Groups)
+            required   :excluded_groups   , set_of(:Groups)
+            required   :excluded_members  , set_of(:Accounts)
+            required   :additional_members, set_of(:Accounts)
+            maintained :members           , lambda {|g| g.base_groups.members - g.excluded_groups.members - g.excluded_members + g.additional_members}
+         end
+      end
+
+
+      define_entity :Capabilities do
+         each :Capability do
+            required   :module   , :Module
+            required   :name     , String, :length => 40
+            required   :parent   , :Capability
+            maintained :ancestors, lambda {|c| set(c.parent) + c.parent.ancestors }
+            maintained :closure  , lambda {|c| set(c) + c.ancestors }
+         end
+         
+         key :module, :name
+      end
+      
+      
+      define_tuple :AccessRule do
+         required :capability , :Capability
+         required :group      , :Group
+         required :is_allowed , :boolean
+         required :is_enforced, :boolean
+
+         volatile :effective_capabilities, lambda {|ar| ar.capability.closure }
+      end
+
+
+      augment :Container do
+         optional :access_control, :default => lambda {|c| c.context.access_control } do
+            required :stated_rules, list_of(:AccessRule)
+            
+            volatile :effective_rules do |c|
+               with c.access_control.stated_rules
+               ungroup :effective_capabilities => :effective_capability
+               
+               add_volatile :effective_previous do |er|
+                  er.previous.or(
+                     c.context.present?(
+                        c.context.access_control.tail_rules.where{|tr| tr.effective_capability = er.effective_capability }
+                     )
+                  )
+               end
+               
+               add_maintained :forbidden_members do |er|
+                  er.effective_previous.forbidden_members + (er.is_enforced & !er.is_allowed).ifelse(er.group.members - er.effective_previous.required_members)
+               end
+
+               add_maintained :required_members do |er|
+                  er.effective_previous.required_members + (er.is_enforced & er.is_allowed).ifelse(er.group.members - er.forbidden_members)
+               end
+               
+               add_maintained :effective_members do |er|
+                  er.is_allowed.ifelse(
+                     er.effective_previous.effective_members + (er.group.members - er.forbidden_members),
+                     er.effective_previous.effective_members - (er.group.members - er.required_members )
+                  )
+               end
+            end
+            
+            volatile :tail_rules, {|c| c.access_control.effective_rules.last }
+            volatile :privileges, {|c| c.access_control.tail_rules.effective_members }
+         end
+      end
+
+
+
       
       
    end

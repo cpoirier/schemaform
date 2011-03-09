@@ -37,10 +37,10 @@ class TupleClass
          def self.master()
             @@master
          end
-         def self.default_for( name )
+         def self.default_for( name, tuple = nil )
             return nil unless @@defaults.member?(name)
             default = @@defaults[name]
-            default.is_a?(Proc) ? default.call() : default
+            default.is_a?(Proc) ? default.call(tuple) : default
          end
       end
    end
@@ -77,10 +77,14 @@ class TupleClass
 
 
 
-   def initialize()
-      @_dirty = false
+   def initialize( attributes = {}, on_missing = :defaults )
+      @_dirty      = false
+      @_on_missing = on_missing   # :defaults, :load
+      
    end
 
+   warn_once( "TODO: apply on_demand and defaults policies to accessors" )
+   
 end # TupleClass
 end # Ruby
 end # Layout

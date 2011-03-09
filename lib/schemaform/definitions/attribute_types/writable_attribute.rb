@@ -34,6 +34,10 @@ class WritableAttribute < Attribute
    
    attr_accessor :type
    
+   def writable?()
+      true
+   end
+   
    def resolve( preferred = TypeInfo::SCALAR )
       supervisor.monitor(self) do
          @type.resolve(preferred).tap do |type|

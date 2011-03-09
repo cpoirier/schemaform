@@ -41,6 +41,17 @@ class Tuple < Type
    
    attr_reader :expression, :root_tuple, :attributes, :definer
    
+   def default()
+      return @default unless @default.nil?
+      @default = {}.tap do |pairs|
+         each_attribute do |attribute|
+            if attribute.writable? then
+               pairs[attribute.name] = attribute.resolve(TypeInfo::SCALAR).default
+            end
+         end
+      end
+   end
+   
    def type_info()
       TypeInfo::TUPLE
    end

@@ -159,6 +159,8 @@ class Schema < Definition
    def find_type( name, preferred = nil, fail_if_missing = true )
       return name if name.is_a?(Type)
       check { type_check(:name, name, [Symbol, Class]) }
+      
+      warn_once( "TODO: We need a way to get from Tuple to Entity, when the relationship is unambiguous." )
 
       type    = nil
       current = name

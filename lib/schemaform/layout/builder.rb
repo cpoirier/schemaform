@@ -124,7 +124,7 @@ class Builder
    # be a block.
    
    def define_attribute_default( name, value )
-      tuple_class.define_attribute_
+      tuple_class.define_attribute_default( name, value )
    end
    
    

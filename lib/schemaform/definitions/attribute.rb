@@ -43,6 +43,9 @@ class Attribute < Definition
       fail_unless_overridden( self, :resolve )
    end
    
+   def writable?()
+      false
+   end
    
    
    # ==========================================================================================

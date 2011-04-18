@@ -19,39 +19,24 @@
 # =============================================================================================
 
 
-#
-# Base class for scalar types.
-
 module Schemaform
-module Definitions
-class ScalarType < Type
-   
-   def initialize( attrs )
-      super
-   end
-   
-   #
-   # Instructs the type to produce a memory representation of a stored value.
-   
-   def load( stored_value )
-      return super if @loader
-      return stored_value
-   end
-   
-   
-   #
-   # Instructs the type to produce a storable value from a memory representation.
-   
-   def store( memory_value )
-      return super if @storer
-      return memory_value
-   end
-   
-   
-   
-   
-   
+module Expressions
+class Expression
+   include QualityAssurance
+   extend  QualityAssurance
+   include Sequel::Inflections
+   extend  Sequel::Inflections
 
-end # ScalarType
-end # Definitions
+   def initialize()
+   end
+   
+   def resolve( relation_types_as = :reference )
+      fail_unless_overridden( self, :resolve )
+   end
+
+   alias type resolve
+   
+end # Expression
+end # Expressions
 end # Schemaform
+

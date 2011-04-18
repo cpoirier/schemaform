@@ -20,38 +20,21 @@
 
 
 #
-# Base class for scalar types.
+# An expression wrapper for a set Attribute.
 
 module Schemaform
-module Definitions
-class ScalarType < Type
+module Expressions
+module Attributes
    
-   def initialize( attrs )
-      super
-   end
-   
-   #
-   # Instructs the type to produce a memory representation of a stored value.
-   
-   def load( stored_value )
-      return super if @loader
-      return stored_value
-   end
-   
-   
-   #
-   # Instructs the type to produce a storable value from a memory representation.
-   
-   def store( memory_value )
-      return super if @storer
-      return memory_value
-   end
-   
-   
-   
-   
-   
+class SetAttribute < Attribute
 
-end # ScalarType
-end # Definitions
+   def initialize( definition )
+      super( definition )
+      fail "TODO"
+   end
+
+end # SetAttribute
+
+end # Attributes
+end # Expressions
 end # Schemaform

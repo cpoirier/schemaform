@@ -18,40 +18,34 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("scalar_type.rb")
+
 
 #
-# Base class for scalar types.
+# The base class for types that implement a string of data (text and binary).
 
 module Schemaform
 module Definitions
-class ScalarType < Type
-   
+class StringType < ScalarType
+
    def initialize( attrs )
-      super
+      @length = attrs.delete(:length)
+      super attrs
    end
    
    #
-   # Instructs the type to produce a memory representation of a stored value.
+   # For the undimensioned type, handles dimensioning.
    
-   def load( stored_value )
-      return super if @loader
-      return stored_value
+   def make_specific( modifiers )
+      if @length && modifiers.fetch(:length, 0) > 0 then
+         self.class.new(:base_type => self, :length => modifiers.delete(:length))
+      else
+         super
+      end
    end
-   
-   
-   #
-   # Instructs the type to produce a storable value from a memory representation.
-   
-   def store( memory_value )
-      return super if @storer
-      return memory_value
-   end
-   
-   
-   
    
    
 
-end # ScalarType
+end # StringType
 end # Definitions
 end # Schemaform

@@ -20,38 +20,17 @@
 
 
 #
-# Base class for scalar types.
+# Wraps the member type of a list, ensuring the next, previous, and value attributes are
+# accessible.
 
 module Schemaform
-module Definitions
-class ScalarType < Type
-   
-   def initialize( attrs )
-      super
-   end
-   
-   #
-   # Instructs the type to produce a memory representation of a stored value.
-   
-   def load( stored_value )
-      return super if @loader
-      return stored_value
-   end
-   
-   
-   #
-   # Instructs the type to produce a storable value from a memory representation.
-   
-   def store( memory_value )
-      return super if @storer
-      return memory_value
-   end
-   
-   
-   
-   
-   
+module Expressions
+class ListMemberExpression < Expression
 
-end # ScalarType
-end # Definitions
+   def initialize( member_type )
+      @member_type = member_type
+   end
+
+end # ListMemberExpression
+end # Expressions
 end # Schemaform

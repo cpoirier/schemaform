@@ -20,38 +20,17 @@
 
 
 #
-# Base class for scalar types.
+# Captures the access of the first item of a list.
 
 module Schemaform
-module Definitions
-class ScalarType < Type
-   
-   def initialize( attrs )
-      super
-   end
-   
-   #
-   # Instructs the type to produce a memory representation of a stored value.
-   
-   def load( stored_value )
-      return super if @loader
-      return stored_value
-   end
-   
-   
-   #
-   # Instructs the type to produce a storable value from a memory representation.
-   
-   def store( memory_value )
-      return super if @storer
-      return memory_value
-   end
-   
-   
-   
-   
-   
+module Expressions
+class FirstOfListExpression < ListMemberExpression
 
-end # ScalarType
-end # Definitions
+   def initialize( lh_expression, element_type )
+      super(element_type)
+      @lh_expression = lh_expression
+   end
+
+end # FirstOfListExpression
+end # Expressions
 end # Schemaform

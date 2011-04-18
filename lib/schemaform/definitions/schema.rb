@@ -22,10 +22,7 @@ require 'monitor'
 
 
 #
-# Provides a naming context and a unit of storage within the Schemaform system.  Individual Schemas
-# are separate from each other, with the exception that a nested Schema inherits the names defined
-# in its context.  Multiple separate Schemas can coexist within one physical database, provided 
-# either unique names or separate connection prefices.  
+# Provides a naming context and a unit of storage within the Schemaform system.
 
 module Schemaform
 module Definitions
@@ -98,13 +95,14 @@ class Schema < Definition
                type_check( :modifiers, modifiers, Hash )
             end
 
-            base_type = TypeReference.new(self, base_name, modifiers)
-            if name.is_a?(Class) then
-               register_type MappedType.new(name, base_type, modifiers.delete(:load), modifiers.delete(:store), modifiers.delete(:default), @schema)
+            if base_name && !@types.member?(base_name) then
+               fail "TODO: deferred types"
             else
-               type = base_type
-               type.name = name
-               register_type type
+               modifiers[:name     ] = name
+               modifiers[:base_type] = base_name
+               modifiers[:context  ] = self
+               
+               register_type UserDefinedType.new(modifiers)
             end
          end
       end
@@ -130,28 +128,37 @@ class Schema < Definition
    # Registers a named type with the schema.
    
    def register_type( type )
-      type_check( :type, type, [Type, TypeReference] )
+      type_check( :type, type, Type )
       return if @types.member?(type.name) && @types[type.name].object_id == type.object_id
       
-      if type.is_a?(TupleType) then
-         check { assert( !@tuple_types.member?(type.name), "schema [#{full_name}] already has a tuple type named [#{type.name}]" ) }
-         @tuple_types[type.name] = type
-      end
-      
-      if type.is_an?(Entity) then
-         check { assert( !@entities.member?(type.name), "schema [#{full_name}] already has an entity named [#{type.name}]" ) }
-         @entities[type.name] = type
-      end
-      
-      if type.is_a?(Relation) then
-         check { assert( !@relations.member?(type.name), "schema [#{full_name}] already has a relation named [#{type.name}]" ) }
-         @relations[type.name] = type      
-      end
+      # if type.is_a?(TupleType) then
+      #    check { assert( !@tuple_types.member?(type.name), "schema [#{full_name}] already has a tuple type named [#{type.name}]" ) }
+      #    @tuple_types[type.name] = type
+      # end
+      # 
+      # if type.is_an?(Entity) then
+      #    check { assert( !@entities.member?(type.name), "schema [#{full_name}] already has an entity named [#{type.name}]" ) }
+      #    @entities[type.name] = type
+      # end
+      # 
+      # if type.is_a?(Relation) then
+      #    check { assert( !@relations.member?(type.name), "schema [#{full_name}] already has a relation named [#{type.name}]" ) }
+      #    @relations[type.name] = type      
+      # end
 
       check { assert( !@types.member?(type.name), "schema [#{full_name}] already has a type named [#{type.name}]" ) }
 
       @types[type.name] = type
       return type
+   end
+   
+   
+   #
+   # Builds a type for a name and a set of constraints.
+   
+   def build_type( name, modifiers = {}, fail_if_missing = true )
+      type = name.is_a?(Type) ? name : find_type(name, fail_if_missing)
+      type.make_specific(modifiers)
    end
 
 
@@ -187,7 +194,7 @@ class Schema < Definition
    # Returns the Type for a name (Symbol or Class), or nil.
    
    def find_type( name, fail_if_missing = true )
-      return name if name.is_a?(Type)
+      return name if name.nil? || name.is_a?(Type) 
       check { type_check(:name, name, [Symbol, Class]) }
       
       type    = nil
@@ -302,34 +309,19 @@ protected
          
       @types_are_resolved = false
 
-      register_type ScalarType.new(   nil          , self, :all     , nil )
-      register_type ScalarType.new(   @types[:all ], nil , :any     , nil )
-      register_type ScalarType.new(   @types[:all ], nil , :void    , nil )
+      register_type CatchAllType.new(:name => :all     , :context   => self)
+      register_type     VoidType.new(:name => :void    , :base_type => @types[:all])
+      register_type         Type.new(:name => :any     , :base_type => @types[:all])
+                                                       
+      register_type   StringType.new(:name => :binary  , :base_type => @types[:any]) ; warn_once( "BUG: does the binary type need a different loader?" )
+      register_type   StringType.new(:name => :text    , :base_type => @types[:any])
+      register_type  BooleanType.new(:name => :boolean , :base_type => @types[:any])
+      register_type DateTimeType.new(:name => :datetime, :base_type => @types[:any])
+      register_type  NumericType.new(:name => :real    , :base_type => @types[:any] , :default => 0.0 )
+      register_type  NumericType.new(:name => :integer , :base_type => @types[:real], :default => 0   )
       
-      register_type BinaryType.new(   @types[:any ], nil , :binary  , 0   )   
-      register_type TextType.new(     @types[:any ], nil , :text    , ""  ) 
-      register_type NumericType.new(  @types[:any ], nil , :real    , 0   )    
-      register_type IntegerType.new(  @types[:real], nil , :integer , 0   )    
-      register_type DateTimeType.new( @types[:text], nil , :datetime, "0000-01-01 00:00:00" ) 
-                                                                     
-
       @dsl.instance_eval do
-         define_type :boolean   , :integer, :range  => 0..1
-         define_type :identifier, :text   , :length => 80, :check => lambda {|i| !!i.to_sym && i.to_sym.inspect !~ /"/}
-
-         define_type Float     , :real
-         define_type Integer   , :integer
-         define_type String    , :text
-         define_type Symbol    , :identifier, :load => lambda {|s| s.intern}
-         define_type IPAddr    , :text, :length => 40, :default => "192.168.0.1"
-         define_type TrueClass , :boolean, :store => 1, :load => lambda {|v| !!v }, :default => 1
-         define_type FalseClass, :boolean, :store => 0, :load => lambda {|v| !!v }, :default => 0
-         define_type Time      , :datetime,
-                                 :store => lambda {|t| utc = t.getutc; utc.strftime("%Y-%m-%d %H:%M:%S") + (utc.usec > 0 ? ".#{utc.usec}" : "") },
-                                 :load  => lambda {|s| year, month, day, hour, minute, second, micros = *s.split(/[:\-\.] /); Time.utc(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i, micros.to_i)}
-                                 
-         define_type :rid      , Integer
-                                 
+         define_type :identifier, :text, :length => 80, :check => lambda {|i| !!i.to_sym && i.to_sym.inspect !~ /"/}
       end
       
       @dsl.instance_eval(&block) if block_given?
@@ -376,11 +368,12 @@ protected
          description = scope_description(scope)
          annotation  = report_worthy ? { :scope => description } : {}
          
+         puts "monitoring #{description}"
          assert( !@entries.member?(scope), "detected loop while trying to resolve #{description}" )
          return annotate_errors( annotation ) do
             check( @entries.push_and_pop(scope) { yield() } ) do |type|
                assert( type.exists?, "unable to resolve type for [#{description}]" )
-               type_check( :type, type, [Type, TypeReference] )
+               type_check( :type, type, Type )
                warn_once( "DEBUG: #{description} resolved to #{class_name_for(type)} #{type.description}" ) if report_worthy
             end
          end
@@ -427,20 +420,3 @@ end # Definitions
 end # Schemaform
 
 
-require Schemaform.locate("type.rb"           ) 
-require Schemaform.locate("type_constraint.rb")
-require Schemaform.locate("entity.rb"         )
-
-#
-# Define the core type constraints.
-
-module Schemaform
-module Definitions
-class Schema
-   define_type_constraint :length, TextType   , TypeConstraints::LengthConstraint
-   define_type_constraint :length, BinaryType , TypeConstraints::LengthConstraint
-   define_type_constraint :range , NumericType, TypeConstraints::RangeConstraint
-   define_type_constraint :check , Type       , TypeConstraints::CheckConstraint
-end
-end
-end

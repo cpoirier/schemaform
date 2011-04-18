@@ -19,39 +19,45 @@
 # =============================================================================================
 
 
+
 #
-# Base class for scalar types.
+# The SF equivalent of an array type -- but one that does not support duplicates, in keeping with
+# the zeitgeist of set math.  If you need a non-unique set (ie. an actual array), use ListType.
 
 module Schemaform
 module Definitions
-class ScalarType < Type
-   
-   def initialize( attrs )
-      super
-   end
-   
+class SetType < Type
+
    #
-   # Instructs the type to produce a memory representation of a stored value.
+   # If you specify a Schema, it will be used.  If not, it will be pulled from the base Type.
    
-   def load( stored_value )
-      return super if @loader
-      return stored_value
+   def initialize( member_type = nil, schema = nil, name = nil )
+      super( schema || member_type.schema, name )
+      @member_type = member_type
    end
    
+   attr_reader :member_type
    
-   #
-   # Instructs the type to produce a storable value from a memory representation.
-   
-   def store( memory_value )
-      return super if @storer
-      return memory_value
+   def type_info()
+      if @member_type.resolve.type_info.has_heading? then
+         TypeInfo::SET
+      else
+         TypeInfo::RELATION
+      end
    end
    
-   
-   
-   
+   def description()
+      # return name.to_s if named?
+      return "[#{@member_type.resolve.description}]"
+   end
+
+   def resolve( relation_types_as = :reference )
+      @member_type.resolve( :reference )
+      self
+   end
    
 
-end # ScalarType
+end # SetType
 end # Definitions
 end # Schemaform
+

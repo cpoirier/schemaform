@@ -20,38 +20,33 @@
 
 
 #
-# Base class for scalar types.
+# Base class for 
 
 module Schemaform
-module Definitions
-class ScalarType < Type
-   
-   def initialize( attrs )
-      super
+module Expressions
+module Attributes
+class MultivaluedAttribute < Attribute
+
+   def initialize( definition )
+      super( definition )
    end
-   
-   #
-   # Instructs the type to produce a memory representation of a stored value.
-   
-   def load( stored_value )
-      return super if @loader
-      return stored_value
-   end
-   
-   
-   #
-   # Instructs the type to produce a storable value from a memory representation.
-   
-   def store( memory_value )
-      return super if @storer
-      return memory_value
-   end
-   
-   
-   
-   
    
 
-end # ScalarType
-end # Definitions
+end # MultivaluedAttribute < Attribute
+end # Attributes
+end # Expressions
 end # Schemaform
+
+tuple.set_field.each -- that's it
+tuple.sequence_field.first, .last -- that's it  --- first and last return Singular wrapper?
+tuple.relation_field.each + tuple.relation_field.attribute -- Plural wrapper?
+tuple.enumeration_field.each + tuple.enumeration_field.attribute -- Plural wrapper + next & previous
+
+RelationAttribute
+   .each -> Tuple
+   .attribute -> 
+
+set -- no fields
+sequence -- no fields
+relation -- fields
+enumeration -- fields

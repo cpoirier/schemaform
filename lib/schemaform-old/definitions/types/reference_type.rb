@@ -20,38 +20,26 @@
 
 
 #
-# Base class for scalar types.
+# A type that represents a reference to an entity.
 
 module Schemaform
 module Definitions
-class ScalarType < Type
-   
-   def initialize( attrs )
-      super
-   end
-   
-   #
-   # Instructs the type to produce a memory representation of a stored value.
-   
-   def load( stored_value )
-      return super if @loader
-      return stored_value
-   end
-   
-   
-   #
-   # Instructs the type to produce a storable value from a memory representation.
-   
-   def store( memory_value )
-      return super if @storer
-      return memory_value
-   end
-   
-   
-   
-   
-   
+class ReferenceType < Type
 
-end # ScalarType
+   def initialize( entity )
+      super( entity.context, false )
+      @entity = entity
+   end
+   
+   def type_info()
+      TypeInfo::REFERENCE
+   end
+   
+   def resolve( relation_types_as = :reference )      
+      @entity.resolve(relation_type_as)
+      self
+   end
+
+end # ReferenceType
 end # Definitions
 end # Schemaform

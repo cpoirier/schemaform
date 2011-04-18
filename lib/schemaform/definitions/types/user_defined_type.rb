@@ -20,38 +20,33 @@
 
 
 #
-# Base class for scalar types.
+# Represents all user-defined types that have an existing type name as base type. All user-
+# defined type have a name.
 
 module Schemaform
 module Definitions
-class ScalarType < Type
+class UserDefinedType < Type
    
+   #
+   # Builds a UDT from parts.
+   
+   def self.build( schema, name, base_type, modifiers = {} )
+      loader    = modifiers.delete(:loader)
+      storer    = modifiers.delete(:storer)
+      default   = modifiers.delete(:default)
+      base_type = schema.build_type(base_type, modifiers)
+      checks    = build_checks(modifiers)
+      
+      assert(modifiers.empty?, "unrecognized modifiers", modifiers)
+      new(name, base_type, default, loader, storer, checks)
+   end
+
    def initialize( attrs )
       super
    end
    
-   #
-   # Instructs the type to produce a memory representation of a stored value.
-   
-   def load( stored_value )
-      return super if @loader
-      return stored_value
-   end
-   
-   
-   #
-   # Instructs the type to produce a storable value from a memory representation.
-   
-   def store( memory_value )
-      return super if @storer
-      return memory_value
-   end
-   
-   
-   
-   
-   
+      
 
-end # ScalarType
+end # UserDefinedType
 end # Definitions
 end # Schemaform

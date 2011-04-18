@@ -18,24 +18,25 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("scalar_type.rb")
 
-#
-# Base class for scalar types.
 
 module Schemaform
 module Definitions
-class ScalarType < Type
-   
+class DateTimeType < ScalarType
+
    def initialize( attrs )
+      attrs[:default] = load("0000-01-01 00:00:00") unless attrs.member?(:default)
       super
    end
-   
+
    #
    # Instructs the type to produce a memory representation of a stored value.
    
    def load( stored_value )
       return super if @loader
-      return stored_value
+      year, month, day, hour, minute, second, micros = *stored_value.split(/[^\d]+/)
+      DateTime.civil(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i)
    end
    
    
@@ -44,14 +45,15 @@ class ScalarType < Type
    
    def store( memory_value )
       return super if @storer
-      return memory_value
+      case memory_value
+      when Time
+         utc = memory_value.getutc
+         utc.strftime("%Y-%m-%d %H:%M:%S") + (utc.usec > 0 ? ".#{utc.usec}" : "")
+      when Date, DateTime
+         memory_value.iso8601
+      end
    end
-   
-   
-   
-   
-   
 
-end # ScalarType
+end # BooleanType
 end # Definitions
 end # Schemaform

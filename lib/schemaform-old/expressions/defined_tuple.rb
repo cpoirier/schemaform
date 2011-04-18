@@ -20,38 +20,38 @@
 
 
 #
-# Base class for scalar types.
+# An Expression wrapper on a Tuple Definition.
 
 module Schemaform
-module Definitions
-class ScalarType < Type
-   
-   def initialize( attrs )
-      super
-   end
-   
-   #
-   # Instructs the type to produce a memory representation of a stored value.
-   
-   def load( stored_value )
-      return super if @loader
-      return stored_value
-   end
-   
-   
-   #
-   # Instructs the type to produce a storable value from a memory representation.
-   
-   def store( memory_value )
-      return super if @storer
-      return memory_value
-   end
-   
-   
-   
-   
-   
+module Expressions
+class DefinedTuple
 
-end # ScalarType
-end # Definitions
+   def initialize( definition )
+      @definition = definition
+   end
+   
+      
+   def method_missing( symbol, *args, &block )
+      tuple = @definition.resolve()
+      if tuple.member?(symbol) then
+         return DottedExpression.new(self, symbol, tuple.attributes[symbol].resolve())
+      end
+   
+      
+      # x.y
+      # 
+      # x type            | y possibilities
+      # ======================================================================
+      # tuple             | attribute of the tuple
+      # list_of(tuple)    | .first, .last, .value (the array of tuples), direct column attributes (convenience, where no conflict)
+      # list_of(scalar)   | .first, .last, .value is the column
+      # set_of(tuple)     | direct column attributes
+      # set_of(scalar)    | there is no y, unless scalar is a reference, in which case it's an aggregate tuple attribute
+      # member_of(entity) | y is an atturibute of the tuple
+
+   end
+      
+
+end # DefinedTuple
+end # Expressions
 end # Schemaform

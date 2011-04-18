@@ -19,39 +19,14 @@
 # =============================================================================================
 
 
-#
-# Base class for scalar types.
-
 module Schemaform
 module Definitions
-class ScalarType < Type
-   
-   def initialize( attrs )
-      super
-   end
-   
-   #
-   # Instructs the type to produce a memory representation of a stored value.
-   
-   def load( stored_value )
-      return super if @loader
-      return stored_value
-   end
-   
-   
-   #
-   # Instructs the type to produce a storable value from a memory representation.
-   
-   def store( memory_value )
-      return super if @storer
-      return memory_value
-   end
-   
-   
-   
-   
-   
 
-end # ScalarType
 end # Definitions
 end # Schemaform
+
+
+require Schemaform.locate("definitions/definition.rb")
+Dir[Schemaform.locate("definitions/*.rb")].each do |path| 
+   require path
+end

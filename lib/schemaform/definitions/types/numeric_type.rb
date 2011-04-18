@@ -18,40 +18,35 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("scalar_type.rb")
+
 
 #
-# Base class for scalar types.
+# Base class for numeric types. Handles the :range modifier to limit value.
 
 module Schemaform
 module Definitions
-class ScalarType < Type
-   
+class NumericType < ScalarType
+
    def initialize( attrs )
+      if attrs.member?(:range) then
+         @range = attrs.delete(:range)
+         attrs[:default] = (@range.member?(0) ? 0 : @range.start) unless attrs.member?(:default)
+      else
+         attrs[:default] = 0 unless attrs.member?(:default)
+      end
+
       super
    end
    
-   #
-   # Instructs the type to produce a memory representation of a stored value.
-   
-   def load( stored_value )
-      return super if @loader
-      return stored_value
+   def make_specific( modifiers )
+      if !@range && modifiers.fetch(:range, nil).is_a?(Range) then
+         self.class.new(:base_type => self, :range => modifiers.delete(:range))
+      else
+         super
+      end
    end
    
-   
-   #
-   # Instructs the type to produce a storable value from a memory representation.
-   
-   def store( memory_value )
-      return super if @storer
-      return memory_value
-   end
-   
-   
-   
-   
-   
-
-end # ScalarType
+end # NumericType
 end # Definitions
 end # Schemaform

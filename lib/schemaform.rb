@@ -19,7 +19,10 @@
 # =============================================================================================
 
 
-require File.expand_path(File.dirname(__FILE__)) + "/schemaform/sundry/quality_assurance.rb"
+require "rubygems"
+require "sequel"
+require File.expand_path(File.dirname(__FILE__)) + "/schemaform/baseline.rb"
+
 
 #
 # Provides the master entry points for the Schemaform system, allowing you to define schemas,
@@ -27,8 +30,12 @@ require File.expand_path(File.dirname(__FILE__)) + "/schemaform/sundry/quality_a
 # inner workings (or namespaces) of the library.
 
 module Schemaform
+   QualityAssurance = Baseline::QualityAssurance
    extend  QualityAssurance
    include QualityAssurance
+
+   @@locator = Baseline::ComponentLocator.new( __FILE__, 2 )
+   
    
    
    #
@@ -109,29 +116,7 @@ module Schemaform
    # allow_from_root is cleared.  Otherwise, the path is calculated relative the caller's directory.
    
    def self.locate( path, allow_from_root = true )
-      if allow_from_root && path[0..("schemaform/".length - 1)] == "schemaform/" then
-         path = File.expand_path(path, File.dirname(__FILE__))
-      else
-
-         #
-         # Figure out the file path of the script in which we were called.  Note that MacRuby has 
-         # an extra level in the stack, compared to standard Ruby.  It costs a little more, but 
-         # we'll search for "require" and step up one level from there.
-
-         stack = caller(0)
-         until stack.empty?
-            line = stack.shift
-            break if line =~ /locate.$/
-         end
-
-         assert( !stack.empty?, "caller stack doesn't seem to show context file, which is needed for Schemaform.locate()" )
-
-         trace_line  = stack.shift
-         script_path = trace_line.split(":")[0]
-         path = File.expand_path(path, File.dirname(File.expand_path(script_path, Dir.pwd())))
-      end
-
-      return path
+      @@locator.locate( path, allow_from_root )
    end
    
    
@@ -161,13 +146,13 @@ private
    # Loads all Schemaform code into memory.
    
    def self.load_all()
-      require locate("schemaform/sundry.rb"     )
-      require locate("schemaform/definition.rb" )
-      require locate("schemaform/expressions.rb")
-      require locate("schemaform/runtime.rb"    )
+      Dir[locate("schemaform/definitions/*.rb")].each{|path| require path}
+      # require locate("schemaform/expressions.rb")
+      # require locate("schemaform/runtime.rb"    )
    end
    
    
 end # Schemaform
+
 
 

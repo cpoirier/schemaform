@@ -20,38 +20,48 @@
 
 
 #
-# Base class for scalar types.
+# Captures dotted expressions of the form x.y
 
 module Schemaform
-module Definitions
-class ScalarType < Type
-   
-   def initialize( attrs )
-      super
-   end
-   
-   #
-   # Instructs the type to produce a memory representation of a stored value.
-   
-   def load( stored_value )
-      return super if @loader
-      return stored_value
-   end
-   
-   
-   #
-   # Instructs the type to produce a storable value from a memory representation.
-   
-   def store( memory_value )
-      return super if @storer
-      return memory_value
-   end
-   
-   
-   
-   
-   
+module Expressions
+class DottedExpression < Expression
 
-end # ScalarType
-end # Definitions
+   def initialize( expression, attribute, type )
+      @expression = expression
+      @attribute  = attribute
+      @type       = type
+   end
+
+
+   def method_missing( symbol, *args, &block )
+      super unless args.empty? && block.nil?
+      
+      #
+      # Okay, it's a potential accessor.  Let's see if we can do something with it.
+      
+      case @type.resolve.type_info.to_s
+      when "scalar"
+         super
+
+      when "reference"
+         referenced_entity = @type.resolve.entity
+         tuple = referenced_entity.resolve.heading
+         super unless tuple.member?(symbol)
+         return DottedExpression.new(self, symbol, tuple.attributes[symbol].resolve()) 
+         
+      when "set"
+         member_type = @type.resolve.member_type.resolve
+         if member_type.
+            
+            
+         
+         Expressions.build_
+      end
+      
+      send( @type.resolve.type_info.specialize("method_missing_for", "type"), symbol, *args, &block )
+   end
+
+
+end # DottedExpression
+end # Expressions
 end # Schemaform

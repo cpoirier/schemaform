@@ -20,38 +20,29 @@
 
 
 #
-# Base class for scalar types.
+# An expression wrapper for a relation Attribute.
 
 module Schemaform
-module Definitions
-class ScalarType < Type
+module Expressions
+module Attributes
    
-   def initialize( attrs )
-      super
+class RelationAttribute < Attribute
+
+   def initialize( definition )
+      super( definition )
+      @tuple_expression = Tuple.new( definition.heading )
    end
    
-   #
-   # Instructs the type to produce a memory representation of a stored value.
-   
-   def load( stored_value )
-      return super if @loader
-      return stored_value
+   def each()
+      yield(@tuple_expression)
    end
    
-   
-   #
-   # Instructs the type to produce a storable value from a memory representation.
-   
-   def store( memory_value )
-      return super if @storer
-      return memory_value
-   end
-   
-   
-   
+   PluralAttribute(relation.attribute)
    
    
 
-end # ScalarType
-end # Definitions
+end # RelationAttribute
+
+end # Attributes
+end # Expressions
 end # Schemaform

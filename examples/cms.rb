@@ -201,6 +201,8 @@ def define_example_cms_schema()
             required   :additional_members, set_of(:Accounts)
             maintained :members           , lambda {|g| g.base_groups.members - g.excluded_groups.members - g.excluded_members + g.additional_members}
          end
+         
+         key :owner, :name
       end
 
 

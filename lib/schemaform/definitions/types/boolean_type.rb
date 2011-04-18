@@ -18,24 +18,23 @@
 #             limitations under the License.
 # =============================================================================================
 
-
-#
-# Base class for scalar types.
+require Schemaform.locate("scalar_type.rb")
 
 module Schemaform
 module Definitions
-class ScalarType < Type
-   
+class BooleanType < ScalarType
+
    def initialize( attrs )
+      attrs[:default] = false unless attrs.member?(:default)
       super
    end
-   
+
    #
    # Instructs the type to produce a memory representation of a stored value.
    
    def load( stored_value )
       return super if @loader
-      return stored_value
+      return !!stored_value
    end
    
    
@@ -44,14 +43,9 @@ class ScalarType < Type
    
    def store( memory_value )
       return super if @storer
-      return memory_value
+      return memory_value ? 1 : 0
    end
-   
-   
-   
-   
-   
 
-end # ScalarType
+end # BooleanType
 end # Definitions
 end # Schemaform

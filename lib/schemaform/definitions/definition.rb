@@ -29,6 +29,8 @@ class Definition
    include QualityAssurance
 
    def initialize( context, name = nil )
+      type_check(:context, context, Definition, true)
+      
       @context = context
       @name    = name
       @path    = nil     # Defer path creation until needed, as some objects are created in the constructors of their contexts . . . . 
@@ -46,6 +48,8 @@ class Definition
          when Symbol, String, Class
             @path = (context.nil? ? [] : context.path) + [@name]
          when FalseClass
+            @path = context.path
+         when NilClass
             @path = context.path
          else
             fail( "name has not been set for object of class [#{self.class.name}]" + (@context ? " in #{@context.full_name}]" : "") )

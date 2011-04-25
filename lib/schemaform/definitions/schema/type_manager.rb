@@ -18,21 +18,44 @@
 #             limitations under the License.
 # =============================================================================================
 
-
-require Schemaform.locate("derived_attribute.rb")
+require Schemaform.locate("registry.rb")
 
 
 #
-# A derived attribute that is cached in the database when convenient, but calculated otherwise.
+# Provides Type management service to the Schema.
 
 module Schemaform
 module Definitions
-class CachedAttribute < DerivedAttribute
+class Schema < Definition
+class TypeRegistry < Registry
 
-   def initialize( tuple, block )
-      super( tuple, block )
+   def initialize( schema, description = "a type" )
+      super
    end
+
+   #
+   # Registers a named type with the schema.
    
-end # CachedAttribute
+   def register( type, name = nil )
+      type_check( :type, type, Type )
+      super
+   end
+
+   
+   #
+   # Builds a type for a name and a set of modifiers. Any modifiers used will be removed
+   # from the set. Any remaining are your responsibility.
+   
+   def build( name, modifiers = {}, fail_if_missing = true )
+      if type = name.is_a?(Type) ? name : find(name, fail_if_missing) then
+         type.make_specific(modifiers)
+      else
+         nil
+      end
+   end
+
+
+end # TypeRegistry
+end # Schema
 end # Definitions
 end # Schemaform

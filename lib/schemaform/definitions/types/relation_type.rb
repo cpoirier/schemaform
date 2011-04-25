@@ -19,40 +19,36 @@
 # =============================================================================================
 
 
+#
+# Base class for relation types.
+
 module Schemaform
 module Definitions
-class Key < Definition
-      
-   def initialize( entity, name, attribute_names )
-      super( entity, name )
-      @attributes = TupleType.new( self )
-      attribute_names.each do |name|
-         @attributes.add_attribute( name, entity.heading.attributes[name] )
-      end
-      # @attributes = attribute_names
+class RelationType < Type
+   
+   #
+   # The heading is a required part of the RelationType, and must be a StructuredType.
+   
+   def initialize( heading, attrs )
+      super attrs
+      @heading = heading
    end
    
-   alias entity context
+   def relation_type?()
+      true
+   end
+   
+   def description()
+      "[" + @heading.description + "]"
+   end
 
    def each_attribute( &block )
-      @attributes.each_attribute( &block )
-   end
-   
-   def member?( name )
-      @attributes.member?(name)
-   end
-   
-   def resolve( relation_types_as = :reference )
-      supervisor.monitor(self) do
-         @attributes.resolve(:reference)
-      end
+      @heading.each_attribute( &block )
    end
 
-   def description()
-      @attributes.description
-   end
-   
-end # Key
+
+end # RelationType
 end # Definitions
 end # Schemaform
+
 

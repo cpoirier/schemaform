@@ -20,45 +20,32 @@
 
 
 
-#
-# A structure that captures a by-name reference to a Type or other type-like structure, with 
-# some set of modifiers. When the time comes, the
-
 module Schemaform
 module Definitions
-class TypeReference < Definition
-   extend QualityAssurance
-   
-   def self.build( context, type_name, modifiers = {} )
-      case type_name
-      when Type, TypeReference
-         check do
-            assert( modifiers.empty?, "modifiers cannot be added to an existing Type or TypeReference" )
-         end
-         
-         return type_name if Type === type_name
-         return new( context, type_name.type_name, type_name.modifiers )
-      else
-         return new( context, type_name, modifiers )
-      end
+class DerivedAttribute < Attribute
+   def initialize( tuple, modifiers = {}, proc = nil, &block )
+      super(tuple)
+      @modifiers = modifiers
+      @forumla   = proc || block
    end
-   
-   attr_reader :type_name, :modifiers, :restriction
 
-   def initialize( context, type_name, modifiers = {} )
-      type_check( :type_name, type_name, [Symbol, Class, Type] )
-      super( context, type_name )
-      @type_name   = type_name
-      @modifiers   = modifiers
-      @type        = nil
+   def recreate_in( tuple )
+      self.class.new( tuple, @block ).tap do |recreation|
+         recreation.name = name
+      end
    end
    
    def resolve( relation_types_as = :reference )
-      supervisor.monitor( self, false ) do
-         ConstrainedType.build( schema.find_type(@type_name).resolve(relation_types_as), @modifiers, @modifiers.fetch(:default, nil) )
-      end
+      supervisor.monitor(self) do
+         annotate_errors( :attribute => full_name() ) do 
+            result_expression = @block.call( root_tuple.expression )
+            type_check( :result_expression, result_expression, Expressions::Expression )
+            result_expression.resolve( relation_types_as )
+         end
+      end   
    end
-
-end # TypeReference
+   
+end
 end # Definitions
 end # Schemaform
+

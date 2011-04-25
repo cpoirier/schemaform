@@ -18,26 +18,24 @@
 #             limitations under the License.
 # =============================================================================================
 
-
-require Schemaform.locate("writable_attribute.rb")
+require Schemaform.locate("definition.rb")
 
 
 #
-# An optional attribute -- one that will show a default value if not specifically set.
+# Base class for named relations.
 
 module Schemaform
 module Definitions
-class OptionalAttribute < WritableAttribute
+class Relation < Definition
 
-   def initialize( container, type = nil )
-      super( container, type )
+   def initialize( schema, name )
+      super(schema, name)
    end
    
-   def optional?()
-      true
+   def heading()
+      fail_unless_overridden self, :heading
    end
-   
 
-end # OptionalAttribute
+end # Relation
 end # Definitions
 end # Schemaform

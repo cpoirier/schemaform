@@ -21,44 +21,53 @@
 
 
 #
-# A structure that captures a by-name reference to a Type or other type-like structure, with 
-# some set of modifiers. When the time comes, the
+# An original (as opposed to derived) attribute.
 
 module Schemaform
 module Definitions
-class TypeReference < Definition
-   extend QualityAssurance
+class WritableAttribute < Attribute
+
+   def initialize( container, type_name, modifiers )
+      super(container)
+      @type_name = type_name
+      @modifiers = modifiers
+   end
    
-   def self.build( context, type_name, modifiers = {} )
-      case type_name
-      when Type, TypeReference
-         check do
-            assert( modifiers.empty?, "modifiers cannot be added to an existing Type or TypeReference" )
-         end
-         
-         return type_name if Type === type_name
-         return new( context, type_name.type_name, type_name.modifiers )
-      else
-         return new( context, type_name, modifiers )
+   def recreate_in( tuple )
+      self.class.new( tuple, @type ).tap do |recreation|
+         recreation.name = name
       end
    end
    
-   attr_reader :type_name, :modifiers, :restriction
-
-   def initialize( context, type_name, modifiers = {} )
-      type_check( :type_name, type_name, [Symbol, Class, Type] )
-      super( context, type_name )
-      @type_name   = type_name
-      @modifiers   = modifiers
-      @type        = nil
+   def writable?()
+      true
    end
    
    def resolve( relation_types_as = :reference )
-      supervisor.monitor( self, false ) do
-         ConstrainedType.build( schema.find_type(@type_name).resolve(relation_types_as), @modifiers, @modifiers.fetch(:default, nil) )
+      supervisor.monitor(self) do
+         @type.resolve(relation_types_as).tap do |type|
+            check do
+               if type.scalar_type? then
+                  assert( type.complete?, "scalar optional and required attributes must be of a complete type -- one that has both a Schemaform and a Ruby representation; found incomplete type [#{type.full_name}]" )
+               end
+            end
+         end
       end
    end
+   
 
-end # TypeReference
+   # ==========================================================================================
+   #                                           Conversion
+   # ==========================================================================================
+
+   
+   def lay_out( builder )
+      builder.define_attribute_default( name, resolve().default )
+      super( builder )
+   end
+
+   
+   
+end # WritableAttribute
 end # Definitions
 end # Schemaform

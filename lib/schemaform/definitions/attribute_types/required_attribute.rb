@@ -19,21 +19,22 @@
 # =============================================================================================
 
 
-require Schemaform.locate("derived_attribute.rb")
+require Schemaform.locate("writable_attribute.rb")
 
 
 #
-# A derived attribute that is kept always up to date in the database.
+# A required attribute -- one that must be present within its context TupleType.
 
 module Schemaform
 module Definitions
-class MaintainedAttribute < DerivedAttribute
+class RequiredAttribute < WritableAttribute
 
-   def initialize( tuple, block )
-      super( tuple, block )
+   def initialize( container, type_name, modifiers = {} )
+      super(container, type_name, modifiers)
    end
    
-   
+
+
 
 protected
 
@@ -90,6 +91,11 @@ protected
    end
 
 
-end # MaintainedAttribute
+   extend QualityAssurance
+   warn_once( "TODO: build the constructor for the TupleClass" )
+   warn_once( "TODO: build a general runtime Tuple class that can wrap a hash" )
+   
+
+end # RequiredAttribute
 end # Definitions
 end # Schemaform

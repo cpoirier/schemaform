@@ -18,22 +18,20 @@
 #             limitations under the License.
 # =============================================================================================
 
-
-require Schemaform.locate("derived_attribute.rb")
+require Schemaform.locate("container_type.rb")
 
 
 #
-# A derived attribute that is never stored in the database.
+# A container type that holds an ordered list of something.
 
 module Schemaform
 module Definitions
-class VolatileAttribute < DerivedAttribute
+class ListType < ContainerType
 
-   def initialize( tuple, block )
-      super( tuple, block )
+   def initialize( element_type, attrs = {} )
+      super
    end
-   
 
-end # MaintainedAttribute
+end # ListType
 end # Definitions
 end # Schemaform

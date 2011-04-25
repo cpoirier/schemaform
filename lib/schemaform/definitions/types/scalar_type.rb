@@ -26,16 +26,39 @@ module Schemaform
 module Definitions
 class ScalarType < Type
    
+   #
+   # Additional attributes include:
+   #  :loader => a Proc that converts data from disk into a memory representation (Object)
+   #  :storer => a Proc that converts object into data for storage on disk
+   
    def initialize( attrs )
       super
+      @loader = attrs.fetch(:load , @base_type && @base_type.scalar_type? ? @base_type.loader : nil)  # Copied locally for convenience
+      @storer = attrs.fetch(:store, @base_type && @base_type.scalar_type? ? @base_type.storer : nil)  # Copied locally for convenience      
    end
+   
+   attr_reader :loader, :storer
+   
+   def scalar_type?
+      true
+   end
+   
+   def description()
+      return name.to_s if named?
+      return @base_type.description if @base_type.exists?
+      return super
+   end
+   
    
    #
    # Instructs the type to produce a memory representation of a stored value.
    
    def load( stored_value )
-      return super if @loader
-      return stored_value
+      if @storer then
+         @storer.responds_to?(:call) ? @storer.call(value) : @storer 
+      else
+         stored_value
+      end
    end
    
    
@@ -43,10 +66,12 @@ class ScalarType < Type
    # Instructs the type to produce a storable value from a memory representation.
    
    def store( memory_value )
-      return super if @storer
-      return memory_value
+      if @loader then
+         @loader.responds_to?(:call) ? @loader.call(stored_value) : @loader
+      else
+         memory_value
+      end
    end
-   
    
    
    

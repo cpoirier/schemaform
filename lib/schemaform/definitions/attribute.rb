@@ -18,28 +18,26 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("definition.rb")
+
 
 #
 # An Attribute in a TupleType.
+#
+# Scalar attributes 
 
 module Schemaform
 module Definitions
 class Attribute < Definition
-   def initialize( tuple )
-      type_check( :tuple, tuple, TupleType )
-      super( tuple )
-      @expression = nil
-   end
    
+   def initialize( tuple )
+      super(tuple)
+   end
+
    alias tuple context
    
    def root_tuple()
       tuple.root_tuple
-   end
-   
-   def expression()
-      @expression = Expressions::Attribute.build( self ) if @expression.nil?
-      @expression
    end
    
    def resolve( relation_types_as = :reference )
@@ -70,6 +68,8 @@ class Attribute < Definition
    end
 
 protected
+
+   attr_writer :type
 
    def lay_out_scalar_type( builder, attribute_type )
       fail_unless_overridden( self, :lay_out_scalar_type )

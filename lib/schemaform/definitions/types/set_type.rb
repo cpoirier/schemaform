@@ -18,33 +18,20 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("container_type.rb")
 
+
+#
+# A container type that can hold no duplicates and has no inherent ordering.
 
 module Schemaform
 module Definitions
-class DerivedAttribute < Attribute
-   def initialize( tuple, block )
-      super( tuple )
-      @block = block
+class SetType < ContainerType
+
+   def initialize( element_type, attrs = {} )
+      super
    end
 
-   def recreate_in( tuple )
-      self.class.new( tuple, @block ).tap do |recreation|
-         recreation.name = name
-      end
-   end
-   
-   def resolve( relation_types_as = :reference )
-      supervisor.monitor(self) do
-         annotate_errors( :attribute => full_name() ) do 
-            result_expression = @block.call( root_tuple.expression )
-            type_check( :result_expression, result_expression, Expressions::Expression )
-            result_expression.resolve( relation_types_as )
-         end
-      end   
-   end
-   
-end
+end # SetType
 end # Definitions
 end # Schemaform
-

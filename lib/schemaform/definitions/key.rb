@@ -18,57 +18,44 @@
 #             limitations under the License.
 # =============================================================================================
 
-
-
-#
-# An original (as opposed to derived) attribute.
+require Schemaform.locate("definition.rb")
 
 module Schemaform
 module Definitions
-class WritableAttribute < Attribute
-
-   def initialize( container, type = nil )
-      super( container )
-      @type = type
-   end
-   
-   attr_accessor :type
-   
-   def recreate_in( tuple )
-      self.class.new( tuple, @type ).tap do |recreation|
-         recreation.name = name
+class Key < Definition
+      
+   def initialize( entity, name, attribute_names )
+      super( entity, name )
+      warn_once "Key should probably be changed to use a backed StructuredType instead of a Tuple"
+      
+      @attributes = Tuple.new( self )
+      attribute_names.each do |name|
+         @attributes.add_attribute( name, entity.heading.attributes[name] )
       end
+      # @attributes = attribute_names
    end
    
-   def writable?()
-      true
+   alias entity context
+
+   def each_attribute( &block )
+      @attributes.each_attribute( &block )
+   end
+   
+   def member?( name )
+      @attributes.member?(name)
    end
    
    def resolve( relation_types_as = :reference )
       supervisor.monitor(self) do
-         @type.resolve(relation_types_as).tap do |type|
-            check do
-               if type.scalar_type? then
-                  assert( type.complete?, "scalar optional and required attributes must be of a complete type -- one that has both a Schemaform and a Ruby representation; found incomplete type [#{type.full_name}]" )
-               end
-            end
-         end
+         @attributes.resolve(:reference)
       end
    end
-   
 
-   # ==========================================================================================
-   #                                           Conversion
-   # ==========================================================================================
-
-   
-   def lay_out( builder )
-      builder.define_attribute_default( name, resolve().default )
-      super( builder )
+   def description()
+      @attributes.description
    end
-
    
-   
-end # WritableAttribute
+end # Key
 end # Definitions
 end # Schemaform
+

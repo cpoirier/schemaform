@@ -600,6 +600,13 @@ module Baseline
       #                                      Runtime Checks
       # =======================================================================================
 
+      #
+      # Returns true if checks are enabled.
+      
+      def checks_enabled?()
+         @@quality_assurance__checks_enabled
+      end
+      
    
       #
       # Provides a context in which interface contract enforcement and other quality code 

@@ -18,6 +18,9 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("definition.rb")
+
+
 
 #
 # Base class for the typing system. Unlike Ruby, database are strongly typed, and need to 
@@ -54,7 +57,20 @@ class Type < Definition
 
    # ==========================================================================================
    
-   attr_reader :base_type, :default, :loader, :storer
+   attr_reader :base_type, :default
+   
+   def scalar_type?     ; false ; end
+   def tuple_type?      ; false ; end
+   def relation_type?   ; false ; end
+   def structured_type? ; false ; end
+
+   #
+   # Returns a human-readable summary of the type, for inclusion in diagnostic output.
+   
+   def description()
+      return full_name.to_s if named?
+      return "an unnamed type"
+   end
 
    #
    # Attributes include:
@@ -65,26 +81,16 @@ class Type < Definition
    #  :storer    => a Proc that converts object into data for storage on disk
    #  :context   => if not supplying a +base_type+, the Schema or other context for this type
    
-   def initialize( attrs = {} )
+   def initialize( attrs )
       assert( attrs.member?(:context) || attrs.fetch(:base_type).is_a?(Type), "you must supply a context or a full base type", attrs )
       super(attrs.fetch(:context, nil) || attrs.fetch(:base_type).context, attrs.fetch(:name, nil))
 
-      @base_type = schema.find_type(attrs.fetch(:base_type, nil))
+      @base_type = schema.types.find(attrs.fetch(:base_type, nil))
       @default   = attrs.fetch(:default, @base_type ? @base_type.default : nil)  # Copied locally for convenience
-      @loader    = attrs.fetch(:load   , @base_type ? @base_type.loader  : nil)  # Copied locally for convenience
-      @storer    = attrs.fetch(:store  , @base_type ? @base_type.storer  : nil)  # Copied locally for convenience
       @checks    = self.class.build_checks(attrs)      
    end
    
    
-   #
-   # Resolves any deferred typing information within the Type.
-   
-   def resolve( relation_types_as = :reference )
-      self
-   end
-
-
    #
    # Returns a specific type by applying any supported modifiers to this (presumbly general) one. 
    # Used by Schema.build_type() to allow types to handle dimensions and other similar modifiers. If 
@@ -94,24 +100,6 @@ class Type < Definition
       self
    end
 
-   
-   #
-   # Instructs the type to produce a memory representation of a stored value.
-   
-   def load( stored_value )
-      fail unless @loader
-      @loader.responds_to?(:call) ? @loader.call(stored_value) : @loader
-   end
-   
-   
-   #
-   # Instructs the type to produce a storable value from a memory representation.
-   
-   def store( memory_value )
-      fail unless @storer
-      @storer.responds_to?(:call) ? @storer.call(value) : @storer
-   end
-   
    
    #
    # Returns true if this and the other type can be joined.

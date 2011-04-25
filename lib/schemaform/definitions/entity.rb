@@ -18,8 +18,8 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("relation.rb"  )
-require Schemaform.locate("tuple_type.rb")
+require Schemaform.locate("relation.rb")
+require Schemaform.locate("tuple.rb"   )
 
 
 #
@@ -30,28 +30,18 @@ module Definitions
 class Entity < Relation
       
    def initialize( name, base_entity, schema, &block )
-      super( base_entity || schema, TupleType.new(schema), name )
+      super( base_entity || schema, name )
 
+      @heading     = nil
       @base_entity = base_entity
       @keys        = {}
       @primary_key = nil
-      @enumeration = nil
       @dsl         = DefinitionLanguage.new( self )
-      @expression  = Expressions::Relations::Entity.new( self )
-      
-      @reference_type = ReferenceType.new( self )
-      
-      if @base_entity then
-         @base_entity.heading.each_attribute do |attribute|
-            @tuple.add_attribute attribute
-         end
-      end
       
       @dsl.instance_eval(&block) if block_given?
    end
    
-   attr_reader :keys, :expression
-   attr_accessor :enumeration
+   attr_reader :keys, :expression, :heading
 
    def has_base_entity?()
       @base_entity.exists?
@@ -102,6 +92,7 @@ class Entity < Relation
          when :tuple
             @heading.resolve()
          when :reference
+            fail "can reference type go away?"
             @reference_type.resolve()
          end
       end
@@ -121,32 +112,23 @@ class Entity < Relation
       end
 
       #
-      # Triggers the inline definition of the TupleType for the Entity.
+      # Triggers the inline definition of the Tuple for the Entity.
       
-      def each( tuple_name, tuple_base = nil, &block )
-         @entity.heading.define(tuple_name, &block)
+      def each( tuple_name, &block )
+         heading = @entity.schema.define_tuple(tuple_name, &block)
+         @entity.instance_eval{ @heading = heading }
       end
       
       
       #
-      # Defines the Entity heading in terms of a named TupleType.
+      # Defines the Entity heading in terms of a named Tuple.
       
-      def of( tuple_type_name )
-         @entity.change_heading( tuple_type_name )
+      def of( tuple_name )
+         haeding = @entity.tuples.find(tuple_name)
+         @entity.instance_eval{ @heading = heading }
       end
       
 
-      #
-      # Causes common fields to be stored in another entity.
-      
-      def overlay( entity_name )
-         warn_once( "TODO: overlay support" )
-         # if attribute.writable? then
-         #    assert( imported_type.attributes[attribute.name].writable?, "can't redefine read-only attribute [#{attribute.name}] as a writable attribute; consider making the base attribute optional with a calculated default" )
-         # end
-      end
-      
-      
    
       #
       # Defines a candidate key on the entity -- a subset of attributes that can uniquely identify
@@ -190,84 +172,96 @@ class Entity < Relation
          end
       end
    
-   
-      #
-      # Enumerates named values within a code table.  Most entities won't need this, but for
-      # those few that do, it makes a lot of things more convenient.  The enumeration code
-      # will automatically create the necessary attributes in an empty entity, or can use any
-      # pair of appropriately typed attributes (specified with enumerate_into).  
-      #
-      # Examples:
-      #   entity :Codes do
-      #     enumerate :first, :second, :fourth, 4, :fifth
-      #   end
-      #
-      #   entity :Codes do
-      #     attribute :a_name , identifier_type()
-      #     attribute :a_value, integer_type()   
-      #     
-      #     enumerate :first, :second, :fourth, 4, :fifth
-      #   end
-      #
-      #   entity :Codes do
-      #     attribute :a_name , identifier_type()
-      #     attribute :a_value, integer_type()   
-      #     attribute :public , boolean_type()
-      #
-      #     enumerate do
-      #       define :first , 1, true
-      #       define :second, 2, false
-      #     end
-      #   end
-
-      def enumerate( *data, &block )
-         dsl = self
-         @entity.instance_eval do
-            check do
-               assert( @base_entity.nil?, "enumerated entities cannot have a base" )
-               assert( @enumeration.nil?, "entity is already enumerated"           )
-            end
-            
-            if @heading.empty? then
-               @heading.define do 
-                  required :name , Symbol
-                  required :value, Integer
-               end
-               dsl.key :name
-            else
-               check do
-                  assert( @attributes.length >= 2, "an enumerated entity needs at least name and value attributes" )
-               end
-               
-               # TODO type check the first two attributes, once you figure out how best to do it
-            end
       
-            @enumeration = Enumeration.new( self )
-            
-            if block then
-               @enumeration.fill(block)
-            else
-               check do
-                  assert( @heading.length == 2, "to use the simple enumeration form, the entity must have only two attributes" )
-               end
-
-               @enumeration.fill do
-                  value = 1
-                  until data.empty?
-                     name  = data.shift
-                     value = data.shift if data.first.is_an?(Integer)
-               
-                     check do
-                        assert( name.is_a?(Symbol), "expected a symbol or value, found #{name.class.name}" )
-                     end
-               
-                     define name, value
-                     value += 1
-                  end
-               end
-            end
-         end
+      #
+      # Defines a constraint on the entity that will be checked on save.
+      
+      def constrain( description, proc = nil, &block )
+         warn_once("TODO: constraint support in Tuple")
       end
+      
+
+      #
+      # TODO: This is probably garbage, replaced by one_of(:x, :y, :z). It is less flexible, in 
+      # some ways, but probably more appropriate than this. Make a decision and implement it
+      #
+      # #
+      # # Enumerates named values within a code table.  Most entities won't need this, but for
+      # # those few that do, it makes a lot of things more convenient.  The enumeration code
+      # # will automatically create the necessary attributes in an empty entity, or can use any
+      # # pair of appropriately typed attributes (specified with enumerate_into).  
+      # #
+      # # Examples:
+      # #   entity :Codes do
+      # #     enumerate :first, :second, :fourth, 4, :fifth
+      # #   end
+      # #
+      # #   entity :Codes do
+      # #     attribute :a_name , identifier_type()
+      # #     attribute :a_value, integer_type()   
+      # #     
+      # #     enumerate :first, :second, :fourth, 4, :fifth
+      # #   end
+      # #
+      # #   entity :Codes do
+      # #     attribute :a_name , identifier_type()
+      # #     attribute :a_value, integer_type()   
+      # #     attribute :public , boolean_type()
+      # #
+      # #     enumerate do
+      # #       define :first , 1, true
+      # #       define :second, 2, false
+      # #     end
+      # #   end
+      # 
+      # def enumerate( *data, &block )
+      #    dsl = self
+      #    @entity.instance_eval do
+      #       check do
+      #          assert( @base_entity.nil?, "enumerated entities cannot have a base" )
+      #          assert( @enumeration.nil?, "entity is already enumerated"           )
+      #       end
+      #       
+      #       if @heading.empty? then
+      #          @heading.define do 
+      #             required :name , Symbol
+      #             required :value, Integer
+      #          end
+      #          dsl.key :name
+      #       else
+      #          check do
+      #             assert( @attributes.length >= 2, "an enumerated entity needs at least name and value attributes" )
+      #          end
+      #          
+      #          # TODO type check the first two attributes, once you figure out how best to do it
+      #       end
+      # 
+      #       @enumeration = Enumeration.new( self )
+      #       
+      #       if block then
+      #          @enumeration.fill(block)
+      #       else
+      #          check do
+      #             assert( @heading.length == 2, "to use the simple enumeration form, the entity must have only two attributes" )
+      #          end
+      # 
+      #          @enumeration.fill do
+      #             value = 1
+      #             until data.empty?
+      #                name  = data.shift
+      #                value = data.shift if data.first.is_an?(Integer)
+      #          
+      #                check do
+      #                   assert( name.is_a?(Symbol), "expected a symbol or value, found #{name.class.name}" )
+      #                end
+      #          
+      #                define name, value
+      #                value += 1
+      #             end
+      #          end
+      #       end
+      #    end
+      # end
    end
    
    
@@ -313,5 +307,4 @@ end # Schemaform
 
 
 require Schemaform.locate("key.rb")
-require Schemaform.locate("enumeration.rb")
 

@@ -459,8 +459,8 @@ class Array
       #
       # Returns all but the first element in this list.
    
-      def rest()
-         return self[1..-1]
+      def rest( n = 1 )
+         return self[n..-1]
       end
    end
    
@@ -487,7 +487,7 @@ class Array
          return self[-1]
       end
    end
-
+   
 end
 
 
@@ -606,7 +606,7 @@ module Baseline
       def checks_enabled?()
          @@quality_assurance__checks_enabled
       end
-      
+
    
       #
       # Provides a context in which interface contract enforcement and other quality code 

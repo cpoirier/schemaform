@@ -30,7 +30,7 @@ class DerivedAttribute < Attribute
    end
 
    def recreate_in( tuple )
-      self.class.new( tuple, @block ).tap do |recreation|
+      self.class.new( tuple, @modifiers, @formula ).tap do |recreation|
          recreation.name = name
       end
    end

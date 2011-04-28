@@ -29,11 +29,19 @@ module Schemaform
 module Definitions
 class RequiredAttribute < WritableAttribute
 
-   def initialize( container, type_name, modifiers = {} )
-      super(container, type_name, modifiers)
+   def initialize( container, definition )
+      super(container, definition)
    end
    
 
+   def lay_out( into )
+      if Tuple === @definition then
+         @definition.each_attribute do |attribute|
+         end
+      else
+      end
+   end
+   
 
 
 protected
@@ -41,6 +49,9 @@ protected
    # ==========================================================================================
    #                                           Conversion
    # ==========================================================================================
+   
+   
+   
 
 
    #

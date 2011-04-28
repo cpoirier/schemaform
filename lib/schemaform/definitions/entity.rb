@@ -275,23 +275,10 @@ class Entity < Relation
    #
    # Maps the Entity into runtime representations.
    
-   def lay_out( builder )
-      warn_once( "TODO: put back in key validations (required, single_valued, key_worthy)" )
-      builder.in_entity_class( @name ) do
-         builder.define_table( @name ) do
-            
-            #
-            # Build any primary key attributes first, as we need them for other things.
-            
-            builder.in_primary_key do
-               heading.lay_out( builder ){|attribute| primary_key.member?(attribute) }
-            end
-
-            #
-            # Now process any remaining attributes.
-            
-            heading.lay_out( builder ){|attribute| !primary_key.member?(attribute) }
-         end
+   def lay_out( into )
+      table = into.define_table(name)
+      @heading.each_attribute do |attribute|
+         attribute.lay_out(table)
       end
    end
    

@@ -41,11 +41,22 @@ class Registry
       @registry.member?(name)
    end
    
+   
    #
    # Returns the named object, or nil.
    
    def []( name )
       find(name, false)
+   end
+   
+   
+   #
+   # Iterates of the registered objects. Passes only the object (not the name).
+   
+   def each()
+      @registry.each do |name, object|
+         yield(object)
+      end
    end
 
    

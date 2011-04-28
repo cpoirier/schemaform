@@ -47,6 +47,18 @@ class Schema < Definition
       end
    end
    
+   def connect( database_url, prefix = nil, user = nil, password = nil )
+      Schemaform.connect(self, database_url, prefix, user, password)
+      map = Mapping::Map.build( self, database_url )
+      fail
+
+      account  = user ? Runtime::Account.new( user, password ) : nil
+      database = Runtime::Database.for( database_url, account )
+      coupling = database.couple_with( schema, "sqlite://cms.rb", "cms", account )
+      coupling.connect( account )
+   end
+   
+   
    
    # ==========================================================================================
    #                                     Definition Language
@@ -136,7 +148,6 @@ class Schema < Definition
       @types[:identifier]
    end
    
-
 
 
    # 
@@ -231,34 +242,10 @@ protected
       end
       
       @dsl.instance_eval(&block) if block_given?
-      resolve_types()
    end
    
    
    
-   # ==========================================================================================
-   #                                      Type Resolution
-   # ==========================================================================================
-
-   
-   #
-   # Resolves types for all attributes within the Schema.
-   
-   def resolve_types()
-      return if @types_are_resolved
-
-
-      #
-      # Resolve any defined types first.
-      
-      @types.each do |name, type|
-         type.resolve()
-      end
-   
-      @types_are_resolved = true
-   end
-   
-
    
    
    # ==========================================================================================
@@ -269,11 +256,14 @@ protected
    # Maps the Schema into runtime representation.
    
    def lay_out()
-      @master = Layout::Master.build(@name) do |builder|
+      if @layout.nil? then
+         @layout = Layout::Schema.new(self)
          @entities.each do |entity|
-            entity.lay_out( builder )
+            entity.lay_out( @layout )
          end
       end
+      
+      @layout
    end
    
    

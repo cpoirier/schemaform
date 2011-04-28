@@ -27,14 +27,14 @@ module Schemaform
 module Definitions
 class WritableAttribute < Attribute
 
-   def initialize( container, type_name, modifiers )
+   def initialize( container, definition )
       super(container)
-      @type_name = type_name
-      @modifiers = modifiers
+      @definition = definition
    end
    
+   
    def recreate_in( tuple )
-      self.class.new( tuple, @type ).tap do |recreation|
+      self.class.new( tuple, @definition ).tap do |recreation|
          recreation.name = name
       end
    end
@@ -42,18 +42,7 @@ class WritableAttribute < Attribute
    def writable?()
       true
    end
-   
-   def resolve( relation_types_as = :reference )
-      supervisor.monitor(self) do
-         @type.resolve(relation_types_as).tap do |type|
-            check do
-               if type.scalar_type? then
-                  assert( type.complete?, "scalar optional and required attributes must be of a complete type -- one that has both a Schemaform and a Ruby representation; found incomplete type [#{type.full_name}]" )
-               end
-            end
-         end
-      end
-   end
+
    
 
    # ==========================================================================================

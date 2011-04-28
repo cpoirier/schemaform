@@ -61,12 +61,10 @@ class Attribute < Definition
    #                                           Conversion
    # ==========================================================================================
 
-   
-   def lay_out( builder )
-      attribute_type = attribute.resolve()
-      send( attribute_type.type_info.specialize("lay_out", "type"), builder, attribute_type )
+   def lay_out( into )
+      
    end
-
+   
 protected
 
    attr_writer :type

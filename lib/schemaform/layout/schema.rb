@@ -20,19 +20,23 @@
 
 
 #
-# Represents all user-defined types that have an existing type name as base type. All user-
-# defined type have a name.
+# Anchors a set of tables to the source Schema definition.
 
 module Schemaform
-module Definitions
-class UserDefinedType < Type
-   
-   def initialize( attrs )
-      super
+module Layout
+class Schema
+
+   def initialize( definition )
+      @definition = definition
+      @tables = {}
    end
    
-      
+   attr_reader :definition, :tables
+   
+   def define_table( name )
+      @tables[name] = Table.new(self, name)
+   end
 
-end # UserDefinedType
-end # Definitions
+end # Schema
+end # Layout
 end # Schemaform

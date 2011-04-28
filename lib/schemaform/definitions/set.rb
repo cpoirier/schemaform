@@ -18,21 +18,20 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("collection.rb")
+
 
 #
-# Represents all user-defined types that have an existing type name as base type. All user-
-# defined type have a name.
+# Similar to a relation, but without the requirement for a heading.
 
 module Schemaform
 module Definitions
-class UserDefinedType < Type
-   
-   def initialize( attrs )
+class Set < Collection
+
+   def initialize( member, context, name = nil )
       super
    end
-   
-      
 
-end # UserDefinedType
+end # Set
 end # Definitions
 end # Schemaform

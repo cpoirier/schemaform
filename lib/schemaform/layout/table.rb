@@ -20,19 +20,31 @@
 
 
 #
-# Represents all user-defined types that have an existing type name as base type. All user-
-# defined type have a name.
+# A table, possibly nested, (for naming purposes only). 
 
 module Schemaform
-module Definitions
-class UserDefinedType < Type
+module Layout
+class Table
+   include QualityAssurance
+
+   # 
+   # Top-level tables are linked to their source Entity or Relation. Nested tables are linked
+   # to their container table.
    
-   def initialize( attrs )
-      super
+   def initialize( name, context = nil )
+      @context = context
+      @name    = name
+      @fields  = {}
+      @tables  = {}
    end
    
-      
+   attr_reader :context, :name, :fields, :tables
 
-end # UserDefinedType
-end # Definitions
+   def define_table( name )
+      @tables[name] = Table.new(self, name)
+   end
+
+
+end # Table
+end # Layout
 end # Schemaform

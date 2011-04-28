@@ -20,19 +20,21 @@
 
 
 #
-# Represents all user-defined types that have an existing type name as base type. All user-
-# defined type have a name.
+# A field within a table. Unlike attributes in the definition series, fields have only a name
+# and a type.
 
 module Schemaform
-module Definitions
-class UserDefinedType < Type
-   
-   def initialize( attrs )
-      super
+module Layout
+class Field
+
+   def initialize( table, name, type )
+      @table = table
+      @name  = name
+      @type  = type
    end
    
-      
+   attr_reader :table, :name, :type
 
-end # UserDefinedType
-end # Definitions
+end # Field
+end # Layout
 end # Schemaform

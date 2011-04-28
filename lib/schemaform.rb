@@ -68,18 +68,32 @@ module Schemaform
    
    
    #
+   # Couples your Schema to a Database, but does not connect it. You can then connect
+   # the coupling for reading or writing.
+   #
+   # Settings include:
+   #  :user     => a user name to connect with, if necessary
+   #  :password => a password to connect with, if necessary
+   #  :prefix   => a prefix to add to table names, if multiple systems share the database
+
+   def self.couple( schema, database_url, settings = {} )
+      account  = settings.member?(:user) ? Runtime::Account.new(settings[:user], settings.fetch(:password)) : nil
+      database = Runtime::Database.for(database_url, account)
+      database.couple_with(schema, database_url, settings.fetch(:prefix, nil), account)
+   end 
+
+
+   #
    # Connects your Schema to a Database in one step.  What you get back is a Connection, 
-   # ready to go.
+   # ready to go. See couple() for details on available settings.
    
-   def self.connect( schema, database_url, prefix = nil, user = nil, password = nil )
-      map = Mapping::Map.build( schema, database_url )
-      fail
-      
-      account  = user ? Runtime::Account.new( user, password ) : nil
-      database = Runtime::Database.for( database_url, account )
-      coupling = database.couple_with( schema, "sqlite://cms.rb", "cms", account )
-      coupling.connect( account )
+   def self.connect( schema, database_url, settings = {} )
+      coupling = couple(schema, database_url, settings)
+      coupling.connect()
    end
+   
+   
+   
    
    
    # ==========================================================================================

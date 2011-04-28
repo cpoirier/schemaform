@@ -63,6 +63,17 @@ class Type < Definition
    def tuple_type?      ; false ; end
    def relation_type?   ; false ; end
    def structured_type? ; false ; end
+   
+   #
+   # Returns an anonymous wrapper on this type with the supplied constraints.
+   
+   def constrain( constraints )
+      return self if constraints.empty?
+      
+      constraints[:base_type] = self
+      UserDefinedType.new(constraints)
+   end
+
 
    #
    # Returns a human-readable summary of the type, for inclusion in diagnostic output.

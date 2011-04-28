@@ -29,8 +29,8 @@ module Schemaform
 module Definitions
 class OptionalAttribute < WritableAttribute
 
-   def initialize( container, type_name = nil, modifiers = {} )
-      super(container, type_name, modifiers)
+   def initialize( container, definition )
+      super(container, definition)
    end
    
    def optional?()

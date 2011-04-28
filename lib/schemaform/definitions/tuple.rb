@@ -136,13 +136,10 @@ class Tuple < Definition
       # Defines a required attribute or subtuple within the entity.  To define a subtuple, supply a 
       # block instead of a type.
    
-      def required( name, type_name = nil, modifiers = {}, required = true, &block )
+      def required( name, type_name = nil, modifiers = {}, &block )
+         definition = definition_for(type_name, modifiers, &block)
          @tuple.instance_eval do
-            type_name = Tuple.new(self, nil, &block) if block
-            type_name = one_of(*type_name) if type_name.is_an?(Array)
-            type_name = one_of(type_name)  if type_name.is_a?(Hash)
-            
-            add_attribute name, RequiredAttribute.new(self, type_name, modifiers)
+            add_attribute name, RequiredAttribute.new(self, definition)
          end
       end
 
@@ -152,12 +149,9 @@ class Tuple < Definition
       # a block instead of a type.
       
       def optional( name, type_name = nil, modifiers = {}, &block )
+         definition = definition_for(type_name, modifiers, &block)
          @tuple.instance_eval do
-            type_name = Tuple.new(self, nil, &block) if block
-            type_name = one_of(*type_name) if type_name.is_an?(Array)
-            type_name = one_of(type_name)  if type_name.is_a?(Hash)
-
-            add_attribute name, OptionalAttribute.new(self, type_name, modifiers)
+            add_attribute name, OptionalAttribute.new(self, definition)
          end
       end
       
@@ -222,16 +216,14 @@ class Tuple < Definition
       # Creates a set type.
       
       def set_of( type_name, modifiers = {} )
-         member_type = @tuple.schema.types.build(type_name, modifiers, false) || ReferenceType.new(type_name, :context => @tuple.schema)
-         SetType.new( member_type )
+         Set.new(definition_for(type_name, modifiers), @tuple)
       end
       
       #
       # Create an (ordered) list type.
       
       def list_of( type_name, modifiers = {} )
-         member_type = @tuple.schema.types.build(type_name, modifiers, false) || ReferenceType.new(type_name, :context => @tuple.schema)
-         ListType.new( member_type )
+         List.new(definition_for(type_name, modifiers), @tuple)
       end
       
       
@@ -246,6 +238,25 @@ class Tuple < Definition
          end
       end
       
+      
+      #
+      # Used to process an attribute definition into a Definition.
+
+      def definition_for( name, modifiers, &block )
+         if block then
+            Tuple.new(@tuple, nil, &block)
+         elsif name.is_a?(Hash) then
+            one_of(name)
+         elsif name.is_an?(Array) then
+            one_of(*name)
+         elsif @tuple.schema.types.member?(name) then
+            @tuple.schema.types.build(name, modifiers)
+         elsif @tuple.schema.tuples.member?(name) then
+            @tuple.schema.tuples.find(name)
+         else
+            ReferenceType.new(name, :context => @tuple.schema)
+         end
+      end
       
    end
    
@@ -262,18 +273,6 @@ class Tuple < Definition
          yield( attribute )
       end
    end
-   
-   #
-   # Returns the complete type for this Tuple.
-   
-   def resolve()
-      each_attribute do |attribute|
-         unless @type[attribute.name]
-            @type[attribute.name] = attribute.resolve()
-         end
-      end
-   end
-   
    
    
    def add_attribute( name, attribute )
@@ -304,6 +303,11 @@ class Tuple < Definition
    # ==========================================================================================
    #                                       Type Operations
    # ==========================================================================================
+
+
+   
+   
+
 
    def resolve( relation_types_as = :reference )
       supervisor.monitor(self, named?) do

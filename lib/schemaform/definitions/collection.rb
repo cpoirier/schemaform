@@ -20,19 +20,19 @@
 
 
 #
-# Represents all user-defined types that have an existing type name as base type. All user-
-# defined type have a name.
+# Base class for things that contain other things.
 
 module Schemaform
 module Definitions
-class UserDefinedType < Type
-   
-   def initialize( attrs )
-      super
+class Collection < Definition
+
+   def initialize( member, context, name = nil )
+      super(context, name)
+      @member = member
    end
    
-      
-
-end # UserDefinedType
+   
+   
+end # Collection
 end # Definitions
 end # Schemaform

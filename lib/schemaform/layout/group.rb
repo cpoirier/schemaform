@@ -40,20 +40,20 @@ class Group < Component
       add_child Field.new(self, name, type, references_field)
    end
    
-   def describe( indent = "", name_override = nil, suffix = nil )
-      if @children then
-         case @children.count
-         when 0
-            return
-         when 1
-            @children.each do |name, child|
-               child.describe(indent, @name)
-            end
-         else
-            super
-         end
-      end
-   end
+   # def describe( indent = "", name_override = nil, suffix = nil )
+   #    if @children then
+   #       case @children.count
+   #       when 0
+   #          return
+   #       when 1
+   #          @children.each do |name, child|
+   #             child.describe(indent, @name)
+   #          end
+   #       else
+   #          super
+   #       end
+   #    end
+   # end
    
 
 end # Group

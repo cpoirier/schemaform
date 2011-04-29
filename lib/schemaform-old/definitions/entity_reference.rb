@@ -27,6 +27,7 @@ require Schemaform.locate("type_reference.rb")
 module Schemaform
 module Definitions
 class EntityReference < TypeReference
+   
    def initialize( context, entity_name )
       type_check( :entity_name, entity_name, Symbol )
       super( context, entity_name )

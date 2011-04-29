@@ -35,15 +35,16 @@ class DerivedAttribute < Attribute
       end
    end
    
-   def resolve( relation_types_as = :reference )
+   def type()
       supervisor.monitor(self) do
-         annotate_errors( :attribute => full_name() ) do 
-            result_expression = @block.call( root_tuple.expression )
-            type_check( :result_expression, result_expression, Expressions::Expression )
-            result_expression.resolve( relation_types_as )
+         annotate_errors(:attribute => full_name()) do 
+            result_expression = @block.call(root_tuple.expression)
+            type_check(:result_expression, result_expression, Expressions::Expression)
+            result_expression.type()
          end
       end   
    end
+   
    
 end
 end # Definitions

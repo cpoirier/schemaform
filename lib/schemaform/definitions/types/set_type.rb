@@ -18,7 +18,7 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("container_type.rb")
+require Schemaform.locate("collection_type.rb")
 
 
 #
@@ -26,7 +26,7 @@ require Schemaform.locate("container_type.rb")
 
 module Schemaform
 module Definitions
-class SetType < ContainerType
+class SetType < CollectionType
 
    def initialize( element_type, attrs = {} )
       super

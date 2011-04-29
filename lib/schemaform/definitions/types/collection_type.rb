@@ -24,7 +24,7 @@
 
 module Schemaform
 module Definitions
-class ContainerType < Type
+class CollectionType < Type
 
    attr_reader :element_type
 
@@ -34,6 +34,6 @@ class ContainerType < Type
       super(attrs)
    end
 
-end # ContainerType
+end # CollectionType
 end # Definitions
 end # Schemaform

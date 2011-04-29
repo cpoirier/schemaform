@@ -19,35 +19,23 @@
 # =============================================================================================
 
 
-require Schemaform.locate("writable_attribute.rb")
-
-
 #
-# An optional attribute -- one that will show a default value if not specifically set.
+# Base class for all expressions.
 
 module Schemaform
-module Definitions
-class OptionalAttribute < WritableAttribute
+module Expressions
+class Expression
+   include QualityAssurance
+   include Sequel::Inflections
 
-   def initialize( container, definition )
-      super(container, definition)
-   end
-   
-   def optional?()
-      true
-   end
-   
-   def lay_out( into )
-      group = super(into)
-      group.define_field(:__present, schema.boolean_type)
+   def initialize()
    end
    
    def type()
-      supervisor(self).monitor do
-      end
+      fail_unless_overridden( self, :type )
    end
-   
 
-end # OptionalAttribute
-end # Definitions
+
+end # Expression
+end # Expressions
 end # Schemaform

@@ -45,9 +45,9 @@ class Key < Definition
       @attributes.member?(name)
    end
    
-   def resolve( relation_types_as = :reference )
+   def type()
       supervisor.monitor(self) do
-         @attributes.resolve(:reference)
+         @attributes.type()
       end
    end
 

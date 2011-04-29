@@ -26,13 +26,13 @@ module Schemaform
 module Definitions
 class Collection < Definition
 
-   def initialize( member_definition, context, name = nil )
+   def initialize( member_definition, context, name, collection_type )
       super(context, name)
       @member_definition = member_definition
+      @type = collection_type.new(member_definition.is_a?(Type) ? member_definition : member_definition.type)
    end
    
-   attr_reader :member_definition
-   
+   attr_reader :member_definition, :type
    
    
 end # Collection

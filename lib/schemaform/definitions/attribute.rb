@@ -40,8 +40,8 @@ class Attribute < Definition
       tuple.root_tuple
    end
    
-   def resolve( relation_types_as = :reference )
-      fail_unless_overridden( self, :resolve )
+   def type()
+      fail_unless_overridden(self, :type)
    end
    
    def writable?()
@@ -53,8 +53,9 @@ class Attribute < Definition
    end
    
    def recreate_in( tuple )
-      fail_unless_overridden( self, :recreate_in )
+      fail_unless_overridden(self, :recreate_in)
    end
+   
    
    
    # ==========================================================================================

@@ -18,36 +18,21 @@
 #             limitations under the License.
 # =============================================================================================
 
-
-require Schemaform.locate("writable_attribute.rb")
+require Schemaform.locate("expression.rb")
 
 
 #
-# An optional attribute -- one that will show a default value if not specifically set.
+# A single tuple variable as an expression.
 
 module Schemaform
-module Definitions
-class OptionalAttribute < WritableAttribute
+module Expressions
+class Tuple < Expression
 
-   def initialize( container, definition )
-      super(container, definition)
+   def initialize( tuple )
+      
+      
    end
-   
-   def optional?()
-      true
-   end
-   
-   def lay_out( into )
-      group = super(into)
-      group.define_field(:__present, schema.boolean_type)
-   end
-   
-   def type()
-      supervisor(self).monitor do
-      end
-   end
-   
 
-end # OptionalAttribute
-end # Definitions
+end # Tuple
+end # Expressions
 end # Schemaform

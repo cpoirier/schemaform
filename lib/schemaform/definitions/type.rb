@@ -80,6 +80,7 @@ class Type < Definition
    
    def description()
       return full_name.to_s if named?
+      return @base_type.description if @base_type
       return "an unnamed type"
    end
 

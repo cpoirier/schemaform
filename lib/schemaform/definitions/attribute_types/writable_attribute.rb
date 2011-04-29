@@ -42,6 +42,10 @@ class WritableAttribute < Attribute
    def writable?()
       true
    end
+   
+   def type()
+      @definition.type
+   end
 
    
 

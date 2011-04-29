@@ -171,63 +171,6 @@ class Schema < Definition
 
 
 
-   # 
-   # 
-   # def each_entity() 
-   #    @entities.each do |name, entity|
-   #       yield( entity )
-   #    end
-   # end
-   # 
-   # def each_tuple_type()
-   #    @types.each do |name, type|
-   #       resolved = type.resolve()
-   #       yield( resolved ) if resolved.tuple_type?
-   #    end
-   # end
-   # 
-   #    
-   # 
-   # 
-   # #
-   # # Returns the TupleType (type) for a name, or nil.
-   # 
-   # def find_tuple_type( name, fail_if_missing = true )
-   #    return name if name.is_a?(TupleType)
-   #    type_check( :name, name, Symbol )
-   #    
-   #    return @tuple_types[name] if @tuple_types.member?(name)
-   #    return nil unless fail_if_missing
-   #    fail( "unrecognized tuple type [#{name}]" )
-   # end
-   # 
-   # 
-   # #
-   # # Returns an Entity or other named Relation for a name (Symbol), or nil.
-   # 
-   # def find_relation( name, fail_if_missing = true )
-   #    return name if name.is_a?(Relation)
-   #    type_check( :name, name, Symbol )
-   #    
-   #    return @relations[name] if @relations.member?(name)
-   #    return nil unless fail_if_missing
-   #    fail( "unrecognized relation [#{name}]" )
-   # end
-   # 
-   # #
-   # # Returns an Entity (only) for a name (Symbol), or nil.
-   # 
-   # def find_entity( name, fail_if_missing = true )
-   #    return name if name.is_a?(Entity)
-   #    type_check( :name, name, Symbol )
-   #    
-   #    return @entities[name] if @entities.member?(name)
-   #    return schema.find_entity(name, fail_if_missing) if schema
-   #    return nil unless fail_if_missing
-   #    fail( "unrecognized entity [#{name}]" )
-   # end
-   # 
-
 
 
 protected

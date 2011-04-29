@@ -81,22 +81,6 @@ class Entity < Relation
       @enumeration.exists?
    end
    
-   def resolve( as = :relation )
-      supervisor.monitor( as == :relation ? self : [self, as] ) do
-         warn_once( "TODO: key resolution and other entity-level resolution jobs" )
-         warn_once( "TODO: create a relation type" )
-         case as 
-         when :relation
-            @heading.resolve()
-            self
-         when :tuple
-            @heading.resolve()
-         when :reference
-            fail "can reference type go away?"
-            @reference_type.resolve()
-         end
-      end
-   end
    
 
    # ==========================================================================================

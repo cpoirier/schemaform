@@ -28,8 +28,8 @@ module Schemaform
 module Definitions
 class List < Collection
 
-   def initialize( member, context, name = nil )
-      super
+   def initialize( member_definition, context, name = nil )
+      super member_definition, context, name, ListType
    end
 
 end # List

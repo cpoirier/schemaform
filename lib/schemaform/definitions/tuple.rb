@@ -43,14 +43,14 @@ class Tuple < Definition
       define(&block) if block_given?
    end
    
-   attr_reader :expression, :attributes, :definer
+   attr_reader :expression, :attributes, :definer, :type
       
    def default()
       return @default unless @default.nil?
       @default = {}.tap do |pairs|
          each_attribute do |attribute|
             if attribute.writable? then
-               pairs[attribute.name] = attribute.resolve(TypeInfo::SCALAR).default
+               pairs[attribute.name] = attribute.resolve.default
             end
          end
       end
@@ -304,24 +304,9 @@ class Tuple < Definition
    #                                       Type Operations
    # ==========================================================================================
 
-
-   
-   
-
-
-   def resolve( relation_types_as = :reference )
-      supervisor.monitor(self, named?) do
-         each_attribute do |attribute|
-            attribute.resolve(:reference)
-         end
-      end
-      self
-   end
-   
-   
    def dereference( lh_expression, rh_symbol )
       if @attributes.member?(rh_symbol) then
-         Expressions::DottedExpression.new(lh_expression, rh_symbol, @attributes[rh_symbol].resolve(:reference)) 
+         Expressions::DottedExpression.new(lh_expression, rh_symbol, @attributes[rh_symbol].type) 
       else
          nil
       end

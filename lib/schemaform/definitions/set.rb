@@ -28,8 +28,8 @@ module Schemaform
 module Definitions
 class Set < Collection
 
-   def initialize( member, context, name = nil )
-      super
+   def initialize( member_definition, context, name = nil )
+      super member_definition, context, name, SetType
    end
 
 end # Set

@@ -18,32 +18,32 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("component.rb")
+
 
 #
 # A table, possibly nested, (for naming purposes only). 
 
 module Schemaform
 module Layout
-class Table
-   include QualityAssurance
+class Table < Component
 
-   # 
-   # Top-level tables are linked to their source Entity or Relation. Nested tables are linked
-   # to their container table.
-   
-   def initialize( name, context = nil )
-      @context = context
-      @name    = name
-      @fields  = {}
-      @tables  = {}
+   def initialize( context, name, id_name = nil )
+      super(context, name)
+      @id_field = define_field(id_name || :__id, schema.identifier_type)
+      context.define_owner_fields(self)
    end
    
-   attr_reader :context, :name, :fields, :tables
-
-   def define_table( name )
-      @tables[name] = Table.new(self, name)
+   attr_reader :id_field
+   alias :fields :children
+   
+   def define_field( name, type, references_field = nil )
+      add_child Field.new(self, name, type, references_field)
    end
 
+   def define_owner_fields( into )
+      into.define_field(:__parent_id, schema.identifier_type, @id_field)
+   end
 
 end # Table
 end # Layout

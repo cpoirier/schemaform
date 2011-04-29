@@ -52,7 +52,7 @@ module Schemaform
    
    def self.defined?( name )
       load_all()
-      Definitions::Schema.defined?( name )
+      Definitions::Schema.defined?(name)
    end
    
    
@@ -61,35 +61,7 @@ module Schemaform
 
    def self.define( name, &block )
       load_all()
-      Definitions::Schema.define( name, &block ).tap do |schema|
-         Runtime::SchemaClass.build( schema )
-      end
-   end
-   
-   
-   #
-   # Couples your Schema to a Database, but does not connect it. You can then connect
-   # the coupling for reading or writing.
-   #
-   # Settings include:
-   #  :user     => a user name to connect with, if necessary
-   #  :password => a password to connect with, if necessary
-   #  :prefix   => a prefix to add to table names, if multiple systems share the database
-
-   def self.couple( schema, database_url, settings = {} )
-      account  = settings.member?(:user) ? Runtime::Account.new(settings[:user], settings.fetch(:password)) : nil
-      database = Runtime::Database.for(database_url, account)
-      database.couple_with(schema, database_url, settings.fetch(:prefix, nil), account)
-   end 
-
-
-   #
-   # Connects your Schema to a Database in one step.  What you get back is a Connection, 
-   # ready to go. See couple() for details on available settings.
-   
-   def self.connect( schema, database_url, settings = {} )
-      coupling = couple(schema, database_url, settings)
-      coupling.connect()
+      Definitions::Schema.define(name, &block)
    end
    
    
@@ -161,6 +133,7 @@ private
    
    def self.load_all()
       Dir[locate("schemaform/definitions/*.rb")].each{|path| require path}
+      Dir[locate("schemaform/layout/*.rb")].each{|path| require path}
       # require locate("schemaform/expressions.rb")
       # require locate("schemaform/runtime.rb"    )
    end

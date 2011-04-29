@@ -18,24 +18,35 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("component.rb")
+
 
 #
 # Anchors a set of tables to the source Schema definition.
 
 module Schemaform
 module Layout
-class Schema
+class Schema < Component
 
    def initialize( definition )
+      super(nil, definition.name)
       @definition = definition
-      @tables = {}
    end
    
-   attr_reader :definition, :tables
+   attr_reader :definition
+   alias :tables :children
    
    def define_table( name )
-      @tables[name] = Table.new(self, name)
+      add_child Table.new(self, name)
    end
+
+   def define_owner_fields( into )      
+   end
+   
+   def identifier_type()
+      @definition.identifier_type
+   end
+   
 
 end # Schema
 end # Layout

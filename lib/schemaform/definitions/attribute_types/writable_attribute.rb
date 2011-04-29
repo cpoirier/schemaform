@@ -50,10 +50,13 @@ class WritableAttribute < Attribute
    # ==========================================================================================
 
    
-   def lay_out( builder )
-      builder.define_attribute_default( name, resolve().default )
-      super( builder )
+   
+   def lay_out( into )
+      super(into).tap do |group|
+         send_specialized(:lay_out, @definition, group)
+      end
    end
+   
 
    
    

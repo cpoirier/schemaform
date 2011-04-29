@@ -22,31 +22,40 @@ require Schemaform.locate("component.rb")
 
 
 #
-# A field within a table. Unlike attributes in the definition series, fields have only a name
-# and a type.
+# Acts like both a field and a table, for the purpose of grouping a set of fields and subtables 
+# together and applying a prefix to the names.
 
 module Schemaform
 module Layout
-class Field < Component
+class Group < Component
 
-   def initialize( context, name, type, references_field = nil )
-      super( context, name )
-      @type = type
-      @references_field = references_field
+   def initialize( context, name )
+      super(context, name)
+      @fields = {}
    end
    
-   attr_reader :type, :references_field
-   alias :tables :children
-   
-   def define_table( name )
-      add_child Table.new(self, name)
+   attr_reader :fields
+
+   def define_field( name, type, references_field = nil )
+      add_child Field.new(self, name, type, references_field)
    end
    
    def describe( indent = "", name_override = nil, suffix = nil )
-      super indent, name_override, @type.description
+      if @children then
+         case @children.count
+         when 0
+            return
+         when 1
+            @children.each do |name, child|
+               child.describe(indent, @name)
+            end
+         else
+            super
+         end
+      end
    end
    
 
-end # Field
+end # Group
 end # Layout
 end # Schemaform

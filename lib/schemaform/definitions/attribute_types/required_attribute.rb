@@ -33,74 +33,7 @@ class RequiredAttribute < WritableAttribute
       super(container, definition)
    end
    
-
-   def lay_out( into )
-      if Tuple === @definition then
-         @definition.each_attribute do |attribute|
-         end
-      else
-      end
-   end
-   
-
-
 protected
-
-   # ==========================================================================================
-   #                                           Conversion
-   # ==========================================================================================
-   
-   
-   
-
-
-   #
-   # Required scalar attributes are easy to convert.  In the Table, there will be a single
-   # field.  In the TupleClass, we will be adding an accessor.
-   
-   def lay_out_scalar_type( builder, attribute_type )
-      builder.define_field( name, attribute_type, false )
-      builder.define_tuple_reader( name, attribute_type )
-      builder.define_tuple_writer( name, attribute_type )
-   end
-   
-   
-   # 
-   # Required tuple attributes are also easy to convert.  We just add the attribute name to 
-   # the prefix and recurse.  
-   
-   def lay_out_tuple_type( builder, attribute_type )
-      attribute_type.lay_out( builder )
-   end
-   
-   
-   #
-   # Required set attributes require a subtable.  However, at least the member type is always a scalar.
-   
-   def lay_out_set_type( tuple_class, table, field_prefix, attribute_type, &custom_processing )
-      member_type = attribute_type.member_type.resolve(:stored_attribute)
-      
-      builder.define_tuple_reader( name, attribute_type )
-      builder.define_tuple_writer( name, attribute_type )
-      
-      builder.define_table( name ) do
-         if member_type.has_heading? then
-            
-            #
-            # We don't want to build a new TupleClass in this case, so we will have to lay out the
-            # TupleType attributes directly.
-            
-            builder.with_name( "referenced_" + member_type.context.context.heading.name ) do # The referenced Entity's TupleType name
-               member_type.each_attribute do |attribute|
-                  attribute.lay_out( builder )
-               end
-            end
-         else
-            builder.define_field( "member_value", member_type )
-         end
-      end
-   end
-
 
    extend QualityAssurance
    warn_once( "TODO: build the constructor for the TupleClass" )

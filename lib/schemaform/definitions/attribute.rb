@@ -61,31 +61,33 @@ class Attribute < Definition
    #                                           Conversion
    # ==========================================================================================
 
+   #
+   # Lays out the attribute into database primitives. Generally, subclasses should extend, not
+   # override this routine, as it will create a Layout::Group for you to handle your naming.
+   
    def lay_out( into )
-      
+      into.define_group(self.name)
    end
    
-protected
-
-   attr_writer :type
-
-   def lay_out_scalar_type( builder, attribute_type )
-      fail_unless_overridden( self, :lay_out_scalar_type )
+   def lay_out_tuple( tuple, into )
+      tuple.each_attribute do |attribute|
+         attribute.lay_out(into)
+      end
    end
    
-   
-   def lay_out_set_type( builder, attribute_type )
-      fail_unless_overridden( self, :lay_out_set_type )
+   def lay_out_set( set, into )
+      subtable = into.define_table(self.name)
+      send_specialized :lay_out, set.member_definition, subtable
    end
    
-   
-   def lay_out_tuple_type( builder, attribute_type )
-      fail_unless_overridden( self, :lay_out_tuple_type )
+   def lay_out_list( list, into )
+      subtable = into.define_table(self.name)
+      into.define_field(:__first, schema.identifier_type, subtable.id_field)
+      into.define_field(:__last , schema.identifier_type, subtable.id_field)
    end
    
-   
-   def lay_out_relation_type( builder, attribute_type )
-      fail_unless_overridden( self, :lay_out_relation_type )
+   def lay_out_type( type, into )
+      into.define_field(:__value, type)
    end
    
 end # Attribute

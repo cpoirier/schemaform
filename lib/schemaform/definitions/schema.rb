@@ -148,6 +148,27 @@ class Schema < Definition
       @types[:identifier]
    end
    
+   def boolean_type()
+      @types[:boolean]
+   end
+   
+   def couple( database_url, settings = {} )
+      account  = settings.fetch(:account, settings.member?(:user) ? Runtime::Account.new(settings[:user], settings.fetch(:password)) : nil)
+      database = Runtime::Database.for(database_url, account)
+      database.couple_with(self, settings.fetch(:prefix, nil), account)
+   end 
+   
+   def lay_out()
+      if @layout.nil? then
+         @layout = Layout::Schema.new(self)
+         @entities.each do |entity|
+            entity.lay_out( @layout )
+         end
+      end
+
+      @layout
+   end
+
 
 
    # 
@@ -242,28 +263,6 @@ protected
       end
       
       @dsl.instance_eval(&block) if block_given?
-   end
-   
-   
-   
-   
-   
-   # ==========================================================================================
-   #                                           Mapping
-   # ==========================================================================================
-   
-   #
-   # Maps the Schema into runtime representation.
-   
-   def lay_out()
-      if @layout.nil? then
-         @layout = Layout::Schema.new(self)
-         @entities.each do |entity|
-            entity.lay_out( @layout )
-         end
-      end
-      
-      @layout
    end
    
    

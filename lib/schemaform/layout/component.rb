@@ -18,35 +18,52 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("component.rb")
-
 
 #
-# A field within a table. Unlike attributes in the definition series, fields have only a name
-# and a type.
+# A component within the Layout tree.
 
 module Schemaform
 module Layout
-class Field < Component
+class Component
+   include QualityAssurance
 
-   def initialize( context, name, type, references_field = nil )
-      super( context, name )
-      @type = type
-      @references_field = references_field
+   def initialize( context, name )
+      @context  = context
+      @schema   = context ? context.schema : self
+      @name     = name
+      @children = nil
    end
    
-   attr_reader :type, :references_field
-   alias :tables :children
-   
-   def define_table( name )
-      add_child Table.new(self, name)
+   attr_reader :context, :name, :children, :schema
+
+   def define_group( name )
+      add_child Group.new(self, name)
    end
    
+   def add_child( child )
+      @children = {} if @children.nil?
+      @children[child.name] = child
+      child
+   end
+   
+   def define_owner_fields( into )
+      @context.define_owner_fields(into)
+   end
+
    def describe( indent = "", name_override = nil, suffix = nil )
-      super indent, name_override, @type.description
+      puts "#{indent}#{self.class.name.split("::").last}: #{name_override || @name}#{suffix ? " " + suffix : ""}"
+      if @children then
+         child_indent = indent + "   "
+         @children.each do |name, child|
+            child.describe(child_indent)
+         end
+      end
    end
    
-
-end # Field
+   
+end # Component
 end # Layout
 end # Schemaform
+
+require Schemaform.locate("group.rb")
+

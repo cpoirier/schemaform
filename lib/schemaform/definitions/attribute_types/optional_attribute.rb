@@ -37,6 +37,11 @@ class OptionalAttribute < WritableAttribute
       true
    end
    
+   def lay_out( into )
+      group = super(into)
+      group.define_field(:__present, schema.boolean_type)
+   end
+   
 
 end # OptionalAttribute
 end # Definitions

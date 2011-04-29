@@ -189,19 +189,24 @@ class Object
       #
       # Sends a specialized method to this object.  Will follow the class hierarchy for the
       # determinant object, searching for a specialization this object supports.  Failing that, 
-      # the default_specialization will be used, if supplied.
+      # your fallback block will be called with the +determinant+ and +parameters+, or the 
+      # routine will +fail()+.
 
-      def send_specialized( name, default_specialization, determinant, *parameters )
+      def send_specialized( name, determinant, *parameters, &fallback )
          current_class = determinant.is_a?(Class) ? determinant : determinant.class
          while current_class
             specialized = current_class.specialize_method_name(name)
             return self.send( specialized, determinant, *parameters ) if self.responds_to?(specialized)
             current_class = current_class.superclass
          end
-
-         specialized = name + (default_specialization ? "_" + default_specialization : "")
-         return self.send( specialized, determinant, *parameters )
+         
+         if fallback then
+            return fallback.call(determinant, *parameters)
+         else
+            fail "unable to find specialization of #{name} for #{current_class.name}"
+         end
       end
+      
    end
 end
    

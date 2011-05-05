@@ -18,39 +18,26 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("../type.rb")
+require Schemaform.locate("../expression.rb")
 
 
 #
-# Base class for relation types.
+# Captures a method call expression.
 
 module Schemaform
 module Definitions
-class RelationType < Type
+module Expressions
+class MethodCall < Expression
    
-   #
-   # The heading is a required part of the RelationType, and must be a StructuredType.
-   
-   def initialize( heading, attrs )
-      super attrs
-      @heading = heading
+   def initialize( object, symbol, *args )
+      super()
+      @object = object
+      @symbol = symbol
+      @args   = args
    end
    
-   def relation_type?()
-      true
-   end
-   
-   def description()
-      "[" + @heading.description + "]"
-   end
 
-   def each_attribute( &block )
-      @heading.each_attribute( &block )
-   end
-
-
-end # RelationType
+end # MethodCall
+end # Expressions
 end # Definitions
 end # Schemaform
-
-

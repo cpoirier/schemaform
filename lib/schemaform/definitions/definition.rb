@@ -59,8 +59,23 @@ class Definition
       return @path
    end
    
+   def context=( args )
+      if args.is_an?(Array) then
+         @context = args.shift
+         @name    = args.shift
+         @path    = nil
+      else
+         @context = args
+         @name    = nil
+         @path    = nil
+      end
+      
+      type_check(:context, @context, Definition)
+   end
+   
    def path=( path )
       @path = path.flatten
+      @name = @path.last
    end
    
    def name=( name )
@@ -81,7 +96,7 @@ class Definition
    end
    
    def named?()
-      @name || @path
+      !!@name
    end
    
    def root()

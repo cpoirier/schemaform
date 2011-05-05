@@ -18,8 +18,6 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("definition.rb")
-
 
 
 #
@@ -55,6 +53,7 @@ class Type < Definition
    end
 
 
+
    # ==========================================================================================
    
    attr_reader :base_type, :default
@@ -63,6 +62,12 @@ class Type < Definition
    def tuple_type?      ; false ; end
    def relation_type?   ; false ; end
    def structured_type? ; false ; end
+   
+   
+   def variable( production = nil )
+      Variable.new(self, production)
+   end   
+   
    
    #
    # Returns an anonymous wrapper on this type with the supplied constraints.

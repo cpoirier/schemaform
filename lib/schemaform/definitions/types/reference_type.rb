@@ -19,6 +19,7 @@
 # =============================================================================================
 
 require Schemaform.locate("../type.rb")
+require Schemaform.locate("../variable.rb")
 
 
 module Schemaform
@@ -29,7 +30,41 @@ class ReferenceType < Type
       attrs[:base_type] = attrs.fetch(:context).schema.identifier_type unless attrs.member?(:base_type)
       super attrs
       @entity_name = entity_name
+      type_check(:entity_name, entity_name, Symbol)
    end
+   
+   attr_reader :entity_name
+   
+   
+   # ==========================================================================================
+   #                                     Expression Interface
+   # ==========================================================================================
+   
+   class ReferenceTypeVariable < Variable
+
+      def initialize( type, production = nil )
+         super(type, production)
+         p type.schema.full_name
+         p type.entity_name
+         @tuple = type.schema.entities.find(type.entity_name).heading
+      end
+
+      def method_missing( symbol, *args, &block )
+         return super unless @tuple.member?(symbol)
+         @tuple[symbol].variable(Expressions::Accessor.new(self, symbol))
+      end
+      
+   end # TupleVariable
+   
+   
+   def variable( production = nil )
+      ReferenceTypeVariable.new(self, production)
+   end
+   
+   
+   
+   
+   
 
 end # ReferenceType
 end # Definitions

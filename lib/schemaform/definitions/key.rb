@@ -18,7 +18,6 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("definition.rb")
 
 module Schemaform
 module Definitions

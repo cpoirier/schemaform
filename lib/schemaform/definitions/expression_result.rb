@@ -18,36 +18,33 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("component.rb")
-
-
 #
-# Anchors a set of tables to the source Schema definition.
+# Represents a Definition within a running Expression. Note that ExpressionResults are produced 
+# on demand at the result of each subexpression -- they carry with them the expression that 
+# produced them.
 
 module Schemaform
-module Layout
-class Schema < Component
+module Definitions
+class ExpressionResult
+   include QualityAssurance
 
-   def initialize( definition )
-      super(nil, definition.name)
+   def initialize( definition, production = nil )
       @definition = definition
+      @production = production
    end
    
-   attr_reader :definition
-   alias :tables :children
-   
-   def define_table( name )
-      add_child Table.new(self, name)
-   end
+   attr_reader :definition, :production
 
-   def define_owner_fields( into )      
+   def type()
+      @definition.type
    end
    
-   def identifier_type()
-      @definition.identifier_type
+   def *( rhs )
+      result_type = self.type.best_common_type(rhs.type)
+      Variable.new(result_type, BinaryOperator.new(:*, self, rhs))
    end
    
-
-end # Schema
-end # Layout
+end # ExpressionResult
+end # Definitions
 end # Schemaform
+

@@ -18,8 +18,9 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("type.rb")
-# require Schemaform.locate("attribute.rb")
+require Schemaform.locate("thing.rb")
+require Schemaform.locate("types/structured_type.rb")
+require Schemaform.locate("expression_result.rb")
 
 
 #
@@ -27,7 +28,7 @@ require Schemaform.locate("type.rb")
 
 module Schemaform
 module Definitions
-class Tuple < Definition
+class Tuple < Thing
 
    def initialize( context, name = nil, &block )
       super(context, name)
@@ -35,6 +36,7 @@ class Tuple < Definition
       @attributes = {}
       @expression = nil
       @definer    = DefinitionLanguage.new(self)
+      @variable   = TupleVariable.new(self)
 
       @type = StructuredType.new(:context => self) do |name|
          @attributes[name].resolve
@@ -43,8 +45,12 @@ class Tuple < Definition
       define(&block) if block_given?
    end
    
-   attr_reader :expression, :attributes, :definer, :type
-      
+   attr_reader :attributes, :definer, :type
+   
+   def []( name )
+      @attributes[name]
+   end
+   
    def default()
       return @default unless @default.nil?
       @default = {}.tap do |pairs|
@@ -60,13 +66,8 @@ class Tuple < Definition
       @type.description
    end
    
-   def expression()
-      @expression = Expressions::Tuple.new( nil, self ) if @expression.nil?
-      @expression
-   end
-
    def root_tuple()
-      return context.tuple.root_tuple if context.is_a?(Attribute)
+      return context.root_tuple if context.responds_to?(:root_tuple)
       return self
    end
    
@@ -161,11 +162,8 @@ class Tuple < Definition
       # the tuple is created, and thereafter only if you update one of its roots within the
       # tuple itself.
    
-      def static( name, proc = nil, &block )
-         @tuple.instance_eval do
-            check { assert(proc.nil? ^ block.nil?, "expected a Proc or block") }
-            add_attribute name, CachedAttribute.new(self, proc.nil? ? block : proc)
-         end
+      def static( name, *args, &block )
+         derived(name, StaticAttribute, *args, &block)
       end   
       
       
@@ -174,11 +172,8 @@ class Tuple < Definition
       # up to date for you by the system, and you can rely on it being up to date at the
       # end of every transaction. Supply a Proc or a block.  
    
-      def maintained( name, proc = nil, &block )
-         @tuple.instance_eval do
-            check { assert(proc.nil? ^ block.nil?, "expected a Proc or block") }
-            add_attribute name, MaintainedAttribute.new(self, proc.nil? ? block : proc)
-         end
+      def maintained( name, *args, &block )
+         derived(name, MaintainedAttribute, *args, &block)
       end   
       
       
@@ -188,11 +183,8 @@ class Tuple < Definition
       # complexity in a volatile attribute will mean all processing must be moved into
       # Ruby memory, and that can be very expensive. 
    
-      def volatile( name, proc = nil, &block )
-         @tuple.instance_eval do
-            check { assert(proc.nil? ^ block.nil?, "expected a Proc or block") }
-            add_attribute name, VolatileAttribute.new(self, proc.nil? ? block : proc)
-         end
+      def volatile( name, *args, &block )
+         derived(name, VolatileAttribute, *args, &block)
       end   
       
       
@@ -208,7 +200,7 @@ class Tuple < Definition
       # Creates a reference type.
       
       def member_of( entity_name )
-         ReferenceType.new( entity_name, :context => @tuple.schema )
+         Scalar.new(ReferenceType.new(entity_name, :context => @tuple.schema))
       end
       
       
@@ -232,32 +224,75 @@ class Tuple < Definition
       
       def one_of( *values )
          if values.length == 1 && values[0].is_a?(Hash) then
-            CodedType.new(values[0], :context => @tuple)
+            Scalar.new(CodedType.new(values[0], :context => @tuple))
          else
-            EnumeratedType.new(values, :context => @tuple)
+            Scalar.new(EnumeratedType.new(values, :context => @tuple))
          end
       end
       
       
+   private
+   
+      #
+      # Creates a derived field of the appropriate class.
+      
+      def derived( name, clas, *args, &block )
+         modifiers = args.first.is_a?(Hash) ? args.shift : {}
+         proc      = block || args.shift
+         formula   = Formula.new(proc, modifiers, @tuple){|body, production| body.call(@tuple.root_tuple.variable(production))}
+
+         @tuple.instance_eval do
+            add_attribute name, clas.new(self, formula)
+         end
+      end
+      
+   
       #
       # Used to process an attribute definition into a Definition.
 
       def definition_for( name, modifiers, &block )
-         if block then
+         if name.is_a?(Thing) then
+            return name
+         elsif block then
             Tuple.new(@tuple, nil, &block)
          elsif name.is_a?(Hash) then
             one_of(name)
          elsif name.is_an?(Array) then
             one_of(*name)
          elsif @tuple.schema.types.member?(name) then
-            @tuple.schema.types.build(name, modifiers)
+            Scalar.new(@tuple.schema.types.build(name, modifiers), @tuple)
          elsif @tuple.schema.tuples.member?(name) then
             @tuple.schema.tuples.find(name)
          else
-            ReferenceType.new(name, :context => @tuple.schema)
+            Reference.new(ReferenceType.new(name, :context => @tuple.schema), @tuple)
          end
       end
       
+   end
+   
+   
+   
+   
+   # ==========================================================================================
+   #                                     Expression Interface
+   # ==========================================================================================
+   
+   class TupleVariable < ExpressionResult
+
+      def initialize( definition, production = nil )
+         super(definition, production)
+      end
+
+      def method_missing( symbol, *args, &block )
+         return super unless @definition.member?(symbol)
+         @definition[symbol].variable(Expressions::Accessor.new(self, symbol))
+      end
+      
+   end # TupleVariable
+   
+   
+   def variable( production = nil )
+      production.nil? ? @variable : TupleVariable.new(self, production)
    end
    
    

@@ -18,6 +18,8 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("../type.rb")
+
 
 #
 # An internal type that can stand in for any type, include void.

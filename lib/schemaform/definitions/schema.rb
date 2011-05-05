@@ -158,17 +158,6 @@ class Schema < Definition
       database.couple_with(self, settings.fetch(:prefix, nil), account)
    end 
    
-   def lay_out()
-      if @layout.nil? then
-         @layout = Layout::Schema.new(self)
-         @entities.each do |entity|
-            entity.lay_out( @layout )
-         end
-      end
-
-      @layout
-   end
-
 
 
 

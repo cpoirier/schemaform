@@ -18,39 +18,36 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("../type.rb")
-
+require Schemaform.locate("expression_result.rb")
 
 #
-# Base class for relation types.
+# A simple, typed ExpressionResult.
 
 module Schemaform
 module Definitions
-class RelationType < Type
-   
-   #
-   # The heading is a required part of the RelationType, and must be a StructuredType.
-   
-   def initialize( heading, attrs )
-      super attrs
-      @heading = heading
+class Variable < ExpressionResult
+
+   def initialize( type, production = nil )
+      super(type, production)
+      type_check(:type, type, Type)
    end
    
-   def relation_type?()
-      true
+   alias type definition
+   
+   def apply(method)
+      fail
    end
    
-   def description()
-      "[" + @heading.description + "]"
+   def *( lhs )
+      
+      p lhs.class.name
    end
 
-   def each_attribute( &block )
-      @heading.each_attribute( &block )
+   def method_missing( symbol, *args, &block )
+      fail "unrecognized variable #{symbol}"
    end
+   
 
-
-end # RelationType
+end # Variable
 end # Definitions
 end # Schemaform
-
-

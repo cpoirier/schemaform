@@ -18,52 +18,21 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("method_call.rb")
 
-#
-# A component within the Layout tree.
+
 
 module Schemaform
-module Layout
-class Component
-   include QualityAssurance
+module Definitions
+module Expressions
+class Accessor < MethodCall
 
-   def initialize( context, name )
-      @context  = context
-      @schema   = context ? context.schema : self
-      @name     = name
-      @children = nil
+   def initialize( object, symbol )
+      super
    end
    
-   attr_reader :context, :name, :children, :schema
 
-   def define_group( name )
-      add_child Group.new(self, name)
-   end
-   
-   def add_child( child )
-      @children = {} if @children.nil?
-      @children[child.name] = child
-      child
-   end
-   
-   def define_owner_fields( into )
-      @context.define_owner_fields(into)
-   end
-
-   def describe( indent = "", name_override = nil, suffix = nil )
-      puts "#{indent}#{self.class.name.split("::").last}: #{name_override || @name}#{suffix ? " " + suffix : ""}"
-      if @children then
-         child_indent = indent + "   "
-         @children.each do |name, child|
-            child.describe(child_indent)
-         end
-      end
-   end
-   
-   
-end # Component
-end # Layout
+end # Accessor
+end # Expressions
+end # Definitions
 end # Schemaform
-
-require Schemaform.locate("group.rb")
-

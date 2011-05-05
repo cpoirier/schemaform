@@ -18,39 +18,46 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("../type.rb")
+require Schemaform.locate("component.rb")
 
 
 #
-# Base class for relation types.
+# Acts like both a field and a table, for the purpose of grouping a set of fields and subtables 
+# together and applying a prefix to the names.
 
 module Schemaform
-module Definitions
-class RelationType < Type
-   
-   #
-   # The heading is a required part of the RelationType, and must be a StructuredType.
-   
-   def initialize( heading, attrs )
-      super attrs
-      @heading = heading
-   end
-   
-   def relation_type?()
-      true
-   end
-   
-   def description()
-      "[" + @heading.description + "]"
-   end
+module Layout
+module SQL
+class Group < Component
 
-   def each_attribute( &block )
-      @heading.each_attribute( &block )
+   def initialize( context, name )
+      super(context, name)
+      @fields = {}
    end
+   
+   attr_reader :fields
 
+   def define_field( name, type, references_field = nil )
+      add_child Field.new(self, name, type, references_field)
+   end
+   
+   # def describe( indent = "", name_override = nil, suffix = nil )
+   #    if @children then
+   #       case @children.count
+   #       when 0
+   #          return
+   #       when 1
+   #          @children.each do |name, child|
+   #             child.describe(indent, @name)
+   #          end
+   #       else
+   #          super
+   #       end
+   #    end
+   # end
+   
 
-end # RelationType
-end # Definitions
+end # Group
+end # SQL
+end # Layout
 end # Schemaform
-
-

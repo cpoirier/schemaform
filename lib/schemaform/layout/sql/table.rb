@@ -18,21 +18,35 @@
 #             limitations under the License.
 # =============================================================================================
 
-
-require Schemaform.locate("derived_attribute.rb")
+require Schemaform.locate("component.rb")
 
 
 #
-# A derived attribute that is cached for some length of time.
+# A table, possibly nested, (for naming purposes only). 
 
 module Schemaform
-module Definitions
-class CachedAttribute < DerivedAttribute
+module Layout
+module SQL
+class Table < Component
 
-   def initialize( tuple, proc = nil, &block )
-      super( tuple, proc || block )
+   def initialize( context, name, id_name = nil )
+      super(context, name)
+      @id_field = define_field(id_name || :__id, schema.identifier_type)
+      context.define_owner_fields(self)
    end
    
-end # CachedAttribute
-end # Definitions
+   attr_reader :id_field
+   alias :fields :children
+   
+   def define_field( name, type, references_field = nil )
+      add_child Field.new(self, name, type, references_field)
+   end
+
+   def define_owner_fields( into )
+      into.define_field(:__parent_id, schema.identifier_type, @id_field)
+   end
+
+end # Table
+end # SQL
+end # Layout
 end # Schemaform

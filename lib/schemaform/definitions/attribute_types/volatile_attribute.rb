@@ -29,10 +29,6 @@ module Schemaform
 module Definitions
 class VolatileAttribute < DerivedAttribute
 
-   def initialize( tuple, modifiers = {}, proc = nil, &block )
-      super(tuple, modifiers, proc || block)
-   end
-   
 
 end # MaintainedAttribute
 end # Definitions

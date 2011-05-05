@@ -20,7 +20,7 @@
 
 
 #
-# A helper class that ensures type resolution errors are noticed and reported.
+# A helper class that ensures Expression resolution errors are noticed and reported.
 
 module Schemaform
 module Definitions
@@ -40,10 +40,10 @@ class ResolutionSupervisor
       puts "monitoring #{description}"
       assert( !@entries.member?(scope), "detected loop while trying to resolve #{description}" )
       return annotate_errors( annotation ) do
-         check( @entries.push_and_pop(scope) { yield() } ) do |type|
-            assert( type.exists?, "unable to resolve type for [#{description}]" )
-            type_check( :type, type, Type )
-            warn_once( "DEBUG: #{description} resolved to #{class_name_for(type)} #{type.description}" ) if report_worthy
+         check( @entries.push_and_pop(scope) { yield() } ) do |result|
+            assert( result.exists?, "unable to resolve expression for [#{description}]" )
+            type_check( :result, result, ExpressionResult )
+            warn_once( "DEBUG: #{description} resolved to #{class_name_for(result.type)} #{type.description}" ) if report_worthy
          end
       end
    end

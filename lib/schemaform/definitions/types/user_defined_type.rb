@@ -18,6 +18,8 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("../type.rb")
+
 
 #
 # Represents all user-defined types that have an existing type name as base type. All user-

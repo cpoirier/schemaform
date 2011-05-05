@@ -18,39 +18,20 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("../type.rb")
-
 
 #
-# Base class for relation types.
+# The base class for things that capture the structure of a Ruby Formula.
 
 module Schemaform
 module Definitions
-class RelationType < Type
-   
-   #
-   # The heading is a required part of the RelationType, and must be a StructuredType.
-   
-   def initialize( heading, attrs )
-      super attrs
-      @heading = heading
-   end
-   
-   def relation_type?()
-      true
-   end
-   
-   def description()
-      "[" + @heading.description + "]"
-   end
+class Expression
 
-   def each_attribute( &block )
-      @heading.each_attribute( &block )
+   def initialize()
    end
+   
 
-
-end # RelationType
+end # Expression
 end # Definitions
 end # Schemaform
 
-
+Dir[Schemaform.locate("expressions/*.rb")].each{|path| require path}

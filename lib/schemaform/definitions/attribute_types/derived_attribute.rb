@@ -23,26 +23,14 @@
 module Schemaform
 module Definitions
 class DerivedAttribute < Attribute
-   def initialize( tuple, modifiers = {}, proc = nil, &block )
-      super(tuple)
-      @modifiers = modifiers
-      @forumla   = proc || block
+   def initialize( tuple, formula )
+      super(tuple, formula)
    end
 
-   def recreate_in( tuple )
-      self.class.new( tuple, @modifiers, @formula ).tap do |recreation|
-         recreation.name = name
-      end
-   end
+   alias formula definition
    
    def type()
-      supervisor.monitor(self) do
-         annotate_errors(:attribute => full_name()) do 
-            result_expression = @block.call(root_tuple.expression)
-            type_check(:result_expression, result_expression, Expressions::Expression)
-            result_expression.type()
-         end
-      end   
+      formula.type
    end
    
    

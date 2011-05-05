@@ -19,21 +19,28 @@
 # =============================================================================================
 
 require Schemaform.locate("definition.rb")
+require Schemaform.locate("expression_result.rb")
 
 
 #
 # An Attribute in a TupleType.
-#
-# Scalar attributes 
 
 module Schemaform
 module Definitions
 class Attribute < Definition
    
-   def initialize( tuple )
+   def initialize( tuple, definition )
       super(tuple)
+      @definition = definition
+      if @definition.named? && @definition.is_a?(Tuple) then
+         p @definition.full_name
+      end
+         
+      @definition.context = self unless @definition.named?
    end
 
+   attr_reader :definition
+   
    alias tuple context
    
    def root_tuple()
@@ -53,44 +60,42 @@ class Attribute < Definition
    end
    
    def recreate_in( tuple )
-      fail_unless_overridden(self, :recreate_in)
-   end
-   
-   
-   
-   # ==========================================================================================
-   #                                           Conversion
-   # ==========================================================================================
-
-   #
-   # Lays out the attribute into database primitives. Generally, subclasses should extend, not
-   # override this routine, as it will create a Layout::Group for you to handle your naming.
-   
-   def lay_out( into )
-      into.define_group(self.name)
-   end
-   
-   def lay_out_tuple( tuple, into )
-      tuple.each_attribute do |attribute|
-         attribute.lay_out(into)
+      self.class.new( tuple, @definition ).tap do |recreation|
+         recreation.name = name
       end
    end
    
-   def lay_out_set( set, into )
-      subtable = into.define_table(self.name)
-      send_specialized :lay_out, set.member_definition, subtable
+   def tuple_variable()
+      @tuple.variable()
+   end
+
+   
+   
+   # ==========================================================================================
+   #                                     Expression Interface
+   # ==========================================================================================
+   
+   class AttributeVariable < ExpressionResult
+
+      def initialize( definition, production = nil )
+         super(definition, production)
+      end
+
+      def method_missing( symbol, *args, &block )
+         handler = @definition.definition.variable(ImpliedContext.new(self))
+         handler.send(symbol, *args, &block)
+      end
+   end # AttributeVariable
+   
+   
+   def variable( production )
+      AttributeVariable.new(self, production)
    end
    
-   def lay_out_list( list, into )
-      subtable = into.define_table(self.name)
-      into.define_field(:__first, schema.identifier_type, subtable.id_field)
-      into.define_field(:__last , schema.identifier_type, subtable.id_field)
-   end
-   
-   def lay_out_type( type, into )
-      into.define_field(:__value, type)
-   end
-   
+
+
+
+
 end # Attribute
 end # Definitions
 end # Schemaform

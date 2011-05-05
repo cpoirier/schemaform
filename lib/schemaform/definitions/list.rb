@@ -32,6 +32,51 @@ class List < Collection
       super member_definition, context, name, ListType
    end
 
+
+   # ==========================================================================================
+   #                                     Expression Interface
+   # ==========================================================================================
+   
+   # class ListVariable < Collection::CollectionVariable 
+   # 
+   #    def initialize( definition, production = nil )
+   #       super(definition, production)
+   #    end
+   #    
+   #    def first!()
+   #       ListMemberVariable.new(self, Expressions::FirstInListExpression(self))
+   #    end
+   #    
+   #    def last!()
+   #       ListMemberVariable.new(self, Expressions::LastInListExpression(self))
+   #    end
+   # 
+   #    def method_missing( symbol, *args, &block )
+   #       handler = @definition.definition.variable(ImpliedContext.new(self))
+   #       handler.send(symbol, *args, &block)
+   #    end
+   # end # AttributeVariable
+   # 
+   # class ListMemberVariable < ExpressionResult
+   #    def initialize( list_variable, production = nil )
+   #       super(list_variable.definition, production)
+   #       @list_variable = list_variable
+   #    end
+   #    
+   #    def next!()
+   #       fail
+   #    end
+   #    
+   #    def previous!()
+   #       fail
+   #    end      
+   # end
+   # 
+   # def variable( production )
+   #    ListVariable.new(self, production)
+   # end
+
+
 end # List
 end # Definitions
 end # Schemaform

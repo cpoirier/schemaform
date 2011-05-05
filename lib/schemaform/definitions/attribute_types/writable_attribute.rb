@@ -28,16 +28,10 @@ module Definitions
 class WritableAttribute < Attribute
 
    def initialize( container, definition )
-      super(container)
-      @definition = definition
+      super(container, definition)
+      type_check(:definition, definition, Thing)
    end
    
-   
-   def recreate_in( tuple )
-      self.class.new( tuple, @definition ).tap do |recreation|
-         recreation.name = name
-      end
-   end
    
    def writable?()
       true
@@ -55,13 +49,6 @@ class WritableAttribute < Attribute
 
    
    
-   def lay_out( into )
-      super(into).tap do |group|
-         send_specialized(:lay_out, @definition, group)
-      end
-   end
-   
-
    
    
 end # WritableAttribute

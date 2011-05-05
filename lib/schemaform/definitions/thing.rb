@@ -18,44 +18,28 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("component.rb")
-
 
 #
-# Acts like both a field and a table, for the purpose of grouping a set of fields and subtables 
-# together and applying a prefix to the names.
+# Base type for things that can be held in a variable or attribute or other addressable 
+# container.
 
 module Schemaform
-module Layout
-class Group < Component
+module Definitions
+class Thing < Definition
 
-   def initialize( context, name )
+   def initialize( context, name = nil )
       super(context, name)
-      @fields = {}
    end
    
-   attr_reader :fields
-
-   def define_field( name, type, references_field = nil )
-      add_child Field.new(self, name, type, references_field)
+   def type()
+      fail_unless_overridden self, :type
    end
    
-   # def describe( indent = "", name_override = nil, suffix = nil )
-   #    if @children then
-   #       case @children.count
-   #       when 0
-   #          return
-   #       when 1
-   #          @children.each do |name, child|
-   #             child.describe(indent, @name)
-   #          end
-   #       else
-   #          super
-   #       end
-   #    end
-   # end
+   def variable(production = nil)
+      fail_unless_overridden self, :variable
+   end
    
 
-end # Group
-end # Layout
+end # Thing
+end # Definitions
 end # Schemaform

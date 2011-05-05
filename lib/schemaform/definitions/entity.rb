@@ -250,25 +250,6 @@ class Entity < Relation
    
    
    
-
-   # ==========================================================================================
-   #                                           Conversion
-   # ==========================================================================================
-
-   
-   #
-   # Maps the Entity into runtime representations.
-   
-   def lay_out( into )
-      table = into.define_table(name)
-      @heading.each_attribute do |attribute|
-         attribute.lay_out(table)
-      end
-   end
-   
-   
-   
-   
    
    
 

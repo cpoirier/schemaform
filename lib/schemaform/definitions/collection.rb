@@ -18,13 +18,15 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("thing.rb")
+
 
 #
 # Base class for things that contain other things.
 
 module Schemaform
 module Definitions
-class Collection < Definition
+class Collection < Thing
 
    def initialize( member_definition, context, name, collection_type )
       super(context, name)
@@ -33,6 +35,30 @@ class Collection < Definition
    end
    
    attr_reader :member_definition, :type
+   
+   
+   
+   # # ==========================================================================================
+   # #                                     Expression Interface
+   # # ==========================================================================================
+   # 
+   # class CollectonVariable < Variable
+   # 
+   #    def initialize( definition, production = nil )
+   #       super(definition, production)
+   #    end
+   # 
+   #    def method_missing( symbol, *args, &block )
+   #       handler = @definition.definition.variable(ImpliedContext.new(self))
+   #       handler.send(symbol, *args, &block)
+   #    end
+   # end # AttributeVariable
+   # 
+   # 
+   # def variable( production )
+   #    AttributeVariable.new(self, production)
+   # end
+   # 
    
    
 end # Collection

@@ -18,6 +18,8 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("../type.rb")
+
 
 #
 # Base class for container types.

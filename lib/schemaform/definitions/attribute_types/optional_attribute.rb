@@ -36,18 +36,33 @@ class OptionalAttribute < WritableAttribute
    def optional?()
       true
    end
-   
-   def lay_out( into )
-      group = super(into)
-      group.define_field(:__present, schema.boolean_type)
-   end
-   
-   def type()
-      supervisor(self).monitor do
-      end
-   end
-   
 
+
+   # ==========================================================================================
+   #                                     Expression Interface
+   # ==========================================================================================
+   
+   class OptionalAttributeVariable < AttributeVariable
+
+      #
+      # Builds an expression that branches based on whether or not a value has been stored in the
+      # attribute (default values will be present otherwise).
+
+      def present?( if_present, otherwise = nil )
+         result_type = if_present.type
+         result_type = result_type.best_common_type(otherwise.type) if otherwise
+         
+         result_type.variable(Expressions::PresentCheck.new(self, if_present, otherwise))
+      end
+
+   end # AttributeVariable
+   
+   
+   def variable( production )
+      OptionalAttributeVariable.new(self, production)
+   end
+   
+   
 end # OptionalAttribute
 end # Definitions
 end # Schemaform

@@ -18,39 +18,21 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("../type.rb")
+require Schemaform.locate("scalar.rb")
 
 
 #
-# Base class for relation types.
+# A reference to a Tuple in an Entity.
 
 module Schemaform
 module Definitions
-class RelationType < Type
-   
-   #
-   # The heading is a required part of the RelationType, and must be a StructuredType.
-   
-   def initialize( heading, attrs )
-      super attrs
-      @heading = heading
-   end
-   
-   def relation_type?()
-      true
-   end
-   
-   def description()
-      "[" + @heading.description + "]"
-   end
+class Reference < Scalar
 
-   def each_attribute( &block )
-      @heading.each_attribute( &block )
+   def initialize(reference_type, context)
+      super(reference_type, context)
    end
 
 
-end # RelationType
+end # Reference
 end # Definitions
 end # Schemaform
-
-

@@ -29,18 +29,10 @@ module Schemaform
 module Definitions
 class MaintainedAttribute < DerivedAttribute
 
-   def initialize( tuple, modifiers = {}, proc = nil, &block )
-      super(tuple, modifiers, proc || block)
+   def initialize( tuple, formula )
+      super(tuple, formula)
    end
    
-
-   def lay_out( into )
-      super(into).tap do |group|
-         send_specialized(:lay_out, type(), group)
-      end
-   end
-
-
 
 end # MaintainedAttribute
 end # Definitions

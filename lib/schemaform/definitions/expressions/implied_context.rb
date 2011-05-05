@@ -18,35 +18,21 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("component.rb")
+require Schemaform.locate("../expression.rb")
 
 
 #
-# A field within a table. Unlike attributes in the definition series, fields have only a name
-# and a type.
+# Provides an implied context within a larger expression.
 
 module Schemaform
-module Layout
-class Field < Component
+module Definitions
+class ImpliedContext < Expression
 
-   def initialize( context, name, type, references_field = nil )
-      super( context, name )
-      @type = type
-      @references_field = references_field
+   def initialize( implied )
+      super()
+      @implied = implied
    end
-   
-   attr_reader :type, :references_field
-   alias :tables :children
-   
-   def define_table( name )
-      add_child Table.new(self, name)
-   end
-   
-   def describe( indent = "", name_override = nil, suffix = nil )
-      super indent, name_override, @type.description
-   end
-   
 
-end # Field
-end # Layout
+end # ImpliedContext
+end # Definitions
 end # Schemaform

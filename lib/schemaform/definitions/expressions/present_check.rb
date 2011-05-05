@@ -18,24 +18,24 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("../expression.rb")
+
 
 #
-# Base class for all expressions.
+# Indicates the present? flag of the source should be checked.
 
 module Schemaform
+module Definitions
 module Expressions
-class Expression
-   include QualityAssurance
-   include Sequel::Inflections
+class PresentCheck < Expression
 
-   def initialize()
-   end
-   
-   def type()
-      fail_unless_overridden( self, :type )
+   def initialize( source, if_present, otherwise )
+      super(source)
+      @if_present = if_present
+      @otherwise  = otherwise
    end
 
-
-end # Expression
+end # PresentCheck
 end # Expressions
+end # Definitions
 end # Schemaform

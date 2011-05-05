@@ -132,14 +132,16 @@ private
    # Loads all Schemaform code into memory.
    
    def self.load_all()
-      Dir[locate("schemaform/definitions/*.rb")].each{|path| require path}
-      Dir[locate("schemaform/layout/*.rb")].each{|path| require path}
-      # require locate("schemaform/expressions.rb")
-      # require locate("schemaform/runtime.rb"    )
+      ["definitions", "layout"].each do |directory|
+         Dir[Schemaform.locate("schemaform/#{directory}/*.rb")].each do |path|
+            require path
+         end
+      end
    end
    
    
 end # Schemaform
+
 
 
 

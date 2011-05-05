@@ -18,39 +18,19 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("../type.rb")
+
+require Schemaform.locate("static_attribute.rb")
 
 
 #
-# Base class for relation types.
+# A maintained attribute that is only updated when the sources in the same record are updated.
 
 module Schemaform
 module Definitions
-class RelationType < Type
-   
-   #
-   # The heading is a required part of the RelationType, and must be a StructuredType.
-   
-   def initialize( heading, attrs )
-      super attrs
-      @heading = heading
-   end
-   
-   def relation_type?()
-      true
-   end
-   
-   def description()
-      "[" + @heading.description + "]"
-   end
-
-   def each_attribute( &block )
-      @heading.each_attribute( &block )
-   end
+class StaticAttribute < MaintainedAttribute
 
 
-end # RelationType
+
+end # StaticAttribute
 end # Definitions
 end # Schemaform
-
-

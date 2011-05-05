@@ -261,7 +261,7 @@ def define_example_cms_schema()
                end
             end
             
-            volatile   :tail_rules, lambda {|c| c.access_control.effective_rules.last }
+            volatile   :tail_rules, lambda {|c| c.access_control.effective_rules.last! }
             maintained :privileges, lambda {|c| c.access_control.tail_rules.effective_members }
          end
       end

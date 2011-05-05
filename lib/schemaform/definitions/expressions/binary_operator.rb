@@ -18,33 +18,26 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("component.rb")
+require Schemaform.locate("../expression.rb")
 
 
 #
-# A table, possibly nested, (for naming purposes only). 
+# Indicates the present? flag of the source should be checked.
 
 module Schemaform
-module Layout
-class Table < Component
+module Definitions
+module Expressions
+class BinaryOperator < Expression
 
-   def initialize( context, name, id_name = nil )
-      super(context, name)
-      @id_field = define_field(id_name || :__id, schema.identifier_type)
-      context.define_owner_fields(self)
-   end
-   
-   attr_reader :id_field
-   alias :fields :children
-   
-   def define_field( name, type, references_field = nil )
-      add_child Field.new(self, name, type, references_field)
+   def initialize( operator, lh_object, rh_object )
+      super()
+      
+      @operator  = operator
+      @lh_object = lh_object
+      @rh_object = rh_object
    end
 
-   def define_owner_fields( into )
-      into.define_field(:__parent_id, schema.identifier_type, @id_field)
-   end
-
-end # Table
-end # Layout
+end # BinaryOperator
+end # Expressions
+end # Definitions
 end # Schemaform

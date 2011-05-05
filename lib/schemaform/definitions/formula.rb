@@ -18,39 +18,50 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("../type.rb")
 
 
 #
-# Base class for relation types.
+# A raw expression within the Definition, not yet processed into real Expressions. Really, it's
+# a way of bringing the Ruby Proc into the Definition tree. I know—I need help.
 
 module Schemaform
 module Definitions
-class RelationType < Type
-   
-   #
-   # The heading is a required part of the RelationType, and must be a StructuredType.
-   
-   def initialize( heading, attrs )
-      super attrs
-      @heading = heading
-   end
-   
-   def relation_type?()
-      true
-   end
-   
-   def description()
-      "[" + @heading.description + "]"
-   end
+class Formula < Thing
 
-   def each_attribute( &block )
-      @heading.each_attribute( &block )
+   def initialize( proc, modifiers = {}, context = nil, name = nil, &launcher )
+      super(context, name)
+      type_check(:proc, proc, Proc)
+      
+      @modifiers         = modifiers
+      @raw_expression    = proc
+      @expression_result = nil
+      @launcher          = launcher
    end
+   
+   attr_reader :raw_expression, :modifiers
+      
+   def type()
+      variable.type
+   end
+   
+   def variable( production = nil )
+      if @expression_tree.nil? then
+         supervisor.monitor(self) do 
+            if @launcher then
+               @expression_tree = @launcher.call(@raw_expression, production)
+            else
+               @expression_tree = @raw_expression.call(production)
+            end
+         end
+      end
+      
+      @expression_tree
+   end
+   
+   
 
 
-end # RelationType
+end # Formula
 end # Definitions
 end # Schemaform
-
 

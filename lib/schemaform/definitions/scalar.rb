@@ -18,21 +18,28 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("expression.rb")
-
 
 #
-# A single tuple variable as an expression.
+# A scalar-typed thing for use in an Attribute or variable.
 
 module Schemaform
-module Expressions
-class Tuple < Expression
+module Definitions
+class Scalar < Thing
 
-   def initialize( tuple )
-      
-      
+   def initialize( type, context = nil, name = nil )
+      super(context || type.context, name)
+      type_check(:type, type, Type)
+      @type = type
+   end
+   
+   attr_reader :type
+
+   def variable( production = nil )
+      type.variable(production)
    end
 
-end # Tuple
-end # Expressions
+
+
+end # Scalar
+end # Definitions
 end # Schemaform

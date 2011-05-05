@@ -50,6 +50,10 @@ class StructuredType < Type
       true
    end
    
+   def simple?
+      @members.length == 1
+   end
+   
    def description()
       "{" + @members.collect{|name, type| ":" + name.to_s + " => " + type.description}.join(", ") + "}"
    end

@@ -35,6 +35,7 @@ class CollectionType < Type
       attrs[:context] = element_type.context unless attrs.member?(:context) || attrs.member?(:base_type)
       super(attrs)
    end
+   
 
 end # CollectionType
 end # Definitions

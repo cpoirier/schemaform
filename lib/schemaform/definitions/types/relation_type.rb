@@ -18,7 +18,7 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("../type.rb")
+require Schemaform.locate("set_type.rb")
 
 
 #
@@ -26,14 +26,15 @@ require Schemaform.locate("../type.rb")
 
 module Schemaform
 module Definitions
-class RelationType < Type
+class RelationType < SetType
    
    #
    # The heading is a required part of the RelationType, and must be a StructuredType.
    
    def initialize( heading, attrs )
-      super attrs
+      type_check(:heading, heading, StructuredType)
       @heading = heading
+      super
    end
    
    def relation_type?()

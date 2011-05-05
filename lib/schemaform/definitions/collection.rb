@@ -31,10 +31,18 @@ class Collection < Thing
    def initialize( member_definition, context, name, collection_type )
       super(context, name)
       @member_definition = member_definition
-      @type = collection_type.new(member_definition.is_a?(Type) ? member_definition : member_definition.type)
+      @collection_type   = collection_type
    end
    
-   attr_reader :member_definition, :type
+   attr_reader :member_definition
+   
+   def type()
+      if @type.nil? then
+         @type = @collection_type.new(@member_definition.is_a?(Type) ? @member_definition : @member_definition.type)
+      end
+      
+      @type
+   end
    
    
    

@@ -329,7 +329,7 @@ class Exception
       # Produces a backtrace with file paths relative to the specified directory.
 
       def relative_backtrace( relative_to, skip_qa_routines = true )
-         relative_to = File.expand_path(relative_to.sub(/\/$/, "")) + "/"
+         relative_to = File.expand_path(relative_to.sub(/\/$/, "")) + "/" if relative_to
 
          relative_backtrace = []
          backtrace.each do |line|
@@ -359,7 +359,7 @@ class Exception
             message   = failsafe_message
             backtrace = relative_backtrace(relative_to, skip_qa_routines)
          
-            stream.puts( "=" * message.length )
+            stream.puts( "=" * (message.length > 60 ? message.length : 60) )
             stream.puts heading
             stream.puts message
             print_data( stream ) if respond_to?("print_data")

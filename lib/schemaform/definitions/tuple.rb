@@ -90,6 +90,17 @@ class Tuple < Thing
    def width()
       @attributes.length
    end   
+   
+   def project(*names)
+      Tuple.new(schema).tap do |projection|
+         names.each do |name|
+            check{ assert(@attributes.member?(name), "no such attribute [#{name}]") }
+            if @attributes.member?(name) then
+               projection.add_attribute name, @attributes[name].recreate_in(projection)
+            end
+         end
+      end
+   end
       
    
    # ==========================================================================================
@@ -271,8 +282,7 @@ class Tuple < Thing
    end
    
    
-   
-   
+      
    # ==========================================================================================
    #                                     Expression Interface
    # ==========================================================================================
@@ -281,6 +291,10 @@ class Tuple < Thing
 
       def initialize( definition, production = nil )
          super(definition, production)
+      end
+      
+      def related( entity_name, link_attribute = nil )
+         @definition.schema.entities.find(entity_name).variable(Expressions::RelatedTuples.new(self, entity_name, link_attribute))
       end
 
       def method_missing( symbol, *args, &block )

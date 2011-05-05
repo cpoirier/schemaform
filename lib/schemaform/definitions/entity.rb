@@ -30,9 +30,8 @@ module Definitions
 class Entity < Relation
       
    def initialize( name, base_entity, schema, &block )
-      super( base_entity || schema, name )
+      super( Tuple.new(self), base_entity || schema, name )
 
-      @heading     = nil
       @base_entity = base_entity
       @keys        = {}
       @primary_key = nil
@@ -247,6 +246,7 @@ class Entity < Relation
       #    end
       # end
    end
+   
    
    
    

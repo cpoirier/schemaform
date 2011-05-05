@@ -18,6 +18,8 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("set.rb"  )
+require Schemaform.locate("tuple.rb")
 
 
 #
@@ -25,15 +27,44 @@
 
 module Schemaform
 module Definitions
-class Relation < Definition
+class Relation < Set
 
-   def initialize( schema, name )
-      super(schema, name)
+   def initialize( heading, schema, name )
+      super(heading, schema, name, RelationType)
+      type_check(:heading, heading, Tuple)
    end
    
    def heading()
-      fail_unless_overridden self, :heading
+      @member_definition
    end
+   
+   
+   def project( *attributes )
+      Relation.new(schema, nil, heading.project(*attributes))
+   end
+
+
+
+   # ==========================================================================================
+   #                                     Expression Interface
+   # ==========================================================================================
+   
+   class RelationVariable < ExpressionResult
+      def initialize( definition, production = nil )
+         super(definition, production)
+      end
+      
+      def method_missing( symbol, *args, &block )
+         return super unless @definition.heading.member?(symbol)
+         @definition.project(symbol).variable(Expressions::Projection.new(self, symbol))
+      end
+   end
+   
+   def variable( production = nil )
+      RelationVariable.new(self, production)
+   end
+   
+   
 
 end # Relation
 end # Definitions

@@ -45,6 +45,10 @@ class ScalarType < Type
       true
    end
    
+   def simple?()
+      true
+   end
+   
    def description()
       return name.to_s if named?
       return @base_type.description if @base_type.exists?

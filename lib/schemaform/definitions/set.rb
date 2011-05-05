@@ -22,14 +22,14 @@ require Schemaform.locate("collection.rb")
 
 
 #
-# Similar to a relation, but without the requirement for a heading.
+# A collection with no ordering and no duplicate members.
 
 module Schemaform
 module Definitions
 class Set < Collection
 
-   def initialize( member_definition, context, name = nil )
-      super member_definition, context, name, SetType
+   def initialize( member_definition, context, name = nil, collection_type = SetType )
+      super member_definition, context, name, collection_type
    end
 
 end # Set

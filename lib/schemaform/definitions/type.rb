@@ -62,6 +62,7 @@ class Type < Definition
    def tuple_type?      ; false ; end
    def relation_type?   ; false ; end
    def structured_type? ; false ; end
+   def simple?          ; false ; end
    
    
    def variable( production = nil )

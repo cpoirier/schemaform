@@ -18,20 +18,26 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("collection_type.rb")
+require Schemaform.locate("../expression.rb")
 
 
 #
-# A container type that can hold no duplicates and has no inherent ordering.
+# Captures a method call expression.
 
 module Schemaform
 module Definitions
-class SetType < CollectionType
-
-   def initialize( element_type, attrs = {} )
-      super
+module Expressions
+class RelatedTuples < Expression
+   
+   def initialize( tuple, entity_name, link_attribute )
+      super()
+      @tuple          = tuple
+      @entity_name    = entity_name
+      @link_attribute = link_attribute
    end
    
-end # SetType
+
+end # MethodCall
+end # Expressions
 end # Definitions
 end # Schemaform

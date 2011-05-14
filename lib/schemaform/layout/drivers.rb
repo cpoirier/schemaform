@@ -18,12 +18,11 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("schemaform/schema.rb")
+
 
 module Schemaform
-module Definitions
-
-   
-class Schema < Definition
+class Schema
    def lay_out()
       if @layout.nil? then
          @layout = Layout::SQL::Schema.new(self)
@@ -34,79 +33,91 @@ class Schema < Definition
 
       @layout
    end
-end
-
-class Entity < Relation
-   def lay_out( into )
-      table = into.define_table(name)
-      @heading.each_attribute do |attribute|
-         attribute.lay_out(table)
-      end
-   end
-end
-
    
-
-class Attribute < Definition
    
-   #
-   # Lays out the attribute into database primitives. Generally, subclasses should extend, not
-   # override this routine, as it will create a Layout::Group for you to handle your naming.
-
-   def lay_out( into )
-      into.define_group(self.name).tap do |group|
-         send_specialized(:lay_out, @definition, group)
-      end
-   end
-   
-   def lay_out_scalar( scalar, into )
-      send_specialized(:lay_out, scalar.type, into)
-   end
-
-   def lay_out_formula( formula, into )
-      send_specialized(:lay_out, formula.type, into)
-   end
-
-   def lay_out_tuple( tuple, into )
-      tuple.each_attribute do |attribute|
-         attribute.lay_out(into)
+   class Entity < Relation
+      def lay_out( into )
+         table = into.define_table(name)
+         @heading.attributes.each do |attribute|
+            attribute.lay_out(table)
+         end
       end
    end
 
-   def lay_out_set( set, into )
-      subtable = into.define_table(self.name)
-      send_specialized :lay_out, set.member_definition, subtable
+
+   class Tuple < Element
+      # def
+      # def lay_out( builder, &attribute_condition )
+      #    builder.in_tuple_class( @name ) do
+      #       each_attribute do |attribute|
+      #          if attribute_condition.nil? || attribute_condition.call(attribute) then 
+      #             attribute.lay_out( builder )
+      #          end
+      #       end
+      #    end
+      # end
    end
 
-   def lay_out_list( list, into )
-      subtable = into.define_table(self.name)
-      into.define_field(:__first, schema.identifier_type, subtable.id_field)
-      into.define_field(:__last , schema.identifier_type, subtable.id_field)
+
+
+   class Attribute < Element
+
+      #
+      # Lays out the attribute into database primitives. Generally, subclasses should extend, not
+      # override this routine, as it will create a Layout::Group for you to handle your naming.
+
+      def lay_out( into )
+         into.define_group(self.name).tap do |group|
+            send_specialized(:lay_out, @definition, group)
+         end
+      end
+
+      def lay_out_scalar( scalar, into )
+         send_specialized(:lay_out, scalar.type, into)
+      end
+
+      def lay_out_formula( formula, into )
+         send_specialized(:lay_out, formula.type, into)
+      end
+
+      def lay_out_tuple( tuple, into )
+         tuple.each_attribute do |attribute|
+            attribute.lay_out(into)
+         end
+      end
+
+      def lay_out_set( set, into )
+         subtable = into.define_table(self.name)
+         send_specialized :lay_out, set.member_definition, subtable
+      end
+
+      def lay_out_list( list, into )
+         subtable = into.define_table(self.name)
+         into.define_field(:__first, schema.identifier_type, subtable.id_field)
+         into.define_field(:__last , schema.identifier_type, subtable.id_field)
+      end
+
+      def lay_out_type( type, into )
+         into.define_field(:__value, type)
+      end
+
    end
 
-   def lay_out_type( type, into )
-      into.define_field(:__value, type)
-   end
 
-end
-
-
-class OptionalAttribute < WritableAttribute
-   def lay_out( into )
-      group = super(into)
-      group.define_field(:__present, schema.boolean_type)
-   end   
-end 
+   class OptionalAttribute < WritableAttribute
+      def lay_out( into )
+         group = super(into)
+         group.define_field(:__present, schema.boolean_type)
+      end   
+   end 
 
 
-class VolatileAttribute < DerivedAttribute
-   def lay_out( into )
-   end
-end 
+   class VolatileAttribute < DerivedAttribute
+      def lay_out( into )
+      end
+   end 
 
-
-
-end # Definitions
+end # Schema
 end # Schemaform
 
 

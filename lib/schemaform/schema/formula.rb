@@ -19,49 +19,50 @@
 # =============================================================================================
 
 
+
 #
-# Captures dotted expressions of the form x.y
+# An expression-valued vessel.
 
 module Schemaform
-module Expressions
-class DottedExpression 
+class Schema
+class Formula < Element
 
-   def initialize( expression, attribute, type )
-      @expression = expression
-      @attribute  = attribute
-      @type       = type
-   end
-
-
-   def method_missing( symbol, *args, &block )
-      super unless args.empty? && block.nil?
+   def initialize( proc, context, *parameters )
+      super(context)
       
-      #
-      # Okay, it's a potential accessor.  Let's see if we can do something with it.
-      
-      case @type.resolve.type_info.to_s
-      when "scalar"
-         super
-
-      when "reference"
-         referenced_entity = @type.resolve.entity
-         tuple = referenced_entity.resolve.heading
-         super unless tuple.member?(symbol)
-         return DottedExpression.new(self, symbol, tuple.attributes[symbol].resolve()) 
-         
-      when "set"
-         member_type = @type.resolve.member_type.resolve
-         if member_type.
-            
-            
-         
-         Expressions.build_
+      check do
+         parameters.each do |parameter|
+            type_check(:parameter, parameter, Element)
+         end
       end
       
-      send( @type.resolve.type_info.specialize("method_missing_for", "type"), symbol, *args, &block )
+      @proc       = proc
+      @parameters = parameters
+      @result     = nil
    end
+   
+   attr_reader :proc
+      
+   def type()
+      marker.type
+   end
+   
+   def marker( production = nil )
+      unless @result
+         schema.supervisor.monitor(self) do
+            @result = @proc.call(*(@parameters.collect{|parameter| parameter.marker(production)}))
+            puts "#{full_name()} resolved to #{@result.type.description}"
+         end
+      end
+   end
+   
+   def recreate_in( new_context, changes = nil )
+      self.class.new(@proc, new_context)
+   end
+   
 
 
-end # DottedExpression
-end # Expressions
+end # Expression
+end # Schema
 end # Schemaform
+

@@ -19,49 +19,20 @@
 # =============================================================================================
 
 
+
 #
-# Captures dotted expressions of the form x.y
+# Indicates the present? flag of the source should be checked.
 
 module Schemaform
 module Expressions
-class DottedExpression 
+class PresentCheck 
 
-   def initialize( expression, attribute, type )
-      @expression = expression
-      @attribute  = attribute
-      @type       = type
+   def initialize( source, if_present, otherwise )
+      super(source)
+      @if_present = if_present
+      @otherwise  = otherwise
    end
 
-
-   def method_missing( symbol, *args, &block )
-      super unless args.empty? && block.nil?
-      
-      #
-      # Okay, it's a potential accessor.  Let's see if we can do something with it.
-      
-      case @type.resolve.type_info.to_s
-      when "scalar"
-         super
-
-      when "reference"
-         referenced_entity = @type.resolve.entity
-         tuple = referenced_entity.resolve.heading
-         super unless tuple.member?(symbol)
-         return DottedExpression.new(self, symbol, tuple.attributes[symbol].resolve()) 
-         
-      when "set"
-         member_type = @type.resolve.member_type.resolve
-         if member_type.
-            
-            
-         
-         Expressions.build_
-      end
-      
-      send( @type.resolve.type_info.specialize("method_missing_for", "type"), symbol, *args, &block )
-   end
-
-
-end # DottedExpression
+end # PresentCheck
 end # Expressions
 end # Schemaform

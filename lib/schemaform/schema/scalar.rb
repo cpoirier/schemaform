@@ -18,50 +18,31 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("element.rb")
 
-#
-# Captures dotted expressions of the form x.y
 
 module Schemaform
-module Expressions
-class DottedExpression 
+class Schema
+class Scalar < Element
 
-   def initialize( expression, attribute, type )
-      @expression = expression
-      @attribute  = attribute
-      @type       = type
+   def initialize( type, context = nil )
+      super(context || type.context, nil)
+      @type = type
+   end
+   
+   attr_reader :type
+
+   def marker( production = nil )
+      type.marker(production)
    end
 
-
-   def method_missing( symbol, *args, &block )
-      super unless args.empty? && block.nil?
-      
-      #
-      # Okay, it's a potential accessor.  Let's see if we can do something with it.
-      
-      case @type.resolve.type_info.to_s
-      when "scalar"
-         super
-
-      when "reference"
-         referenced_entity = @type.resolve.entity
-         tuple = referenced_entity.resolve.heading
-         super unless tuple.member?(symbol)
-         return DottedExpression.new(self, symbol, tuple.attributes[symbol].resolve()) 
-         
-      when "set"
-         member_type = @type.resolve.member_type.resolve
-         if member_type.
-            
-            
-         
-         Expressions.build_
+   def recreate_in( new_context, changes = nil )
+      super.tap do |new_scalar|
+         new_scalar.instance_eval{ @type = @type.recreate_in(new_context)}
       end
-      
-      send( @type.resolve.type_info.specialize("method_missing_for", "type"), symbol, *args, &block )
    end
 
 
-end # DottedExpression
-end # Expressions
+end # Scalar
+end # Schema
 end # Schemaform

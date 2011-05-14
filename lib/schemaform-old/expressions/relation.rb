@@ -27,7 +27,7 @@ require Schemaform.locate("expression.rb")
 
 module Schemaform
 module Expressions
-class Relation < Expression
+class Relation 
    
    def initialize()
       super()

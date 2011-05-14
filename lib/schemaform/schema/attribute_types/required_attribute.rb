@@ -19,19 +19,23 @@
 # =============================================================================================
 
 
+require Schemaform.locate("writable_attribute.rb")
+
+
 #
-# An expression tha converts a list to a set.
+# A required attribute -- one that must be present within its context TupleType.
 
 module Schemaform
-module Expressions
-class ListToSetExpression 
+class Schema
+class RequiredAttribute < WritableAttribute
 
-   def initialize( lh_expression, member_type, symbol = nil )
-      @lh_expression = lh_expression
-      @member_type   = member_type
-      @symbol        = symbol      
-   end
+protected
 
-end # ListToSetExpression
-end # Expressions
+   extend QualityAssurance
+   warn_once( "TODO: build the constructor for the TupleClass" )
+   warn_once( "TODO: build a general runtime Tuple class that can wrap a hash" )
+   
+
+end # RequiredAttribute
+end # Schema
 end # Schemaform

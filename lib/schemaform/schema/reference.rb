@@ -18,50 +18,26 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("scalar.rb")
+
 
 #
-# Captures dotted expressions of the form x.y
+# A reference to a Tuple in an Entity.
 
 module Schemaform
-module Expressions
-class DottedExpression 
+class Schema
+class Reference < Scalar
 
-   def initialize( expression, attribute, type )
-      @expression = expression
-      @attribute  = attribute
-      @type       = type
-   end
-
-
-   def method_missing( symbol, *args, &block )
-      super unless args.empty? && block.nil?
-      
-      #
-      # Okay, it's a potential accessor.  Let's see if we can do something with it.
-      
-      case @type.resolve.type_info.to_s
-      when "scalar"
-         super
-
-      when "reference"
-         referenced_entity = @type.resolve.entity
-         tuple = referenced_entity.resolve.heading
-         super unless tuple.member?(symbol)
-         return DottedExpression.new(self, symbol, tuple.attributes[symbol].resolve()) 
-         
-      when "set"
-         member_type = @type.resolve.member_type.resolve
-         if member_type.
-            
-            
-         
-         Expressions.build_
+   def initialize(entity, context = nil)
+      if entity.responds_to?(:name) then
+         super(ReferenceType.new(entity.name, :context => entity.context))
+      else
+         assert( context, "you must provide a context if you are initializing a Reference with an entity name" )
+         super(ReferenceType.new(entity, :context => context))
       end
-      
-      send( @type.resolve.type_info.specialize("method_missing_for", "type"), symbol, *args, &block )
    end
+   
 
-
-end # DottedExpression
-end # Expressions
+end # Reference
+end # Schema
 end # Schemaform

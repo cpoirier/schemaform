@@ -25,7 +25,7 @@
 
 module Schemaform
 module Expressions
-class ListMemberExpression < Expression
+class ListMemberExpression 
 
    def initialize( member_type )
       @member_type = member_type

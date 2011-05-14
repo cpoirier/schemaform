@@ -18,20 +18,40 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("set_type.rb")
+
 
 #
-# An expression tha converts a list to a set.
+# Base class for relation types.
 
 module Schemaform
-module Expressions
-class ListToSetExpression 
-
-   def initialize( lh_expression, member_type, symbol = nil )
-      @lh_expression = lh_expression
-      @member_type   = member_type
-      @symbol        = symbol      
+class Schema
+class RelationType < SetType
+   
+   #
+   # The heading is a required part of the RelationType, and must be a StructuredType.
+   
+   def initialize( heading, attrs )
+      type_check(:heading, heading, StructuredType)
+      @heading = heading
+      super
+   end
+   
+   def relation_type?()
+      true
+   end
+   
+   def description()
+      "[" + @heading.description + "]"
    end
 
-end # ListToSetExpression
-end # Expressions
+   def each_attribute( &block )
+      @heading.each_attribute( &block )
+   end
+
+
+end # RelationType
+end # Schema
 end # Schemaform
+
+

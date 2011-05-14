@@ -18,50 +18,23 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("collection.rb")
+require Schemaform.locate("type.rb"      )
+
 
 #
-# Captures dotted expressions of the form x.y
+# A collection with no ordering and no duplicate members.
 
 module Schemaform
-module Expressions
-class DottedExpression 
+class Schema
+class Set < Collection
 
-   def initialize( expression, attribute, type )
-      @expression = expression
-      @attribute  = attribute
-      @type       = type
+   def initialize( member, context = nil, name = nil, collection_type = SetType )
+      super(member, context || member.context, name, collection_type)
    end
+   
+   
 
-
-   def method_missing( symbol, *args, &block )
-      super unless args.empty? && block.nil?
-      
-      #
-      # Okay, it's a potential accessor.  Let's see if we can do something with it.
-      
-      case @type.resolve.type_info.to_s
-      when "scalar"
-         super
-
-      when "reference"
-         referenced_entity = @type.resolve.entity
-         tuple = referenced_entity.resolve.heading
-         super unless tuple.member?(symbol)
-         return DottedExpression.new(self, symbol, tuple.attributes[symbol].resolve()) 
-         
-      when "set"
-         member_type = @type.resolve.member_type.resolve
-         if member_type.
-            
-            
-         
-         Expressions.build_
-      end
-      
-      send( @type.resolve.type_info.specialize("method_missing_for", "type"), symbol, *args, &block )
-   end
-
-
-end # DottedExpression
-end # Expressions
+end # Set
+end # Schema
 end # Schemaform

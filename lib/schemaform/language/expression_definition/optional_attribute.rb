@@ -18,50 +18,46 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("marker.rb")
+require Schemaform.locate("schemaform/expressions/present_check.rb")
+
 
 #
-# Captures dotted expressions of the form x.y
+# Provides access to a Tuple and its attributes.
 
 module Schemaform
-module Expressions
-class DottedExpression 
+module Language
+module ExpressionDefinition
+class OptionalAttribute < Marker
 
-   def initialize( expression, attribute, type )
-      @expression = expression
-      @attribute  = attribute
-      @type       = type
+   def initialize( definition, production = nil )
+      super(production)
+      @definition = definition
    end
-
-
+   
    def method_missing( symbol, *args, &block )
-      super unless args.empty? && block.nil?
-      
-      #
-      # Okay, it's a potential accessor.  Let's see if we can do something with it.
-      
-      case @type.resolve.type_info.to_s
-      when "scalar"
-         super
+      handler = @definition.definition.marker(Expressions::ImpliedContext.new(self))
+      handler.send(symbol, *args, &block)
+   end
+   
+   
+   #
+   # Builds an expression that branches based on whether or not a value has been stored in the
+   # attribute (default values will be present otherwise).
 
-      when "reference"
-         referenced_entity = @type.resolve.entity
-         tuple = referenced_entity.resolve.heading
-         super unless tuple.member?(symbol)
-         return DottedExpression.new(self, symbol, tuple.attributes[symbol].resolve()) 
-         
-      when "set"
-         member_type = @type.resolve.member_type.resolve
-         if member_type.
-            
-            
-         
-         Expressions.build_
+   def present?( true_value, false_value = nil )
+      check do
+         type_check(:true_value, true_value, Marker)
+         type_check(:false_value, false_value, Marker, true)
       end
       
-      send( @type.resolve.type_info.specialize("method_missing_for", "type"), symbol, *args, &block )
+      result_type = true_value.type
+      result_type = result_type.best_common_type(false_value.type) if false_value
+
+      result_type.marker(Expressions::PresentCheck.new(self, true_value, false_value))
    end
 
-
-end # DottedExpression
-end # Expressions
+end # OptionalAttribute
+end # ExpressionDefinition
+end # Language
 end # Schemaform

@@ -20,48 +20,24 @@
 
 
 #
-# Captures dotted expressions of the form x.y
+# An internal type that can stand in for any type, include void.
 
 module Schemaform
-module Expressions
-class DottedExpression 
+class Schema
+class CatchAllType < Type
 
-   def initialize( expression, attribute, type )
-      @expression = expression
-      @attribute  = attribute
-      @type       = type
+   def initialize( attrs )
+      super
    end
 
-
-   def method_missing( symbol, *args, &block )
-      super unless args.empty? && block.nil?
-      
-      #
-      # Okay, it's a potential accessor.  Let's see if we can do something with it.
-      
-      case @type.resolve.type_info.to_s
-      when "scalar"
-         super
-
-      when "reference"
-         referenced_entity = @type.resolve.entity
-         tuple = referenced_entity.resolve.heading
-         super unless tuple.member?(symbol)
-         return DottedExpression.new(self, symbol, tuple.attributes[symbol].resolve()) 
-         
-      when "set"
-         member_type = @type.resolve.member_type.resolve
-         if member_type.
-            
-            
-         
-         Expressions.build_
-      end
-      
-      send( @type.resolve.type_info.specialize("method_missing_for", "type"), symbol, *args, &block )
+   def join_compatible?( with )
+      return false
    end
 
+   def assignable_from?( from )
+      return true
+   end
 
-end # DottedExpression
-end # Expressions
+end # CatchAllType
+end # module
 end # Schemaform

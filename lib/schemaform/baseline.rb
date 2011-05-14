@@ -725,7 +725,7 @@ module Baseline
       #
       # Raises an AssertionFailure if the condition is false.
 
-      def assert( condition, message, data = nil, &block )
+      def assert( condition, message = "this should not happen", data = nil, &block )
          fail( message, data, &block ) unless condition
          true
       end
@@ -850,8 +850,8 @@ module Baseline
    class ComponentLocator
 
       def initialize( master_path, levels_back = 1 )
-         @system_name = File.basename(__FILE__, ".rb")
-         @system_base = File.expand_path(File.dirname(__FILE__))
+         @system_name = File.basename(master_path, ".rb")
+         @system_base = File.expand_path(File.dirname(master_path))
          @levels_back = levels_back
       end
 

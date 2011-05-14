@@ -20,18 +20,19 @@
 
 
 #
-# An expression tha converts a list to a set.
+# Represents all user-defined types that have an existing type name as base type. All user-
+# defined type have a name.
 
 module Schemaform
-module Expressions
-class ListToSetExpression 
-
-   def initialize( lh_expression, member_type, symbol = nil )
-      @lh_expression = lh_expression
-      @member_type   = member_type
-      @symbol        = symbol      
+class Schema
+class UserDefinedType < Type
+   
+   def initialize( attrs )
+      super
    end
+   
+      
 
-end # ListToSetExpression
-end # Expressions
+end # UserDefinedType
+end # Schema
 end # Schemaform

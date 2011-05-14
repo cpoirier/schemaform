@@ -19,49 +19,25 @@
 # =============================================================================================
 
 
-#
-# Captures dotted expressions of the form x.y
-
 module Schemaform
-module Expressions
-class DottedExpression 
+class Schema
+class ReferenceType < Type
 
-   def initialize( expression, attribute, type )
-      @expression = expression
-      @attribute  = attribute
-      @type       = type
+   def initialize( entity_name, attrs )
+      attrs[:base_type] = attrs.fetch(:context).schema.identifier_type unless attrs.member?(:base_type)
+      super attrs
+      @entity_name = entity_name
+      type_check(:entity_name, entity_name, Symbol)
    end
-
-
-   def method_missing( symbol, *args, &block )
-      super unless args.empty? && block.nil?
-      
-      #
-      # Okay, it's a potential accessor.  Let's see if we can do something with it.
-      
-      case @type.resolve.type_info.to_s
-      when "scalar"
-         super
-
-      when "reference"
-         referenced_entity = @type.resolve.entity
-         tuple = referenced_entity.resolve.heading
-         super unless tuple.member?(symbol)
-         return DottedExpression.new(self, symbol, tuple.attributes[symbol].resolve()) 
-         
-      when "set"
-         member_type = @type.resolve.member_type.resolve
-         if member_type.
-            
-            
-         
-         Expressions.build_
-      end
-      
-      send( @type.resolve.type_info.specialize("method_missing_for", "type"), symbol, *args, &block )
+   
+   attr_reader :entity_name
+   
+   def referenced_entity()
+      schema.entities.find(@entity_name)
    end
+   
+   
 
-
-end # DottedExpression
-end # Expressions
+end # ReferenceType
+end # Schema
 end # Schemaform

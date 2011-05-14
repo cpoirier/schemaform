@@ -18,50 +18,45 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("scalar_type.rb" )
+require Schemaform.locate("integer_type.rb")
+require Schemaform.locate("string_type.rb" )
+
 
 #
-# Captures dotted expressions of the form x.y
+# Base class for enumerated types.
 
 module Schemaform
-module Expressions
-class DottedExpression 
+class Schema
+class EnumeratedType < ScalarType
 
-   def initialize( expression, attribute, type )
-      @expression = expression
-      @attribute  = attribute
-      @type       = type
-   end
-
-
-   def method_missing( symbol, *args, &block )
-      super unless args.empty? && block.nil?
+   def initialize( values, attrs )
+      context = attrs.fetch(:context)
+      @values = values
       
       #
-      # Okay, it's a potential accessor.  Let's see if we can do something with it.
+      # Determine the base type for this enumeration. We prefer an integer type, if all values
+      # are compatible, but will settle for a string type otherwise.
       
-      case @type.resolve.type_info.to_s
-      when "scalar"
-         super
-
-      when "reference"
-         referenced_entity = @type.resolve.entity
-         tuple = referenced_entity.resolve.heading
-         super unless tuple.member?(symbol)
-         return DottedExpression.new(self, symbol, tuple.attributes[symbol].resolve()) 
-         
-      when "set"
-         member_type = @type.resolve.member_type.resolve
-         if member_type.
-            
-            
-         
-         Expressions.build_
+      begin
+         all_integers  = true
+         string_length = 0
+         values.each do |value|
+            all_integers  = false if all_integers and !value.is_an?(Integer)
+            string_length = value.to_s.length
+         end
+      
+         attrs[:base_type] = all_integers ? IntegerType.new(:context => context) : StringType.new(:context => context, :length => string_length)
       end
       
-      send( @type.resolve.type_info.specialize("method_missing_for", "type"), symbol, *args, &block )
+      super attrs
    end
-
-
-end # DottedExpression
-end # Expressions
+   
+   def description()
+      @values.collect{|v| v.inspect}.join("|")
+   end
+   
+   
+end # EnumeratedType
+end # Schema
 end # Schemaform

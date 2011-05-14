@@ -19,19 +19,17 @@
 # =============================================================================================
 
 
+require Schemaform.locate("derived_attribute.rb")
+
+
 #
-# An expression tha converts a list to a set.
+# A derived attribute that is kept always up to date in the database.
 
 module Schemaform
-module Expressions
-class ListToSetExpression 
+class Schema
+class MaintainedAttribute < DerivedAttribute
+   
 
-   def initialize( lh_expression, member_type, symbol = nil )
-      @lh_expression = lh_expression
-      @member_type   = member_type
-      @symbol        = symbol      
-   end
-
-end # ListToSetExpression
-end # Expressions
+end # MaintainedAttribute
+end # Schema
 end # Schemaform

@@ -18,50 +18,35 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("scalar_type.rb")
+
 
 #
-# Captures dotted expressions of the form x.y
+# Base class for numeric types. Handles the :range modifier to limit value.
 
 module Schemaform
-module Expressions
-class DottedExpression 
+class Schema
+class NumericType < ScalarType
 
-   def initialize( expression, attribute, type )
-      @expression = expression
-      @attribute  = attribute
-      @type       = type
-   end
-
-
-   def method_missing( symbol, *args, &block )
-      super unless args.empty? && block.nil?
-      
-      #
-      # Okay, it's a potential accessor.  Let's see if we can do something with it.
-      
-      case @type.resolve.type_info.to_s
-      when "scalar"
-         super
-
-      when "reference"
-         referenced_entity = @type.resolve.entity
-         tuple = referenced_entity.resolve.heading
-         super unless tuple.member?(symbol)
-         return DottedExpression.new(self, symbol, tuple.attributes[symbol].resolve()) 
-         
-      when "set"
-         member_type = @type.resolve.member_type.resolve
-         if member_type.
-            
-            
-         
-         Expressions.build_
+   def initialize( attrs )
+      if attrs.member?(:range) then
+         @range = attrs.delete(:range)
+         attrs[:default] = (@range.member?(0) ? 0 : @range.start) unless attrs.member?(:default)
+      else
+         attrs[:default] = 0 unless attrs.member?(:default)
       end
-      
-      send( @type.resolve.type_info.specialize("method_missing_for", "type"), symbol, *args, &block )
+
+      super
    end
-
-
-end # DottedExpression
-end # Expressions
+   
+   def make_specific( modifiers )
+      if !@range && modifiers.fetch(:range, nil).is_a?(Range) then
+         self.class.new(:base_type => self, :range => modifiers.delete(:range))
+      else
+         super
+      end
+   end
+   
+end # NumericType
+end # Schema
 end # Schemaform

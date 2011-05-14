@@ -19,19 +19,18 @@
 # =============================================================================================
 
 
+require Schemaform.locate("static_attribute.rb")
+
+
 #
-# An expression tha converts a list to a set.
+# A maintained attribute that is only updated when the sources in the same record are updated.
 
 module Schemaform
-module Expressions
-class ListToSetExpression 
+class Schema
+class StaticAttribute < MaintainedAttribute
 
-   def initialize( lh_expression, member_type, symbol = nil )
-      @lh_expression = lh_expression
-      @member_type   = member_type
-      @symbol        = symbol      
-   end
 
-end # ListToSetExpression
-end # Expressions
+
+end # StaticAttribute
+end # Schema
 end # Schemaform

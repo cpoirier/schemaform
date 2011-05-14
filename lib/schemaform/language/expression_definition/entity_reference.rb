@@ -18,50 +18,31 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("marker.rb")
+require Schemaform.locate("schemaform/expressions/accessor.rb")
+
 
 #
-# Captures dotted expressions of the form x.y
+# Provides access to a Tuple and its attributes.
 
 module Schemaform
-module Expressions
-class DottedExpression 
+module Language
+module ExpressionDefinition
+class EntityReference < Marker
 
-   def initialize( expression, attribute, type )
-      @expression = expression
-      @attribute  = attribute
-      @type       = type
+   def initialize( reference_type, production = nil )
+      super(production)
+      @reference_type = reference_type
+      @tuple = reference_type.referenced_entity.heading
    end
-
-
+   
    def method_missing( symbol, *args, &block )
-      super unless args.empty? && block.nil?
-      
-      #
-      # Okay, it's a potential accessor.  Let's see if we can do something with it.
-      
-      case @type.resolve.type_info.to_s
-      when "scalar"
-         super
-
-      when "reference"
-         referenced_entity = @type.resolve.entity
-         tuple = referenced_entity.resolve.heading
-         super unless tuple.member?(symbol)
-         return DottedExpression.new(self, symbol, tuple.attributes[symbol].resolve()) 
-         
-      when "set"
-         member_type = @type.resolve.member_type.resolve
-         if member_type.
-            
-            
-         
-         Expressions.build_
-      end
-      
-      send( @type.resolve.type_info.specialize("method_missing_for", "type"), symbol, *args, &block )
+      return super unless @tuple.member?(symbol)
+      @tuple[symbol].marker(Expressions::Accessor.new(self, symbol))
    end
-
-
-end # DottedExpression
-end # Expressions
+   
+end # Attribute
+end # ExpressionDefinition
+end # Language
 end # Schemaform
+

@@ -18,20 +18,37 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("element.rb")
+
 
 #
-# An expression tha converts a list to a set.
+# An Attribute in a Tuple. Attributes are bound to the specific Tuple in which they are created. 
+# If you need to copy an Attribute into another Tuple, use +duplicate()+.
 
 module Schemaform
-module Expressions
-class ListToSetExpression 
-
-   def initialize( lh_expression, member_type, symbol = nil )
-      @lh_expression = lh_expression
-      @member_type   = member_type
-      @symbol        = symbol      
+class Schema
+class Attribute < Element
+   
+   def initialize( name, tuple, definition )
+      type_check(:tuple, tuple, Tuple)
+      super(tuple, name)
+      @definition = definition
    end
 
-end # ListToSetExpression
-end # Expressions
+   attr_reader :definition
+   
+   def type()
+      @definition.type
+   end
+   
+   def recreate_in( new_context, changes = nil )
+      self.class.new(@name, new_context, definition.recreate_in(new_context))
+   end
+   
+   
+end # Attribute
+end # Schema
 end # Schemaform
+
+
+Dir[Schemaform.locate("attribute_types/*.rb")].each {|path| require path}

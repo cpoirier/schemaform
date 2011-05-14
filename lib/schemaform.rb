@@ -35,15 +35,13 @@ module Schemaform
    include QualityAssurance
 
    @@locator = Baseline::ComponentLocator.new( __FILE__, 2 )
-   
-   
+      
    
    #
    # Returns the named Schema definition.
    
    def self.[]( name )
-      load_all()
-      Definitions::Schema[name]
+      @@schemas[name]
    end
    
    
@@ -51,18 +49,21 @@ module Schemaform
    # Returns true if the named Schema is already defined.
    
    def self.defined?( name )
-      load_all()
-      Definitions::Schema.defined?(name)
+      @@schemas.member?(name)
    end
    
    
    #
    # Creates a Schema and calls your block to fill it in (see Schema::DefinitionLanguage).
 
-   def self.define( name, &block )
-      load_all()
-      Definitions::Schema.define(name, &block)
+   def self.define( name, into_registry = nil, &block )
+      Schema.new(name).tap do |schema|
+         Language::SchemaDefinition.process(schema, &block)         
+         (into_registry || @@schemas).register(schema)   
+      end
    end
+   
+   
    
    
    
@@ -111,7 +112,6 @@ module Schemaform
    # must be registered before you attempt to use it in a Schema definition.  
    
    def self.define_type_constraint( name, type_class, constraint_class )
-      load_all()
       Definitions::Schema.define_type_constraint( name, type_class, constraint_class )
    end
 
@@ -127,21 +127,18 @@ module Schemaform
       
       
 private
-      
-   #
-   # Loads all Schemaform code into memory.
    
-   def self.load_all()
-      ["definitions", "layout"].each do |directory|
-         Dir[Schemaform.locate("schemaform/#{directory}/*.rb")].each do |path|
-            require path
-         end
+   require locate("schemaform/registry.rb")
+   
+   ["language", "expressions", "definitions", "layout"].each do |directory|
+      Dir[Schemaform.locate("schemaform/#{directory}/*.rb")].each do |path|
+         require path
       end
    end
    
+   @@schemas = Registry.new("Schemaform")
    
 end # Schemaform
-
 
 
 

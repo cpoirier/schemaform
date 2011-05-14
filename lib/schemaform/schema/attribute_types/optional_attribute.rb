@@ -19,19 +19,21 @@
 # =============================================================================================
 
 
+require Schemaform.locate("writable_attribute.rb")
+
+
 #
-# An expression tha converts a list to a set.
+# An optional attribute -- one that will show a default value if not specifically set.
 
 module Schemaform
-module Expressions
-class ListToSetExpression 
+class Schema
+class OptionalAttribute < WritableAttribute
 
-   def initialize( lh_expression, member_type, symbol = nil )
-      @lh_expression = lh_expression
-      @member_type   = member_type
-      @symbol        = symbol      
+   def optional?()
+      true
    end
-
-end # ListToSetExpression
-end # Expressions
+   
+   
+end # OptionalAttribute
+end # Schema
 end # Schemaform

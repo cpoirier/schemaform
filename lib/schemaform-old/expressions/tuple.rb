@@ -26,7 +26,7 @@ require Schemaform.locate("expression.rb")
 
 module Schemaform
 module Expressions
-class Tuple < Expression
+class Tuple 
 
    attr_reader :attributes
    

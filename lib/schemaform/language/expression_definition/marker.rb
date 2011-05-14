@@ -18,50 +18,36 @@
 #             limitations under the License.
 # =============================================================================================
 
-
 #
-# Captures dotted expressions of the form x.y
+# The base class for variables, intermediates, and results of an expression. These are the 
+# things with which you interact when describing a derived attribute or default value in the 
+# Schemaform definition language. Your expression must return one, but you should never create
+# one directly.
 
 module Schemaform
-module Expressions
-class DottedExpression 
+module Language
+module ExpressionDefinition
+class Marker
+   include QualityAssurance
 
-   def initialize( expression, attribute, type )
-      @expression = expression
-      @attribute  = attribute
+   def initialize( production = nil, type = nil )
+      @production = production
       @type       = type
    end
-
-
-   def method_missing( symbol, *args, &block )
-      super unless args.empty? && block.nil?
-      
-      #
-      # Okay, it's a potential accessor.  Let's see if we can do something with it.
-      
-      case @type.resolve.type_info.to_s
-      when "scalar"
-         super
-
-      when "reference"
-         referenced_entity = @type.resolve.entity
-         tuple = referenced_entity.resolve.heading
-         super unless tuple.member?(symbol)
-         return DottedExpression.new(self, symbol, tuple.attributes[symbol].resolve()) 
-         
-      when "set"
-         member_type = @type.resolve.member_type.resolve
-         if member_type.
-            
-            
-         
-         Expressions.build_
-      end
-      
-      send( @type.resolve.type_info.specialize("method_missing_for", "type"), symbol, *args, &block )
+   
+   attr_reader :production
+   
+   def type()
+      @type ? @type : fail_unless_overridden(self, :type)
    end
-
-
-end # DottedExpression
-end # Expressions
+   
+   def *( rhs )
+      result_type = self.type.best_common_type(rhs.type)
+      Marker.new(Productions::BinaryOperator.new(:*, self, rhs), result_type)
+   end
+   
+end # Marker
+end # ExpressionDefinition
+end # Language
 end # Schemaform
+

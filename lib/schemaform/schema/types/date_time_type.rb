@@ -18,50 +18,42 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("scalar_type.rb")
 
-#
-# Captures dotted expressions of the form x.y
 
 module Schemaform
-module Expressions
-class DottedExpression 
+class Schema
+class DateTimeType < ScalarType
 
-   def initialize( expression, attribute, type )
-      @expression = expression
-      @attribute  = attribute
-      @type       = type
+   def initialize( attrs )
+      attrs[:default] = load("0000-01-01 00:00:00") unless attrs.member?(:default)
+      super
    end
 
-
-   def method_missing( symbol, *args, &block )
-      super unless args.empty? && block.nil?
-      
-      #
-      # Okay, it's a potential accessor.  Let's see if we can do something with it.
-      
-      case @type.resolve.type_info.to_s
-      when "scalar"
-         super
-
-      when "reference"
-         referenced_entity = @type.resolve.entity
-         tuple = referenced_entity.resolve.heading
-         super unless tuple.member?(symbol)
-         return DottedExpression.new(self, symbol, tuple.attributes[symbol].resolve()) 
-         
-      when "set"
-         member_type = @type.resolve.member_type.resolve
-         if member_type.
-            
-            
-         
-         Expressions.build_
+   #
+   # Instructs the type to produce a memory representation of a stored value.
+   
+   def load( stored_value )
+      return super if @loader
+      year, month, day, hour, minute, second, micros = *stored_value.split(/[^\d]+/)
+      DateTime.civil(year.to_i, month.to_i, day.to_i, hour.to_i, minute.to_i, second.to_i)
+   end
+   
+   
+   #
+   # Instructs the type to produce a storable value from a memory representation.
+   
+   def store( memory_value )
+      return super if @storer
+      case memory_value
+      when Time
+         utc = memory_value.getutc
+         utc.strftime("%Y-%m-%d %H:%M:%S") + (utc.usec > 0 ? ".#{utc.usec}" : "")
+      when Date, DateTime
+         memory_value.iso8601
       end
-      
-      send( @type.resolve.type_info.specialize("method_missing_for", "type"), symbol, *args, &block )
    end
 
-
-end # DottedExpression
-end # Expressions
+end # BooleanType
+end # Schema
 end # Schemaform

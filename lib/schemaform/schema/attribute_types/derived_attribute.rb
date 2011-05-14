@@ -18,20 +18,19 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("../formula.rb")
 
-#
-# An expression tha converts a list to a set.
 
 module Schemaform
-module Expressions
-class ListToSetExpression 
+class Schema
+class DerivedAttribute < Attribute
 
-   def initialize( lh_expression, member_type, symbol = nil )
-      @lh_expression = lh_expression
-      @member_type   = member_type
-      @symbol        = symbol      
+   def initialize( name, tuple, definition )
+      super(name, tuple, definition)
+      type_check(:definition, definition, Formula)
    end
-
-end # ListToSetExpression
-end # Expressions
+   
+end # DerivedAttribute
+end # Schema
 end # Schemaform
+

@@ -19,19 +19,41 @@
 # =============================================================================================
 
 
-#
-# An expression tha converts a list to a set.
-
 module Schemaform
-module Expressions
-class ListToSetExpression 
-
-   def initialize( lh_expression, member_type, symbol = nil )
-      @lh_expression = lh_expression
-      @member_type   = member_type
-      @symbol        = symbol      
+class Schema
+class Key < Element
+      
+   def initialize( attribute_names, context )
+      # warn_once "Key should probably be changed to use a backed StructuredType instead of a Tuple"
+      # 
+      # @attributes = Tuple.new()
+      # attribute_names.each do |name|
+      #    @attributes.add_attribute( name, entity.heading.attributes[name] )
+      # end
+      # # @attributes = attribute_names
    end
-
-end # ListToSetExpression
-end # Expressions
+   # 
+   # alias entity context
+   # 
+   # def each_attribute( &block )
+   #    @attributes.each_attribute( &block )
+   # end
+   # 
+   # def member?( name )
+   #    @attributes.member?(name)
+   # end
+   # 
+   # def type()
+   #    supervisor.monitor(self) do
+   #       @attributes.type()
+   #    end
+   # end
+   # 
+   # def description()
+   #    @attributes.description
+   # end
+   
+end # Key
+end # Schema
 end # Schemaform
+

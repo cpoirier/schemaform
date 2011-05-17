@@ -18,7 +18,7 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("marker.rb")
+require Schemaform.locate("base.rb")
 require Schemaform.locate("schemaform/expressions/projection.rb")
 
 
@@ -28,11 +28,15 @@ require Schemaform.locate("schemaform/expressions/projection.rb")
 module Schemaform
 module Language
 module ExpressionDefinition
-class Relation < Marker
+class Relation < Base
 
    def initialize( definition, production = nil )
       super(production)
       @definition = definition
+   end
+   
+   def definition!()
+      @definition
    end
    
    def method_missing( symbol, *args, &block )

@@ -38,10 +38,9 @@ class Tuple < Element
 
       @attributes = Registry.new(self, "an attribute")
       @expression = nil
-      @root_tuple = context.is_a?(Tuple) ? context.root_tuple : self
    end
    
-   attr_reader :attributes, :type, :root_tuple
+   attr_reader :attributes, :type
    
    def []( name )
       @attributes[name]

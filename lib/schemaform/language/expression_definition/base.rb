@@ -18,40 +18,58 @@
 #             limitations under the License.
 # =============================================================================================
 
-
-
 #
-# An expression-valued vessel.
+# The base class for variables, intermediates, and results of an expression. These are the 
+# things with which you interact when describing a derived attribute or default value in the 
+# Schemaform definition language. Your expression must return one, but you should never create
+# one directly.
 
 module Schemaform
-class Schema
-class Formula < Element
+module Language
+module ExpressionDefinition
+class Base
+   include QualityAssurance
 
-   def initialize( proc, context, *parameters )
-      super(context)
-      
-      check do
-         parameters.each do |parameter|
-            type_check(:parameter, parameter, Element)
+   def initialize( production = nil, type = nil )
+      @production = production
+      @type       = type
+   end
+   
+   def effective!()
+      self
+   end
+   
+   def production!()
+      @production
+   end
+   
+   def type!()
+      @type ? @type : fail_unless_overridden(self, :type)
+   end
+   
+   def []( name )
+      method_missing(name)
+   end
+   
+   def markup!( object )
+      case object
+      when Base
+         return object
+      when NilClass
+         return nil
+      when Array
+         if object.empty? then
+            return EmptySet.new()
+         else
+            fail
          end
+      else
+         fail
       end
-      
-      @proc       = proc
-      @parameters = parameters
    end
    
-   attr_reader :proc
-      
-   def type()
-      marker.type
-   end
-   
-   def recreate_in( new_context, changes = nil )
-      self.class.new(@proc, new_context)
-   end
-
-
-end # Expression
-end # Schema
+end # Base
+end # ExpressionDefinition
+end # Language
 end # Schemaform
 

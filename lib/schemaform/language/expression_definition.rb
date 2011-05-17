@@ -19,18 +19,32 @@
 # =============================================================================================
 
 require Schemaform.locate("schemaform/schema.rb")
+Dir[Schemaform.locate("expression_definition/*.rb")].each{|path| require path}
 
-#
-# comment
+
+# =============================================================================================
+#                                        Marker Production
+# =============================================================================================
 
 module Schemaform
-
 class Schema
    
    class Type < Element
       def marker( production = nil )
-         Language::ExpressionDefinition::Marker.new(production, self)
+         fail "what kind of marker should #{self.class.name} have?"
       end   
+   end
+
+   class NumericType < ScalarType
+      def marker( production = nil )
+         Language::ExpressionDefinition::Number.new(self, production)
+      end
+   end
+   
+   class EnumeratedType < ScalarType
+      def marker( production = nil )
+         effective_type.marker(production)
+      end
    end
    
    class ReferenceType < Type
@@ -39,12 +53,25 @@ class Schema
       end
    end
    
+   class UserDefinedType < Type
+      def marker( production = nil )
+         fail "TODO: how does this interact with effective type?"
+      end
+   end
+   
+   
+   
+   
    class Tuple < Element
       def marker( production = nil )
          return Language::ExpressionDefinition::Tuple.new(self, production) unless production.nil?
          return @marker if @marker
          @marker = Language::ExpressionDefinition::Tuple.new(self, production)
       end
+      
+      def formula_context( production = nil )
+         @formula_context ||= Language::ExpressionDefinition::Tuple.new(self, production)
+      end      
    end
    
    class Attribute < Element
@@ -59,16 +86,106 @@ class Schema
       end
    end
 
+
+
    class Relation < Set
       def marker( production = nil )
          Language::ExpressionDefinition::Relation.new(self, production)
       end
    end
    
+   class Entity < Relation
+      def formula_context( production = nil )
+         @formula_context ||= Language::ExpressionDefinition::EntityTuple.new(self, production)
+      end
+   end
 
 
+   
+   class Formula < Element
+      def marker( production = nil )
+         warn_once("TODO: how should we detect resolution loops in Formula?")
+         if !@result then
+            if @result.nil? then
+               @result = @proc.call(*(@parameters.collect{|parameter| parameter.formula_context}))
+            else
+               @proc.call(*(@parameters.collect{|parameter| parameter.formula_context}))
+            end
+         end
+         
+         @result
+      end
+   end
+
+   class Scalar < Element
+      def marker( production = nil )
+         type.marker(production)
+      end
+   end
+      
 
 end # Schema
 end # Schemaform
 
-Dir[Schemaform.locate("expression_definition/*.rb")].each{|path| require path}
+
+
+
+# =============================================================================================
+#                                        Path Discovery
+# =============================================================================================
+
+module Schemaform
+class Schema
+
+   class Entity < Relation
+
+      #
+      # Recurses through the attributes, calling your block at each with the attribute
+      # and an expression indicating how it arrived there. When you find what you are 
+      # looking for, you can build the final Marker around the path and return (or return 
+      # whatever else you want -- we won't judge).
+
+      def search( path = nil, &block )
+         unless @heading.attributes.empty?
+            path = formula_context() if path.nil?
+            @heading.attributes.each do |attribute|
+               attribute_path = attribute.marker(path)
+               result = yield(attribute, attribute_path) || attribute.definition.search(attribute_path, &block)
+               return result if result
+            end
+         end
+         
+         return nil
+      end
+
+   end
+   
+   
+   class Tuple < Element
+      def search( path = nil, &block )
+         unless @attributes.empty?
+            path = formula_context() if path.nil?
+            @attributes.each do |attribute|
+               attribute_path = attribute.marker(path)
+               result = yield(attribute, attribute_path) || attribute.definition.search(attribute_path, &block)
+               return result if result
+            end
+         end
+         
+         return nil
+      end
+   end
+
+
+   class Element
+      def search( path = nil, &block )
+         return nil
+      end
+   end
+   
+end # Schema
+end # Schemaform
+
+
+
+

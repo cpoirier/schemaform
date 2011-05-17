@@ -69,6 +69,7 @@ class Entity < Relation
       return @base_entity.key?(name) if @base_entity.exists?
       return false
    end
+
    
    #
    # If true, this entity is enumerated.
@@ -77,7 +78,7 @@ class Entity < Relation
       @enumeration.exists?
    end
    
-   
+
    
 
 end # Entity

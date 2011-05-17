@@ -18,40 +18,26 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("base.rb")
 
-
-#
-# An expression-valued vessel.
 
 module Schemaform
-class Schema
-class Formula < Element
+module Language
+module ExpressionDefinition
+class Number < Base
 
-   def initialize( proc, context, *parameters )
-      super(context)
-      
-      check do
-         parameters.each do |parameter|
-            type_check(:parameter, parameter, Element)
-         end
-      end
-      
-      @proc       = proc
-      @parameters = parameters
+   def initialize( type, production = nil )
+      super(production, type)
    end
    
-   attr_reader :proc
-      
-   def type()
-      marker.type
+   def *( rhs )
+      result_type = self.type!.best_common_type(rhs.type!)
+      result_type.marker(Productions::BinaryOperator.new(:*, self, rhs))
    end
    
-   def recreate_in( new_context, changes = nil )
-      self.class.new(@proc, new_context)
-   end
-
-
-end # Expression
-end # Schema
+   
+end # Number
+end # ExpressionDefinition
+end # Language
 end # Schemaform
 

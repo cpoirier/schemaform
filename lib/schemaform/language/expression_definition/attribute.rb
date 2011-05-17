@@ -18,7 +18,7 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("marker.rb")
+require Schemaform.locate("base.rb")
 require Schemaform.locate("schemaform/expressions/implied_context.rb")
 
 
@@ -28,21 +28,30 @@ require Schemaform.locate("schemaform/expressions/implied_context.rb")
 module Schemaform
 module Language
 module ExpressionDefinition
-class Attribute < Marker
+class Attribute < Base
 
    def initialize( definition, production = nil )
       super(production)
       @definition = definition
+      @effective  = definition.definition.marker(Expressions::ImpliedContext.new(self))
+   end
+   
+   def effective!()
+      @effective
+   end
+   
+   def definition!()
+      @definition
+   end
+   
+   def type!()
+      @definition.definition.type
    end
    
    def method_missing( symbol, *args, &block )
-      handler = @definition.definition.marker(Expressions::ImpliedContext.new(self))
-      handler.send(symbol, *args, &block)
+      @effective.send(symbol, *args, &block)
    end
-
-   def type()
-      @definition.definition.type
-   end
+   
    
 end # Attribute
 end # ExpressionDefinition

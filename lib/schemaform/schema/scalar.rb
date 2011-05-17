@@ -24,16 +24,16 @@ require Schemaform.locate("element.rb")
 module Schemaform
 class Schema
 class Scalar < Element
-
+   
    def initialize( type, context = nil )
       super(context || type.context, nil)
       @type = type
    end
    
    attr_reader :type
-
-   def marker( production = nil )
-      type.marker(production)
+   
+   def effective_type()
+      @type.effective_type
    end
 
    def recreate_in( new_context, changes = nil )
@@ -42,6 +42,14 @@ class Scalar < Element
       end
    end
 
+   def self.build_from_reference( entity, context = nil )
+      if entity.responds_to?(:name) then
+         new(ReferenceType.new(entity.name, :context => entity.context))
+      else
+         assert( context, "you must provide a context if you are initializing a Reference with an entity name" )
+         new(ReferenceType.new(entity, :context => context))
+      end
+   end
 
 end # Scalar
 end # Schema

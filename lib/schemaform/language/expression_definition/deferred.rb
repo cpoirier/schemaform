@@ -18,40 +18,35 @@
 #             limitations under the License.
 # =============================================================================================
 
-
+require Schemaform.locate("base.rb")
 
 #
-# An expression-valued vessel.
+# A marker created when a formula references itself (directly or indirectly). It is an error
+# for a Deferred marker to be the final result of a formula, as that means the formula's type
+# is unresolvable. However, where overall typing can be inferred from other parts of the 
+# expression, it acts as a temporary placeholder. It will later be replaced with a functional
+# marker.
 
 module Schemaform
-class Schema
-class Formula < Element
+module Language
+module ExpressionDefinition
+class Deferred < Base
 
-   def initialize( proc, context, *parameters )
-      super(context)
+   def initialize( formula, production = nil )
+      super(production)
       
-      check do
-         parameters.each do |parameter|
-            type_check(:parameter, parameter, Element)
-         end
-      end
-      
-      @proc       = proc
-      @parameters = parameters
    end
    
-   attr_reader :proc
-      
-   def type()
-      marker.type
+   
+   
+   def *( rhs )
+      result_type = self.type!.best_common_type(rhs.type!)
+      result_type.marker(Productions::BinaryOperator.new(:*, self, rhs))
    end
    
-   def recreate_in( new_context, changes = nil )
-      self.class.new(@proc, new_context)
-   end
-
-
-end # Expression
-end # Schema
+   
+end # Deferred
+end # ExpressionDefinition
+end # Language
 end # Schemaform
 

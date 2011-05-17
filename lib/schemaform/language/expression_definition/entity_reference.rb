@@ -18,8 +18,7 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("marker.rb")
-require Schemaform.locate("schemaform/expressions/accessor.rb")
+require Schemaform.locate("base.rb")
 
 
 #
@@ -28,20 +27,24 @@ require Schemaform.locate("schemaform/expressions/accessor.rb")
 module Schemaform
 module Language
 module ExpressionDefinition
-class EntityReference < Marker
-
+class EntityReference < Base
+   
    def initialize( reference_type, production = nil )
-      super(production)
-      @reference_type = reference_type
-      @tuple = reference_type.referenced_entity.heading
+      super(production, reference_type)
+      @tuple     = reference_type.referenced_entity.heading
+      @effective = reference_type.referenced_entity.formula_context(Expressions::ImpliedContext.new(self))
+   end
+   
+   def effective!()
+      @effective
    end
    
    def method_missing( symbol, *args, &block )
-      return super unless @tuple.member?(symbol)
-      @tuple[symbol].marker(Expressions::Accessor.new(self, symbol))
+      @effective.send(symbol, *args, &block)
    end
    
-end # Attribute
+   
+end # EntityReference
 end # ExpressionDefinition
 end # Language
 end # Schemaform

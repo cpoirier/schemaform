@@ -18,35 +18,16 @@
 #             limitations under the License.
 # =============================================================================================
 
-#
-# The base class for variables, intermediates, and results of an expression. These are the 
-# things with which you interact when describing a derived attribute or default value in the 
-# Schemaform definition language. Your expression must return one, but you should never create
-# one directly.
+require Schemaform.locate("base.rb")
+
 
 module Schemaform
 module Language
 module ExpressionDefinition
-class Marker
-   include QualityAssurance
+class Set < Base
 
-   def initialize( production = nil, type = nil )
-      @production = production
-      @type       = type
-   end
    
-   attr_reader :production
-   
-   def type()
-      @type ? @type : fail_unless_overridden(self, :type)
-   end
-   
-   def *( rhs )
-      result_type = self.type.best_common_type(rhs.type)
-      Marker.new(Productions::BinaryOperator.new(:*, self, rhs), result_type)
-   end
-   
-end # Marker
+end # Set
 end # ExpressionDefinition
 end # Language
 end # Schemaform

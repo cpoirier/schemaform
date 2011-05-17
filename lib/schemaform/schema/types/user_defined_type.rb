@@ -31,7 +31,10 @@ class UserDefinedType < Type
       super
    end
    
-      
+   def effective_type()
+      @base_type.effective_type()
+   end
+   
 
 end # UserDefinedType
 end # Schema

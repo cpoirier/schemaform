@@ -18,26 +18,17 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("scalar.rb")
+require Schemaform.locate("set.rb")
 
-
-#
-# A reference to a Tuple in an Entity.
 
 module Schemaform
-class Schema
-class Reference < Scalar
+module Language
+module ExpressionDefinition
+class EmptySet < Set
 
-   def initialize(entity, context = nil)
-      if entity.responds_to?(:name) then
-         super(ReferenceType.new(entity.name, :context => entity.context))
-      else
-         assert( context, "you must provide a context if you are initializing a Reference with an entity name" )
-         super(ReferenceType.new(entity, :context => context))
-      end
-   end
    
-
-end # Reference
-end # Schema
+end # EmptySet
+end # ExpressionDefinition
+end # Language
 end # Schemaform
+

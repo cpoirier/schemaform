@@ -26,6 +26,7 @@ module Schemaform
 class Schema
 class Element
    include QualityAssurance
+   extend QualityAssurance
 
    def initialize( context, name = nil )
       @context = context
@@ -37,6 +38,11 @@ class Element
    def context()
       assert( @context, "Element is missing a context; either you did not initialize the Element, or you called an Element method before initialization is complete")
       @context
+   end
+   
+   def context=( new_context )
+      @context = new_context
+      @path = nil if defined?(@path)
    end
    
    def schema()
@@ -83,15 +89,21 @@ class Element
       description
    end
    
+   
    #
    # Returns a version of the element in a new context. If you don't have a use for the 
    # changes, pass them through verbatim, for use by nested elements.
    
    def recreate_in( new_context, changes = nil )
       clone.tap do |element|
-         element.instance_eval{ @context = new_context }
+         element.instance_eval do
+            @context = new_context
+            @path    = nil
+         end
       end
    end
+   
+   
    
 
 end # Element

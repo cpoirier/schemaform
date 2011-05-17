@@ -70,6 +70,10 @@ class Type < Element
       self
    end
    
+   def effective_type()
+      self
+   end
+   
    
    #
    # Returns an anonymous wrapper on this type with the supplied constraints.
@@ -94,7 +98,7 @@ class Type < Element
    #
    # Attributes include:
    #  :name      => any name for this type
-   #  :base_type => the base type (or name) for this type
+   #  :base_type => the base type for this type
    #  :default   => the default value for this type
    #  :loader    => a Proc that converts data from disk into a memory representation (Object)
    #  :storer    => a Proc that converts object into data for storage on disk

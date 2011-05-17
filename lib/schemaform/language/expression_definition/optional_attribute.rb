@@ -18,8 +18,7 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("marker.rb")
-require Schemaform.locate("schemaform/expressions/present_check.rb")
+require Schemaform.locate("attribute.rb")
 
 
 #
@@ -28,11 +27,10 @@ require Schemaform.locate("schemaform/expressions/present_check.rb")
 module Schemaform
 module Language
 module ExpressionDefinition
-class OptionalAttribute < Marker
+class OptionalAttribute < Attribute
 
    def initialize( definition, production = nil )
-      super(production)
-      @definition = definition
+      super(definition, production)
    end
    
    def method_missing( symbol, *args, &block )
@@ -46,10 +44,8 @@ class OptionalAttribute < Marker
    # attribute (default values will be present otherwise).
 
    def present?( true_value, false_value = nil )
-      check do
-         type_check(:true_value, true_value, Marker)
-         type_check(:false_value, false_value, Marker, true)
-      end
+      true_value  = markup!(true_value )
+      false_value = markup!(false_value)
       
       result_type = true_value.type
       result_type = result_type.best_common_type(false_value.type) if false_value

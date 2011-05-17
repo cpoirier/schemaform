@@ -32,6 +32,11 @@ class Registry
       @owner_description  = owner_description
       @member_description = member_description
    end
+   
+   def empty?()
+      @registry.empty?
+   end
+   
 
    #
    # Checks if the named object exists.

@@ -19,39 +19,18 @@
 # =============================================================================================
 
 
-
-#
-# An expression-valued vessel.
-
 module Schemaform
 class Schema
-class Formula < Element
+class EmbeddedTupleType < Type
 
-   def initialize( proc, context, *parameters )
-      super(context)
-      
-      check do
-         parameters.each do |parameter|
-            type_check(:parameter, parameter, Element)
-         end
-      end
-      
-      @proc       = proc
-      @parameters = parameters
+   def initialize( tuple, attrs )
+      super attrs
+      @tuple = tuple
    end
    
-   attr_reader :proc
-      
-   def type()
-      marker.type
-   end
+   attr_reader :tuple
    
-   def recreate_in( new_context, changes = nil )
-      self.class.new(@proc, new_context)
-   end
 
-
-end # Expression
+end # EmbeddedTupleType
 end # Schema
 end # Schemaform
-

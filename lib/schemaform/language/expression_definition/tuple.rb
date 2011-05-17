@@ -18,30 +18,33 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("marker.rb")
-require Schemaform.locate("schemaform/expressions/accessor.rb")
+require Schemaform.locate("base.rb")
 
 
 #
-# Provides access to a Tuple and its attributes.
+# Provides access to a Entity-examplar Tuple and its attributes. This is the Marker passed
+# to the Formula for a derived attribute.
 
 module Schemaform
 module Language
 module ExpressionDefinition
-class Tuple < Marker
+class Tuple < Base
 
-   def initialize( definition, production = nil )
+   def initialize( tuple, production = nil )
       super(production)
-      @definition = definition
+      @tuple = tuple
    end
    
-   def related( entity_name, link_attribute = nil )
-      @definition.schema.entities.find(entity_name).marker(Expressions::RelatedTuples.new(self, entity_name, link_attribute))
+   def tuple!()
+      @tuple
    end
-
+   
    def method_missing( symbol, *args, &block )
-      return super unless @definition.member?(symbol)
-      @definition[symbol].marker(Expressions::Accessor.new(self, symbol))
+      if @tuple.member?(symbol) && args.empty? then
+         return @tuple[symbol].marker(Expressions::Accessor.new(self, symbol))
+      else
+         return super
+      end
    end
    
 

@@ -55,7 +55,7 @@ class SchemaDefinition
    # Defines a tuple within the Schema.
    
    def define_tuple( name, &block )
-      TupleDefinition.build(@schema, name, true, &block)
+      TupleDefinition.build(@schema, nil, name, true, &block)
    end
 
 
@@ -63,7 +63,7 @@ class SchemaDefinition
    # Defines a simple (non-entity) type.  
 
    def define_type( name, base_name = nil, modifiers = {} )
-      fail
+      fail "TODO: not refactored yet"
       @schema.instance_eval do
          check do
             type_check( :name, name, [Symbol, Class] )
@@ -73,7 +73,7 @@ class SchemaDefinition
          if base_name && !@types.member?(base_name) then
             fail "TODO: deferred types"
          else
-            modifiers[:base_type] = base_name
+            modifiers[:base_type] = @types[base_name]
             @types.register modifiers[:name], UserDefinedType.new(modifiers)
          end
       end

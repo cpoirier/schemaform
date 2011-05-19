@@ -19,20 +19,17 @@
 # =============================================================================================
 
 
-
 #
-# Indicates the present? flag of the source should be checked.
+# comment
 
 module Schemaform
-module Expressions
-class PresentCheck 
+module Productions
+class Anchor
 
-   def initialize( source, if_present, otherwise )
-      super(source)
-      @if_present = if_present
-      @otherwise  = otherwise
+   def initialize()
+      
    end
 
-end # PresentCheck
-end # Expressions
+end # Anchor
+end # Productions
 end # Schemaform

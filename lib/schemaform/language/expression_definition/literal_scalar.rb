@@ -24,19 +24,24 @@ require Schemaform.locate("base.rb")
 module Schemaform
 module Language
 module ExpressionDefinition
-class Number < Base
+class LiteralScalar < Base
 
-   def initialize( type, production = nil )
-      super(production, type)
+   def initialize( value, type = nil )
+      super(type || value.type)
+      @value = value
    end
    
-   def *( rhs )
-      result_type = self.type!.best_common_type(rhs.type!)
-      result_type.marker(Productions::BinaryOperator.new(:*, self, rhs))
+   def value!()
+      @value
    end
    
+   # def *( rhs )
+   #    result_type = self.type!.best_common_type(rhs.type!)
+   #    result_type.marker(Productions::BinaryOperator.new(:*, self, rhs))
+   # end
    
-end # Number
+   
+end # LiteralScalar
 end # ExpressionDefinition
 end # Language
 end # Schemaform

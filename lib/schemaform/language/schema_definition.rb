@@ -55,7 +55,7 @@ class SchemaDefinition
    # Defines a tuple within the Schema.
    
    def define_tuple( name, &block )
-      TupleDefinition.build(@schema, nil, name, true, &block)
+      TupleDefinition.build(@schema, name, &block)
    end
 
 

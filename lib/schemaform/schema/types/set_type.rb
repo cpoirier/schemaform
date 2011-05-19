@@ -27,9 +27,20 @@ require Schemaform.locate("collection_type.rb")
 module Schemaform
 class Schema
 class SetType < CollectionType
+   
+   def self.build( member_type, attrs = {} )
+      attrs[:context    ] = member_type unless attrs.member?(:context)
+      attrs[:member_type] = member_type
+      
+      if member_type.is_a?(TupleType) then
+         RelationType.new(attrs)
+      else
+         new(attrs)
+      end
+   end
 
-   def initialize( element_type, attrs = {} )
-      super
+   def description()
+      "set of #{member_type.description}"
    end
    
 end # SetType

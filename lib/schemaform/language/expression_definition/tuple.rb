@@ -31,8 +31,9 @@ module ExpressionDefinition
 class Tuple < Base
 
    def initialize( tuple, production = nil )
-      super(production)
-      @tuple = tuple
+      super()
+      @production = production
+      @tuple      = tuple
    end
    
    def tuple!()
@@ -41,7 +42,7 @@ class Tuple < Base
    
    def method_missing( symbol, *args, &block )
       if @tuple.member?(symbol) && args.empty? then
-         return @tuple[symbol].marker(Expressions::Accessor.new(self, symbol))
+         return @tuple[symbol].marker(Productions::Accessor.new(self, symbol))
       else
          return super
       end

@@ -27,14 +27,16 @@ module Schemaform
 class Schema
 class WritableAttribute < Attribute
 
+   def initialize( name, tuple, type )
+      type_check(:type, type, Type)
+      super(name, tuple, type)
+   end
+   
    
    def writable?()
       true
    end
    
-   def type()
-      @definition.type
-   end
 
    
 

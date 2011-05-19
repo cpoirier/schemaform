@@ -27,8 +27,28 @@ module Schemaform
 class Schema
 class ListType < CollectionType
 
-   def initialize( element_type, attrs = {} )
-      super
+   def self.build( member_type, attrs = {} )
+      attrs[:context    ] = member_type.schema unless attrs.member?(:context)
+      attrs[:member_type] = member_type
+      
+      if member_type.is_a?(TupleType) then
+         TabulationType.new(attrs)
+      else
+         new(attrs)
+      end
+   end
+   
+   def description()
+      "list of #{member_type.description}"
+   end
+   
+   def method_type( symbol, *args, &block )
+      case symbol
+      when :join
+         schema.text_type()
+      else
+         super
+      end
    end
 
 end # ListType

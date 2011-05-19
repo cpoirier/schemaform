@@ -53,6 +53,15 @@ class Entity < Relation
       return nil
    end
    
+   def register_tuple( tuple )
+      schema.register_tuple(tuple)
+   end
+   
+   def describe( indent = "", name_override = nil, suffix = nil )
+      super
+      @heading.describe(indent + "   ")
+   end
+   
    
    #
    # Returns true if the named attribute is defined in this or any base entity.

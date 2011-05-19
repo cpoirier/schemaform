@@ -21,20 +21,19 @@
 
 
 #
-# Indicates the present? flag of the source should be checked.
+# Captures a method call expression.
 
 module Schemaform
-module Expressions
-class BinaryOperator 
-
-   def initialize( operator, lh_object, rh_object )
+module Productions
+class Projection 
+   
+   def initialize( against, *attributes )
       super()
-      
-      @operator  = operator
-      @lh_object = lh_object
-      @rh_object = rh_object
+      @against    = against
+      @attributes = attributes
    end
+   
 
-end # BinaryOperator
-end # Expressions
+end # MethodCall
+end # Productions
 end # Schemaform

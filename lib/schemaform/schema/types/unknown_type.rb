@@ -19,19 +19,29 @@
 # =============================================================================================
 
 
-
 #
-# Provides an implied context within a larger expression.
+# An internal type that can stand in for any type, include void.
 
 module Schemaform
-module Expressions
-class ImpliedContext 
+class Schema
+class UnknownType < Type
 
-   def initialize( implied )
-      super()
-      @implied = implied
+   def initialize( attrs )
+      super
    end
 
-end # ImpliedContext
-end # Expressions
+   def join_compatible?( with )
+      return false
+   end
+
+   def assignable_from?( from )
+      return true
+   end
+   
+   def unknown_type?()
+      return true
+   end
+
+end # CatchAllType
+end # module
 end # Schemaform

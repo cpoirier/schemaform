@@ -29,31 +29,22 @@ module Schemaform
 class Schema
 class Attribute < Element
    
-   def initialize( name, tuple, body = nil )
+   def initialize( name, tuple, type = nil )
       type_check(:tuple, tuple, Tuple)
       super(tuple, name)
-      @body = body
+      @type = type
    end
 
-   def body()
-      @body
-   end
-   
-   def body=( body )
-      assert(@body.nil?, "attribute #{full_name} already has a body")
-      @body = body
-   end
-   
    def type()
-      @body.type
+      @type
    end
    
    def recreate_in( new_context, changes = nil )
-      self.class.new(@name, new_context, @body.recreate_in(new_context))
+      self.class.new(@name, new_context, @type)
    end
    
-   def references_entity?( entity_name )
-      
+   def describe( indent = "", name_override = nil, suffix = nil )
+      super(indent, name_override, " " + type().description)
    end
    
 end # Attribute

@@ -18,23 +18,26 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("collection.rb")
-require Schemaform.locate("type.rb"      )
+require Schemaform.locate("base.rb")
 
-
-#
-# A collection with no ordering and no duplicate members.
 
 module Schemaform
-class Schema
-class Set < Collection
+module Language
+module ExpressionDefinition
+class LiteralList < Base
+   
+   def initialize( *members )
+      @members = members
 
-   def initialize( member, context = nil, name = nil, collection_type = SetType )
-      super(member, context || member.context, name, collection_type)
+      warn_once( "TODO: type determination for literal lists" )
+      member_type = nil
+
+      super(Thread[:expression_contexts].top.build_list_type(member_type))
    end
    
    
-
-end # Set
-end # Schema
+end # LiteralList
+end # ExpressionDefinition
+end # Language
 end # Schemaform
+

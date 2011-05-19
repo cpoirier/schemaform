@@ -21,7 +21,7 @@
 
 module Schemaform
 class Schema
-class EmbeddedTupleType < Type
+class TupleType < Type
 
    def initialize( tuple, attrs )
       super attrs
@@ -30,7 +30,10 @@ class EmbeddedTupleType < Type
    
    attr_reader :tuple
    
+   def description()
+      fail
+   end
 
-end # EmbeddedTupleType
+end # TupleType
 end # Schema
 end # Schemaform

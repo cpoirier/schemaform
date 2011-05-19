@@ -30,21 +30,20 @@ module ExpressionDefinition
 class Base
    include QualityAssurance
 
-   def initialize( production = nil, type = nil )
-      @production = production
+   def initialize( type = nil )
       @type       = type
+   end
+   
+   def namer!()
+      @namer
    end
    
    def effective!()
       self
    end
    
-   def production!()
-      @production
-   end
-   
    def type!()
-      @type ? @type : fail_unless_overridden(self, :type)
+      @type ? @type : fail_unless_overridden(self, :type!)
    end
    
    def []( name )
@@ -58,13 +57,13 @@ class Base
       when NilClass
          return nil
       when Array
-         if object.empty? then
-            return EmptySet.new()
-         else
-            fail
-         end
+         return LiteralList.new(*object.collect{|e| markup!(e)})
+      when Set
+         return LiteralSet.new(*object.collect{|e| markup!(e)})
+      when FalseClass, TrueClass
+         return LiteralScalar.new(object, Thread[:expression_contexts].top.boolean_type)
       else
-         fail
+         fail "no support for #{object.class.name}"
       end
    end
    

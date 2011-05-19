@@ -36,10 +36,16 @@ class Group < Component
    end
    
    attr_reader :fields
+   alias :tables :children
 
    def define_field( name, type, references_field = nil )
       add_child Field.new(self, name, type, references_field)
    end
+   
+   def define_table( name )
+      add_child Table.new(self, name)
+   end
+   
    
    # def describe( indent = "", name_override = nil, suffix = nil )
    #    if @children then

@@ -18,22 +18,19 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("method_call.rb")
 
 
-#
-# Captures a method call expression.
 
 module Schemaform
-module Expressions
-class Projection 
-   
-   def initialize( against, *attributes )
-      super()
-      @against    = against
-      @attributes = attributes
+module Productions
+class Accessor < MethodCall
+
+   def initialize( object, symbol )
+      super
    end
    
 
-end # MethodCall
-end # Expressions
+end # Accessor
+end # Productions
 end # Schemaform

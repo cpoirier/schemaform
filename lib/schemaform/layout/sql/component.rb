@@ -36,6 +36,10 @@ class Component
    end
    
    attr_reader :context, :name, :children, :schema
+   
+   def top()
+      @context ? @context.top : self
+   end
 
    def define_group( name )
       add_child Group.new(self, name)

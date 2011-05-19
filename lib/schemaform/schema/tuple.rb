@@ -19,7 +19,7 @@
 # =============================================================================================
 
 require Schemaform.locate("element.rb")
-require Schemaform.locate("types/structured_type.rb")
+require Schemaform.locate("type.rb")
 
 
 #
@@ -36,11 +36,12 @@ class Tuple < Element
          @attributes[name].type
       end
 
-      @attributes = Registry.new(self, "an attribute")
+      @attributes = Registry.new(self, "an attribute" )
+      @tuples     = Registry.new(self, "a child tuple")
       @expression = nil
    end
    
-   attr_reader :attributes, :type
+   attr_reader :attributes, :tuples, :type
    
    def []( name )
       @attributes[name]
@@ -58,9 +59,17 @@ class Tuple < Element
       @attributes.member?(name)
    end   
    
+   def empty?()
+      @attributes.empty? && @tuples.empty?
+   end
+   
    def register( attribute )
       type_check(:attribute, attribute, Attribute)
       @attributes.register(attribute)
+   end
+   
+   def register_tuple( tuple )
+      @tuples.register(tuple)
    end
    
    def default()
@@ -98,6 +107,15 @@ class Tuple < Element
          end
       end
    end
+   
+   def describe( indent = "", name_override = nil, suffix = nil )
+      super
+      child_indent = indent + "   "
+      @attributes.each do |attribute|
+         attribute.describe(child_indent)
+      end
+   end
+   
       
    
    
@@ -108,7 +126,7 @@ class Tuple < Element
 
    def dereference( lh_expression, rh_symbol )
       if @attributes.member?(rh_symbol) then
-         Expressions::DottedExpression.new(lh_expression, rh_symbol, @attributes[rh_symbol].type) 
+         Productions::DottedExpression.new(lh_expression, rh_symbol, @attributes[rh_symbol].type) 
       else
          nil
       end
@@ -123,12 +141,17 @@ class Tuple < Element
    # if a change replaces a Scalar (or anything else) with a Tuple, the master copy switches from 
    # us to the change.
 
-   def recreate_children_in( tuple, changes = nil )
+   def recreate_children_in( new_context, changes = nil )
       if changes.nil? then
          @attributes.each do |attribute|
-            attribute.recreate_in(tuple)
+            attribute.recreate_in(new_context)
+         end
+         @tuples.each do |tuple|
+            tuple.recreate_in(new_context)
          end
       else
+         fail "TODO: import of nested tuples with changes"
+         
          (@attributes.names + changes.names).uniq.each do |name|
             if changes.member?(name) then
                if changes[name].definition.is_a?(Tuple) && @attributes.member?(name) && @attributes[name].definition.is_a?(Tuple) then

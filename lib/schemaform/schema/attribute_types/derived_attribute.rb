@@ -25,10 +25,15 @@ module Schemaform
 class Schema
 class DerivedAttribute < Attribute
 
-   def initialize( name, tuple, definition )
-      super(name, tuple, definition)
-      type_check(:definition, definition, Formula)
+   def initialize( name, tuple, proc )
+      super(name, tuple)
+      @proc = proc
    end
+   
+   def recreate_in( new_context, changes = nil )
+      self.class.new(@name, new_context, @proc)
+   end
+   
    
 end # DerivedAttribute
 end # Schema

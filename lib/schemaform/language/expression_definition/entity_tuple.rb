@@ -51,8 +51,8 @@ class EntityTuple < Tuple
       else
          link_path = related_entity.search do |attribute, path|
             next unless attribute.definition.is_a?(Schema::Scalar)
-            next unless attribute.definition.effective_type.is_a?(Schema::ReferenceType)
-            next unless attribute.definition.effective_type.entity_name == @entity.name
+            next unless attribute.definition.evaluated_type.is_a?(Schema::ReferenceType)
+            next unless attribute.definition.evaluated_type.entity_name == @entity.name
             attribute.marker(path)
          end
       end
@@ -61,7 +61,7 @@ class EntityTuple < Tuple
          fail "couldn't find any way to relate records from #{@entity_name} to #{@entity.full_name}"
       elsif !link_path.is_an?(Attribute) then
          fail "expected Attribute result from the link expression"
-      elsif !link_path._definition.effective_type.is_a?(Schema::ReferenceType) || link_path._definition.effective_type.entity_name != @entity.name then
+      elsif !link_path._definition.evaluated_type.is_a?(Schema::ReferenceType) || link_path._definition.evaluated_type.entity_name != @entity.name then
          fail "expected reference to #{@entity.full_name} as the result of the link expression"
       end
       

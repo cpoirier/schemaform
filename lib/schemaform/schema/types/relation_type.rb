@@ -28,25 +28,13 @@ module Schemaform
 class Schema
 class RelationType < SetType
    
-   #
-   # The heading is a required part of the RelationType, and must be a StructuredType.
-   
-   def initialize( heading, attrs )
-      type_check(:heading, heading, StructuredType)
-      @heading = heading
-      super
-   end
-   
-   def relation_type?()
-      true
+   def initialize( attrs )
+      super attrs
+      @tuple_type = member_type()
    end
    
    def description()
-      "[" + @heading.description + "]"
-   end
-
-   def each_attribute( &block )
-      @heading.each_attribute( &block )
+      "[" + @tuple_type.description + "]"
    end
 
 

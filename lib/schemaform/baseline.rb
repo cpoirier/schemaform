@@ -549,6 +549,8 @@ end
 #                                          Set Extensions
 # =============================================================================================
 
+require 'set'
+
 #
 # Note: we don't explicitly require 'set' beforehand, so this is at worst harmless.
 
@@ -580,6 +582,29 @@ class Set
    
 end
 
+def Set( *values )
+   Set.new(values)
+end
+
+
+
+# =============================================================================================
+#                                        Thread Extensions
+# =============================================================================================
+
+class Thread
+   def self.[]( name )
+      Thread.current[name]
+   end
+   
+   def self.[]=( name, value )
+      Thread.current[name] = value
+   end
+   
+   def self.key?( name )
+      Thread.current.key?(name)
+   end
+end
 
 
 
@@ -713,6 +738,14 @@ module Baseline
       def self.warnings_disabled?()
          !@@quality_assurance__warnings_enabled
       end
+      
+      
+      #
+      # Dumps a debug message to $stderr.
+      
+      def debug( message )
+         $stderr.puts( (message =~ /^[A-Z]+: / ? "" : "DEBUG: ") + message )
+      end
    
    
 
@@ -747,8 +780,8 @@ module Baseline
          method = object.instance_class.instance_method(method) unless method.is_a?(Method)
          fail( "You must override: #{method.owner.name}.#{method.name} in #{object.class.name}" )
       end
-
-
+      
+      
       #
       # Asserts that condition is true, but still outputs the message.
    

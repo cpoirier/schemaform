@@ -89,6 +89,10 @@ class Element
       description
    end
    
+   def describe( indent = "", name_override = nil, suffix = nil )
+      puts "#{indent}#{self.class.name.split("::").last}: #{name_override || @name}#{suffix ? " " + suffix : ""}"
+   end
+   
    
    #
    # Returns a version of the element in a new context. If you don't have a use for the 

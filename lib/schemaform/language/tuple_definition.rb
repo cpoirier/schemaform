@@ -25,23 +25,23 @@ module Language
 class TupleDefinition
    include QualityAssurance
    
-   def self.build( context, owner, name = nil, register = false, &block )
+   def self.build( context, name = nil, register = true, &block )
       Schema::Tuple.new(context, name).tap do |tuple|
-         context.schema.tuples.register(tuple) if register
-         TupleDefinition.process(tuple, owner, &block)
+         context.register_tuple(tuple) if register && context.responds_to?(:register_tuple)
+         TupleDefinition.process(tuple, &block)
       end      
    end
    
-   def self.process( tuple, owner = nil, &block )
-      dsl = new(tuple, owner)
-      dsl.instance_eval(&block)
-      tuple
+   def self.process( tuple, &block )
+      tuple.tap do 
+         dsl = new(tuple)
+         dsl.instance_eval(&block)
+      end
    end
 
-   def initialize( tuple, owner = nil )
+   def initialize( tuple )
       @tuple  = tuple
       @schema = tuple.schema
-      @owner  = owner || tuple
    end
    
    
@@ -51,7 +51,8 @@ class TupleDefinition
    
    def import( tuple_name, &block )
       imported_tuple = @schema.tuples.find(tuple_name)
-      redefinitions  = block ? self.class.build(@schema, @owner, &block) : nil
+      redefinitions  = block ? self.class.build(@tuple, nil, false, &block) : nil
+      redefinitions  = nil if redefinitions && redefinitions.empty?
       
       imported_tuple.recreate_children_in(@tuple, redefinitions)
    end
@@ -62,10 +63,7 @@ class TupleDefinition
    # block instead of a type.
 
    def required( name, type_name = nil, modifiers = {}, &block )
-      Schema::RequiredAttribute.new(name, @tuple).tap do |attribute|
-         attribute.body = definition_for(type_name, modifiers, name, &block)
-         @tuple.attributes.register attribute
-      end
+      @tuple.attributes.register Schema::RequiredAttribute.new(name, @tuple, type_for(type_name, modifiers, name, &block))
    end
 
    
@@ -74,10 +72,7 @@ class TupleDefinition
    # a block instead of a type.
    
    def optional( name, type_name = nil, modifiers = {}, &block )
-      Schema::OptionalAttribute.new(name, @tuple) do |attribute|
-         attribute.body = definition_for(type_name, modifiers, name, &block)
-         @tuple.attributes.register attribute
-      end
+      @tuple.attributes.register Schema::OptionalAttribute.new(name, @tuple, type_for(type_name, modifiers, name, &block))
    end
    
       
@@ -125,7 +120,7 @@ class TupleDefinition
    
    def member_of( entity_name )
       type_check(:entity_name, entity_name, Symbol)
-      Schema::Scalar.build_from_reference(entity_name, @tuple)
+      Schema::ReferenceType.new(entity_name, :context => @tuple)
    end
    
    
@@ -133,7 +128,7 @@ class TupleDefinition
    # Creates a Set or Relation for use as an attribute definition.
    
    def set_of( type_name, modifiers = {} )
-      collection_of(type_name, modifiers, Schema::Relation, Schema::Set)
+      Schema::SetType.build(type_for(type_name, modifiers), :context => @tuple)
    end
 
    
@@ -141,7 +136,7 @@ class TupleDefinition
    # Creates an (ordered) list for use as an attribute definition.
    
    def list_of( type_name, modifiers = {} )
-      collection_of(type_name, modifiers, Schema::Tabulation, Schema::List)
+      Schema::ListType.build(type_for(type_name, modifiers), :context => @tuple)
    end
    
    
@@ -150,9 +145,9 @@ class TupleDefinition
    
    def one_of( *values )
       if values.length == 1 && values[0].is_a?(Hash) then
-         Schema::Scalar.new(Schema::CodedType.new(values[0], :context => @tuple))
+         Schema::CodedType.new(values[0], :context => @tuple)
       else
-         Schema::Scalar.new(Schema::EnumeratedType.new(values, :context => @tuple))
+         Schema::EnumeratedType.new(values, :context => @tuple)
       end
    end
    
@@ -165,40 +160,23 @@ private
    def derived( name, clas, *args, &block )
       modifiers = args.first.is_a?(Hash) ? args.shift : {}
       proc      = block || args.shift
-      formula   = Schema::Formula.new(proc, @tuple, @owner)
 
-      @tuple.attributes.register(clas.new(name, @tuple, formula))
-   end
-   
-   
-   #
-   # Creates a collection of the appropriate class.
-   
-   def collection_of( type_name, modifiers = {}, complex_class = Schema::Relation, simple_class = Schema::Set )
-      warn_once("consider modifiers on a collection_of")
-
-      if @schema.tuples.member?(type_name) then
-         complex_class.new(@schema.tuples[type_name])
-      elsif @schema.types.member?(type_name) then
-         simple_class.new(definition_for(type_name, modifiers))
-      else
-         simple_class.new(Schema::Scalar.build_from_reference(type_name, @tuple))
-      end      
+      @tuple.attributes.register clas.new(name, @tuple, proc)
    end
    
    
    #
    # Retrieves or builds a definition for the given name.
    
-   def definition_for( name, modifiers, implied_name = nil, &block )
-      return name if name.is_an?(Schema::Element)
+   def type_for( name, modifiers, implied_name = nil, &block )
+      return name if name.is_a?(Schema::Type)
       
       if block then
-         TupleDefinition.build(@tuple, @owner, implied_name, &block)
+         Schema::TupleType.new(TupleDefinition.build(@tuple, implied_name, &block), :context => @tuple)
       elsif @schema.types.member?(name) then
-         Schema::Scalar.new(@schema.types.build(name, modifiers))         
+         @schema.types.build(name, modifiers)
       elsif @schema.tuples.member?(name) then
-         @schema.tuples.find(name)
+         Schema::TupleType.new(@schema.tuples.find(name), :context => @tuple)
       else
          member_of(name)
       end

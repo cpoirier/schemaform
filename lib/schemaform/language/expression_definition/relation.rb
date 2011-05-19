@@ -19,7 +19,6 @@
 # =============================================================================================
 
 require Schemaform.locate("base.rb")
-require Schemaform.locate("schemaform/expressions/projection.rb")
 
 
 #
@@ -31,7 +30,8 @@ module ExpressionDefinition
 class Relation < Base
 
    def initialize( definition, production = nil )
-      super(production)
+      super()
+      @production = production
       @definition = definition
    end
    
@@ -41,7 +41,7 @@ class Relation < Base
    
    def method_missing( symbol, *args, &block )
       return super unless @definition.heading.member?(symbol)
-      @definition.project(symbol).marker(Expressions::Projection.new(self, symbol))
+      @definition.project(symbol).marker(Productions::Projection.new(self, symbol))
    end
    
 end # Relation

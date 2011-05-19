@@ -56,7 +56,7 @@ class EnumeratedType < ScalarType
       @values.collect{|v| v.inspect}.join("|")
    end
    
-   def effective_type()
+   def evaluated_type()
       base_type()
    end
    

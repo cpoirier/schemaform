@@ -18,27 +18,23 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("list.rb" )
-require Schemaform.locate("tuple.rb")
 
 
 #
-# Base class for named relations.
+# Captures a method call expression.
 
 module Schemaform
-class Schema
-class Tabulation < List
-
-   def initialize( heading, context = nil, name = nil )
-      super(heading, context || heading.context, name)
-      @heading = heading
+module Productions
+class RelatedTuples 
+   
+   def initialize( tuple, entity_name, link_attribute )
+      super()
+      @tuple          = tuple
+      @entity_name    = entity_name
+      @link_attribute = link_attribute
    end
    
-   def heading()
-      @heading
-   end
 
-
-end # Tabulation
-end # Schema
+end # RelatedTuples
+end # Productions
 end # Schemaform

@@ -129,8 +129,9 @@ module Schemaform
 private
    
    require locate("schemaform/registry.rb")
+   require locate("schemaform/schema.rb")
    
-   ["language", "expressions", "definitions", "layout"].each do |directory|
+   ["language", "productions", "layout"].each do |directory|
       Dir[Schemaform.locate("schemaform/#{directory}/*.rb")].each do |path|
          require path
       end

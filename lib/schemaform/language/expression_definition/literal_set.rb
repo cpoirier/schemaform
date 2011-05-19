@@ -18,42 +18,28 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("attribute.rb")
+require Schemaform.locate("base.rb")
 
-
-#
-# Provides access to a Tuple and its attributes.
 
 module Schemaform
 module Language
 module ExpressionDefinition
-class OptionalAttribute < Attribute
-
-   def initialize( definition, production = nil )
-      super(definition, production)
-   end
+class LiteralSet < Base
    
-   def method_missing( symbol, *args, &block )
-      handler = @definition.definition.marker(Expressions::ImpliedContext.new(self))
-      handler.send(symbol, *args, &block)
-   end
-   
-   
-   #
-   # Builds an expression that branches based on whether or not a value has been stored in the
-   # attribute (default values will be present otherwise).
-
-   def present?( true_value, false_value = nil )
-      true_value  = markup!(true_value )
-      false_value = markup!(false_value)
+   def initialize( *members )
+      @members = members
       
-      result_type = true_value.type
-      result_type = result_type.best_common_type(false_value.type) if false_value
-
-      result_type.marker(Expressions::PresentCheck.new(self, true_value, false_value))
+      warn_once( "TODO: type determination for literal sets" )
+      member_type = nil
+      
+      super(Thread[:expression_contexts].top.build_set_type(member_type))
    end
-
-end # OptionalAttribute
+   
+   
+   
+   
+end # LiteralSet
 end # ExpressionDefinition
 end # Language
 end # Schemaform
+

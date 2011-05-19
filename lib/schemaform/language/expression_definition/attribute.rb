@@ -19,7 +19,6 @@
 # =============================================================================================
 
 require Schemaform.locate("base.rb")
-require Schemaform.locate("schemaform/expressions/implied_context.rb")
 
 
 #
@@ -31,9 +30,14 @@ module ExpressionDefinition
 class Attribute < Base
 
    def initialize( definition, production = nil )
-      super(production)
+      super()
+      @production = production
       @definition = definition
-      @effective  = definition.definition.marker(Expressions::ImpliedContext.new(self))
+      @effective  = definition.type.marker(Productions::ImpliedContext.new(self))
+   end
+   
+   def production!()
+      @production
    end
    
    def effective!()
@@ -45,12 +49,28 @@ class Attribute < Base
    end
    
    def type!()
-      @definition.definition.type
+      @definition.type
    end
    
    def method_missing( symbol, *args, &block )
       @effective.send(symbol, *args, &block)
    end
+   
+   #
+   # Builds an expression that branches based on whether or not a value has been stored in the
+   # attribute (default values will be present otherwise).
+
+   def present?( true_value = nil, false_value = nil )
+      true_value  = markup!(true_value )
+      false_value = markup!(false_value)      
+      
+      result_type = Thread[:expression_contexts].top.boolean_type
+      result_type = true_value.type!                                if true_value
+      result_type = result_type.best_common_type(false_value.type!) if false_value
+
+      result_type.marker(Productions::PresentCheck.new(self, true_value, false_value))
+   end
+
    
    
 end # Attribute

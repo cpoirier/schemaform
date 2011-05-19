@@ -34,16 +34,28 @@ class Schema
          fail "what kind of marker should #{self.class.name} have?"
       end   
    end
-
-   class NumericType < ScalarType
+   
+   class UnknownType < Type
       def marker( production = nil )
-         Language::ExpressionDefinition::Number.new(self, production)
+         Language::ExpressionDefinition::Value.new(self, production)
+      end
+   end
+
+   class ScalarType < Type
+      def marker( production = nil )
+         Language::ExpressionDefinition::Value.new(self, production)
+      end
+   end
+   
+   class CollectionType < Type
+      def marker( production = nil )
+         Language::ExpressionDefinition::Value.new(self, production)
       end
    end
    
    class EnumeratedType < ScalarType
       def marker( production = nil )
-         effective_type.marker(production)
+         evaluated_type.marker(production)
       end
    end
    
@@ -78,50 +90,86 @@ class Schema
       def marker( production = nil )
          Language::ExpressionDefinition::Attribute.new(self, production)
       end
+      
+      def formula_context( production = nil )
+         context.formula_context(production)
+      end
    end
    
-   class OptionalAttribute < WritableAttribute
+   class DerivedAttribute < Attribute
+      def type()
+         (@type ||= analyze_formula) || schema.unknown_type
+      end
+      
+      def analyze_formula()
+         if @analysis.nil? then
+            debug("processing in #{full_name}")
+
+            Thread[:expression_contexts] = [] unless Thread.key?(:expression_contexts)
+            Thread[:expression_contexts].push_and_pop(schema()) do
+               begin
+                  @analysis = false  # Set false to ensure any self-references don't retrigger analysis
+                  @analysis = @proc.call(formula_context())
+                  assert(!@analysis.type!.unknown_type?, "#{full_name}'s is self-referential and the type cannot be inferred")
+               ensure
+                  @analysis = nil unless @analysis
+               end
+            end
+         end
+         
+         @analysis ? @analysis.type! : nil
+      end
+   end
+   
+   class VolatileAttribute < DerivedAttribute
+      
+      def type()
+         @type ||= marker.type!
+      end
+      
+      #
+      # Volatile attributes are essentially macros. We treat the formula as if it were used
+      # inline in the context. However, to enable that, we disallow recursion.
+
       def marker( production = nil )
-         Language::ExpressionDefinition::OptionalAttribute.new(self, production)
+         warn_once("TODO: must recursion be excluded from volatile attributes?")
+         
+         if @analyzing then
+            fail "#{full_name} is a self-referencing volatile attribute, which is not presently supported"
+         else
+            debug("processing in #{full_name}")
+            
+            Thread[:expression_contexts] = [] unless Thread.key?(:expression_contexts)
+            Thread[:expression_contexts].push_and_pop(schema()) do
+               begin
+                  warn_once("TODO: shouldn't the formula_context for a Volatile attribute link in with the context Production?")
+                  @analyzing = true  # Set true to ensure any self-references are detected
+                  return @proc.call(formula_context(production))
+               ensure
+                  @analyzing = false
+               end
+            end
+         end
       end
    end
 
 
 
-   class Relation < Set
+   class Relation < Element
       def marker( production = nil )
-         Language::ExpressionDefinition::Relation.new(self, production)
+         Language::ExpressionDefinition::Relation.new(context, self, production)
       end
    end
    
    class Entity < Relation
       def formula_context( production = nil )
-         @formula_context ||= Language::ExpressionDefinition::EntityTuple.new(self, production)
+         warn_once("what does it mean to supply a production to Entity.formula_context()?") if production.nil?
+         Language::ExpressionDefinition::EntityTuple.new(self, production)
       end
    end
 
 
    
-   class Formula < Element
-      def marker( production = nil )
-         warn_once("TODO: how should we detect resolution loops in Formula?")
-         if !@result then
-            if @result.nil? then
-               @result = @proc.call(*(@parameters.collect{|parameter| parameter.formula_context}))
-            else
-               @proc.call(*(@parameters.collect{|parameter| parameter.formula_context}))
-            end
-         end
-         
-         @result
-      end
-   end
-
-   class Scalar < Element
-      def marker( production = nil )
-         type.marker(production)
-      end
-   end
       
 
 end # Schema

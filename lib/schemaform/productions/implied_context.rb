@@ -21,20 +21,17 @@
 
 
 #
-# Captures a method call expression.
+# Provides an implied context within a larger expression.
 
 module Schemaform
-module Expressions
-class RelatedTuples 
-   
-   def initialize( tuple, entity_name, link_attribute )
-      super()
-      @tuple          = tuple
-      @entity_name    = entity_name
-      @link_attribute = link_attribute
-   end
-   
+module Productions
+class ImpliedContext 
 
-end # RelatedTuples
-end # Expressions
+   def initialize( implied )
+      super()
+      @implied = implied
+   end
+
+end # ImpliedContext
+end # Productions
 end # Schemaform

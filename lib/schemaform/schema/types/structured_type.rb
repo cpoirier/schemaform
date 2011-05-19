@@ -48,7 +48,7 @@ class StructuredType < Type
       true
    end
    
-   def simple?
+   def simple_type?
       @members.length == 1
    end
    

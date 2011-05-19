@@ -24,17 +24,18 @@
 # Captures a method call expression.
 
 module Schemaform
-module Expressions
+module Productions
 class MethodCall 
    
-   def initialize( object, symbol, *args )
+   def initialize( marker, symbol, *args, &block )
       super()
-      @object = object
+      @marker = marker
       @symbol = symbol
       @args   = args
+      @block  = block
    end
    
 
 end # MethodCall
-end # Expressions
+end # Productions
 end # Schemaform

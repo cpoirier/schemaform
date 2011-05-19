@@ -30,9 +30,10 @@ module ExpressionDefinition
 class EntityReference < Base
    
    def initialize( reference_type, production = nil )
-      super(production, reference_type)
-      @tuple     = reference_type.referenced_entity.heading
-      @effective = reference_type.referenced_entity.formula_context(Expressions::ImpliedContext.new(self))
+      super()
+      @production = production
+      @tuple      = reference_type.referenced_entity.heading
+      @effective  = reference_type.referenced_entity.formula_context(Productions::ImpliedContext.new(self))
    end
    
    def effective!()

@@ -38,69 +38,26 @@ class Schema
    class Entity < Relation
       def lay_out( into )
          table = into.define_table(name)
-         @heading.attributes.each do |attribute|
-            attribute.lay_out(table)
-         end
+         @heading.lay_out(table)
       end
    end
 
 
    class Tuple < Element
-      # def
-      # def lay_out( builder, &attribute_condition )
-      #    builder.in_tuple_class( @name ) do
-      #       each_attribute do |attribute|
-      #          if attribute_condition.nil? || attribute_condition.call(attribute) then 
-      #             attribute.lay_out( builder )
-      #          end
-      #       end
-      #    end
-      # end
-   end
-
-
-
-   class Attribute < Element
-
-      #
-      # Lays out the attribute into database primitives. Generally, subclasses should extend, not
-      # override this routine, as it will create a Layout::Group for you to handle your naming.
-
       def lay_out( into )
-         into.define_group(self.name).tap do |group|
-            send_specialized(:lay_out, @definition, group)
-         end
-      end
-
-      def lay_out_scalar( scalar, into )
-         send_specialized(:lay_out, scalar.type, into)
-      end
-
-      def lay_out_formula( formula, into )
-         send_specialized(:lay_out, formula.type, into)
-      end
-
-      def lay_out_tuple( tuple, into )
-         tuple.each_attribute do |attribute|
+         @attributes.each do |attribute|
             attribute.lay_out(into)
          end
       end
+   end
 
-      def lay_out_set( set, into )
-         subtable = into.define_table(self.name)
-         send_specialized :lay_out, set.member_definition, subtable
+
+   class Attribute < Element
+      def lay_out( into )
+         into.define_group(self.name).tap do |group|
+            type.lay_out(group)
+         end
       end
-
-      def lay_out_list( list, into )
-         subtable = into.define_table(self.name)
-         into.define_field(:__first, schema.identifier_type, subtable.id_field)
-         into.define_field(:__last , schema.identifier_type, subtable.id_field)
-      end
-
-      def lay_out_type( type, into )
-         into.define_field(:__value, type)
-      end
-
    end
 
 
@@ -110,12 +67,53 @@ class Schema
          group.define_field(:__present, schema.boolean_type)
       end   
    end 
-
-
+   
+   
    class VolatileAttribute < DerivedAttribute
       def lay_out( into )
       end
    end 
+   
+   
+   class Type < Element
+      def lay_out( into )
+         fail "no lay_out support for #{self.class.name}"
+      end
+   end
+   
+   class ReferenceType < Type
+      def lay_out( into )
+         warn_once("TODO: reference field link")
+         into.define_field(nil, schema.identifier_type)
+      end
+   end
+   
+   class ScalarType < Type
+      def lay_out( into )         
+         into.define_field(nil, self)
+      end
+   end
+   
+   class TupleType < Type
+      def lay_out( into )
+         @tuple.lay_out(into)
+      end
+   end
+
+   class SetType < CollectionType
+      def lay_out( into )
+         table = into.define_table(:values)
+         @member_type.lay_out(table)
+      end
+   end
+   
+   class UnknownType < Type
+      def lay_out( into )
+         into.top.describe
+         fail
+      end
+   end
+   
 
 end # Schema
 end # Schemaform

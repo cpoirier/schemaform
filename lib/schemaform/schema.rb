@@ -51,6 +51,14 @@ class Schema
       self
    end
 
+   def unknown_type()
+      @types[:unknown]
+   end
+   
+   def any_type()
+      @types[:any]
+   end
+   
    def identifier_type()
       @types[:identifier]
    end
@@ -59,11 +67,38 @@ class Schema
       @types[:boolean]
    end
    
+   def text_type()
+      @types[:text]
+   end
+   
+   def build_list_type( member_type )
+      ListType.build(member_type, :context => self)
+   end
+   
+   def build_set_type( member_type )      
+      SetType.build(member_type, :context => self)
+   end
+   
    def couple( database_url, settings = {} )
       account  = settings.fetch(:account, settings.member?(:user) ? Runtime::Account.new(settings[:user], settings.fetch(:password)) : nil)
       database = Runtime::Database.for(database_url, account)
       database.couple_with(self, settings.fetch(:prefix, nil), account)
    end 
+   
+   def register_tuple( tuple )
+      @tuples.register(tuple)
+   end
+   
+   
+   def describe( indent = "", name_override = nil, suffix = nil )
+      puts "#{indent}#{self.class.name.split("::").last}: #{name_override || @name}#{suffix ? " " + suffix : ""}"
+      child_indent = indent + "   "
+      @entities.each do |entity|
+         entity.describe(child_indent)
+      end
+   end
+   
+   
    
 
 
@@ -83,9 +118,9 @@ protected
       @types       = TypeRegistry.new("schema [#{@name}]")
       @supervisor  = ResolutionSupervisor.new(self)
          
-      @types.register CatchAllType.new(:name => :all       , :context => self )
-      @types.register     VoidType.new(:name => :void      , :base_type => @types[:all])
-      @types.register         Type.new(:name => :any       , :base_type => @types[:all])
+      @types.register  UnknownType.new(:name => :unknown   , :context => self )
+      @types.register     VoidType.new(:name => :void      , :base_type => @types[:unknown])
+      @types.register         Type.new(:name => :any       , :base_type => @types[:unknown])
                                                            
       @types.register   StringType.new(:name => :binary    , :base_type => @types[:any]) ; warn_once( "BUG: does the binary type need a different loader?" )
       @types.register   StringType.new(:name => :text      , :base_type => @types[:any])
@@ -101,7 +136,6 @@ protected
       # 
       # @dsl.instance_eval(&block) if block_given?
    end
-   
    
    
    

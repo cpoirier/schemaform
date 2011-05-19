@@ -43,7 +43,7 @@ class ScalarType < Type
       true
    end
    
-   def simple?()
+   def simple_type?()
       true
    end
    

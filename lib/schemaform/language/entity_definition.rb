@@ -50,7 +50,7 @@ class EntityDefinition
          
          tuple.name = tuple_name
          @schema.tuples.register(tuple)
-         TupleDefinition.process(tuple, @entity, &block)
+         TupleDefinition.process(tuple, &block)
       end
    end
    

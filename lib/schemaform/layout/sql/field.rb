@@ -31,17 +31,12 @@ module SQL
 class Field < Component
 
    def initialize( context, name, type, references_field = nil )
-      super( context, name )
+      super( context, name || :__value )
       @type = type
       @references_field = references_field
    end
    
    attr_reader :type, :references_field
-   alias :tables :children
-   
-   def define_table( name )
-      add_child Table.new(self, name)
-   end
    
    def describe( indent = "", name_override = nil, suffix = nil )
       super indent, name_override, @type.description

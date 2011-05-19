@@ -18,35 +18,23 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("base.rb")
+
 
 #
-# A marker created when a formula references itself (directly or indirectly). It is an error
-# for a Deferred marker to be the final result of a formula, as that means the formula's type
-# is unresolvable. However, where overall typing can be inferred from other parts of the 
-# expression, it acts as a temporary placeholder. It will later be replaced with a functional
-# marker.
+# Indicates the present? flag of the source should be checked.
 
 module Schemaform
-module Language
-module ExpressionDefinition
-class Deferred < Base
+module Productions
+class BinaryOperator
 
-   def initialize( formula, production = nil )
-      super(production)
+   def initialize( operator, lh_object, rh_object )
+      super()
       
+      @operator  = operator
+      @lh_object = lh_object
+      @rh_object = rh_object
    end
-   
-   
-   
-   def *( rhs )
-      result_type = self.type!.best_common_type(rhs.type!)
-      result_type.marker(Productions::BinaryOperator.new(:*, self, rhs))
-   end
-   
-   
-end # Deferred
-end # ExpressionDefinition
-end # Language
-end # Schemaform
 
+end # BinaryOperator
+end # Productions
+end # Schemaform

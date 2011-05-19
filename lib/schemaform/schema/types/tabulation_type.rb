@@ -18,17 +18,28 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("set.rb")
+require Schemaform.locate("list_type.rb")
 
+
+#
+# Describes an "ordered relation".
 
 module Schemaform
-module Language
-module ExpressionDefinition
-class EmptySet < Set
-
+class Schema
+class TabulationType < ListType
    
-end # EmptySet
-end # ExpressionDefinition
-end # Language
+   def initialize( attrs )
+      super attrs
+      @tuple_type = member_type()
+   end
+
+   def description()
+      "[" + @tuple_type.description + "]"
+   end
+
+
+end # RelationType
+end # Schema
 end # Schemaform
+
 

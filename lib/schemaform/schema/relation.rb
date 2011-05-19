@@ -18,8 +18,7 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("set.rb"  )
-require Schemaform.locate("tuple.rb")
+require Schemaform.locate("element.rb")
 
 
 #
@@ -27,10 +26,10 @@ require Schemaform.locate("tuple.rb")
 
 module Schemaform
 class Schema
-class Relation < Set
+class Relation < Element
 
    def initialize( heading, context = nil, name = nil )
-      super(heading, context || heading.context, name)
+      super(context || heading.context, name)
       @heading = heading
    end
    

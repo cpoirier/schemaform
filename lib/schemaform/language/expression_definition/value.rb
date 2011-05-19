@@ -20,14 +20,47 @@
 
 require Schemaform.locate("base.rb")
 
+#
+# Base class for values.
 
 module Schemaform
 module Language
 module ExpressionDefinition
-class Set < Base
+class Value < Base
 
+   def initialize( type, production = nil )
+      super(type)
+      @production = production
+   end
    
-end # Set
+   def production!()
+      @production
+   end
+   
+   def +( rhs )
+      rhs = markup!(rhs)
+      
+      result_type = self.type!.best_common_type(rhs.type!)
+      result_type.marker(Productions::BinaryOperator.new(:+, self, rhs))
+   end
+   
+   def *( rhs )
+      rhs = markup!(rhs)
+
+      result_type = self.type!.best_common_type(rhs.type!)
+      result_type.marker(Productions::BinaryOperator.new(:*, self, rhs))
+   end
+   
+   def method_missing( symbol, *args, &block )
+      if result_type = @type.method_type(symbol, *args, &block) then
+         Value.new(result_type, Productions::MethodCall.new(self, symbol, *args, &block))
+      else
+         super
+      end
+   end
+   
+
+end # Value
 end # ExpressionDefinition
 end # Language
 end # Schemaform

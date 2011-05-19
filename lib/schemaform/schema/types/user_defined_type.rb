@@ -31,8 +31,8 @@ class UserDefinedType < Type
       super
    end
    
-   def effective_type()
-      @base_type.effective_type()
+   def evaluated_type()
+      @base_type.evaluated_type()
    end
    
 

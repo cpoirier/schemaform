@@ -61,16 +61,18 @@ class Type < Element
    
    def scalar_type?     ; false ; end
    def tuple_type?      ; false ; end
+   def collection_type? ; false ; end
    def relation_type?   ; false ; end
    def structured_type? ; false ; end
-   def simple?          ; false ; end
+   def simple_type?     ; false ; end
+   def unknown_type?    ; false ; end
    
    
    def type()
       self
    end
    
-   def effective_type()
+   def evaluated_type()
       self
    end
    
@@ -94,6 +96,15 @@ class Type < Element
       return @base_type.description if @base_type
       return "an unnamed type"
    end
+
+
+   #
+   # Returns the type for a method applied to this type, or nil.
+    
+   def method_type( symbol, *args, &block )
+      return nil
+   end
+   
 
    #
    # Attributes include:
@@ -135,8 +146,8 @@ class Type < Element
    # Returns true if a variable of this type can accept a value from a variable of the other
    # type.
    
-   def assignable_from?( rhs )
-      rhs_type.descendent_of?(self)
+   def assignable_from?( rh_type )
+      rh_type.descendent_of?(self)
    end
    
    
@@ -199,44 +210,52 @@ class Type < Element
 
    def best_common_type( rhs_type )
 
-      rhs_type = rhs_type.evaluated_type
-
       #
       # Short cut the hard work, if the answer is obvious . . . 
 
+      return rhs_type if unknown_type?
+      return self     if rhs_type.unknown_type?
       return self     if assignable_from?(rhs_type)
       return rhs_type if rhs_type.assignable_from?(self)
 
       #
       # If we are going to have to do the work, search each pedigree
       # for a member that is assignable from the other side.
-
-      lhs_common = nil
-      pedigree() do |type|
-         if type.assignable_from?( rhs_type ) then
-            lhs_common = type
-            break
+      
+      if @base_type.nil? || rhs_type.base_type.nil? then
+         return self.class.new(:context => context()) if self.class == rhs_type.class || self.is_a?(rhs_type.class)
+         return rhs_type.class.new(:context => context()) if rhs_type.is_a?(self.class)
+         return schema.unknown_type()
+      else
+         lhs_common = nil
+         pedigree() do |type|
+            if type.assignable_from?( rhs_type ) then
+               lhs_common = type
+               break
+            end
          end
-      end
 
-      rhs_common = nil
-      rhs_type.pedigree do |type|
-         if type.assignable_from?( self ) then
-            rhs_common = type
-            break
+         rhs_common = nil
+         rhs_type.pedigree do |type|
+            if type.assignable_from?( self ) then
+               rhs_common = type
+               break
+            end
          end
+
+         return schema.unknown_type if lhs_common.nil? && rhs_common.nil?
+         return rhs_common if lhs_common.nil?
+         return lhs_common if rhs_common.nil?
+
+         #
+         # If we have a choice, pick the *most* specific of the two.
+
+         return lhs_common if rhs_common.assignable_from?(lhs_common)
+         return rhs_common
       end
-
-      return rhs_common if lhs_common.nil? 
-      return lhs_common if rhs_common.nil?
-
-      #
-      # If we have a choice, pick the *most* specific of the two.
-
-      return lhs_common if rhs_common.assignable_from?(lhs_common)
-      return rhs_common
-
    end
+   
+   
    
 
 end # Type

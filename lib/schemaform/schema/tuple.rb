@@ -29,14 +29,14 @@ module Schemaform
 class Schema
 class Tuple < Element
 
-   def initialize( context, name = nil )
+   def initialize( context, name = nil, registry_chain = nil )
       super(context, name)
 
       @type = StructuredType.new(:context => self) do |name|
          @attributes[name].type
       end
 
-      @attributes = Registry.new(self, "an attribute" )
+      @attributes = Registry.new(self, "an attribute" , registry_chain)
       @tuples     = Registry.new(self, "a child tuple")
       @expression = nil
    end
@@ -66,6 +66,10 @@ class Tuple < Element
    def register( attribute )
       type_check(:attribute, attribute, Attribute)
       @attributes.register(attribute)
+   end
+   
+   def rename( from, to )
+      @attributes.rename(from, to)
    end
    
    def register_tuple( tuple )

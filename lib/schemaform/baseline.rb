@@ -540,6 +540,12 @@ class String
       alias :includes? :include?
    end
    
+   if !method_defined?(:identifier_case) then
+      def identifier_case()
+         self.gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').gsub(/([a-z\d])([A-Z])/,'\1_\2').tr("-", "_").downcase
+      end
+   end
+   
 end
 
 

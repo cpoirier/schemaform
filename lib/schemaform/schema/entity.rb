@@ -31,13 +31,33 @@ class Entity < Relation
       
    def initialize( name, base_entity, schema )
       super(Tuple.new(self), schema, name)
+      @identifiers      = Tuple.new(self, :identifiers, heading.attributes)
+      @declared_heading = Tuple.new(self, nil         , heading.attributes)
+
+      #
+      # Import the base entity identifier attributes.
 
       @base_entity = base_entity
-      @keys        = {}
-      @primary_key = nil
+
+      if base_entity then
+         base_entity.identifiers.each do |id| 
+            @identifiers.register(id.recreate_in(@identifiers))
+         end
+      end
+
+      @identifiers.register(IDAttribute.new(@identifiers))
+
+      #
+      # Other stuff.
+      
+      @keys = {}
    end
    
-   attr_reader :keys, :expression, :heading
+   attr_reader :keys, :identifiers, :declared_heading
+   
+   def id()
+      (@declared_heading.name.to_s.identifier_case + "_id").intern
+   end
 
    def has_base_entity?()
       @base_entity.exists?

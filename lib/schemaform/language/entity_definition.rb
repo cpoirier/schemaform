@@ -45,15 +45,16 @@ class EntityDefinition
    # Triggers the inline definition of the Tuple for the Entity.
    
    def each( tuple_name, &block )
-      @entity.heading.tap do |tuple|
+      @entity.declared_heading.tap do |tuple|
          assert( tuple.name.nil?, "expected unnamed tuple for TupleDefinition::each()")
          
          tuple.name = tuple_name
          @schema.tuples.register(tuple)
          TupleDefinition.process(tuple, &block)
       end
-   end
-   
+
+      @entity.identifiers.rename(:id, @entity.id())
+   end   
    
 
    #
@@ -98,7 +99,7 @@ class EntityDefinition
       #    @primary_key = key_name if primary_key.nil?
       # end
    end
-
+   
    
    #
    # Defines a constraint on the entity that will be checked on save.

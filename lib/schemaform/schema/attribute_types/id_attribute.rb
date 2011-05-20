@@ -18,42 +18,26 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("element.rb")
+
+require Schemaform.locate("writable_attribute.rb")
 
 
 #
-# An Attribute in a Tuple. Attributes are bound to the specific Tuple in which they are created. 
-# If you need to copy an Attribute into another Tuple, use +duplicate()+.
+# An ID attribute within the tuple. This is automatically generated and should never be created
+# by the schema designer.
 
 module Schemaform
 class Schema
-class Attribute < Element
+class IDAttribute < WritableAttribute
    
-   def initialize( name, tuple, type = nil )
-      type_check(:tuple, tuple, Tuple)
-      super(tuple, name)
-      @type = type
-   end
-
-   def type()
-      @type
-   end
-   
-   def evaluated_type()
-      type.evaluated_type
+   def initialize( tuple, name = :id, type = nil )
+      super(name, tuple, type || tuple.schema.identifier_type)
    end
    
    def recreate_in( new_context, changes = nil )
-      self.class.new(@name, new_context, @type)
+      self.class.new(new_context, @name, @type)
    end
    
-   def describe( indent = "", name_override = nil, suffix = nil )
-      super(indent, name_override, "— " + type().description)
-   end
-   
-end # Attribute
+end # IDAttribute
 end # Schema
 end # Schemaform
-
-
-Dir[Schemaform.locate("attribute_types/*.rb")].each {|path| require path}

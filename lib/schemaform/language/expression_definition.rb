@@ -40,7 +40,7 @@ class Schema
          Language::ExpressionDefinition::Value.new(self, production)
       end
    end
-
+   
    class ScalarType < Type
       def marker( production = nil )
          Language::ExpressionDefinition::Value.new(self, production)
@@ -71,6 +71,12 @@ class Schema
       end
    end
    
+   class TupleType < Type
+      def marker( production = nil )
+         Language::ExpressionDefinition::Tuple.new(@tuple, production)
+      end
+   end
+
    
    
    
@@ -82,7 +88,7 @@ class Schema
       end
       
       def formula_context( production = nil )
-         @formula_context ||= Language::ExpressionDefinition::Tuple.new(self, production)
+         @formula_context ||= (context.responds_to?(:formula_context) ? context.formula_context : Language::ExpressionDefinition::Tuple.new(self, production))
       end      
    end
    
@@ -198,8 +204,9 @@ class Schema
             path = formula_context() if path.nil?
             @heading.attributes.each do |attribute|
                attribute_path = attribute.marker(path)
-               result = yield(attribute, attribute_path) || attribute.definition.search(attribute_path, &block)
-               return result if result
+               if result = yield(attribute, attribute_path) || attribute.search(attribute_path, &block) then
+                  return result
+               end
             end
          end
          
@@ -215,7 +222,7 @@ class Schema
             path = formula_context() if path.nil?
             @attributes.each do |attribute|
                attribute_path = attribute.marker(path)
-               result = yield(attribute, attribute_path) || attribute.definition.search(attribute_path, &block)
+               result = yield(attribute, attribute_path) || attribute.search(attribute_path, &block)
                return result if result
             end
          end
@@ -223,7 +230,18 @@ class Schema
          return nil
       end
    end
-
+   
+   
+   class WritableAttribute < Attribute
+      def search( path = nil, &block )
+         if evaluated_type.is_a?(TupleType) then
+            return evaluated_type.tuple.search(path, &block)
+         else
+            return super
+         end
+      end
+   end
+   
 
    class Element
       def search( path = nil, &block )

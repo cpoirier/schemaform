@@ -40,6 +40,10 @@ class Tuple < Base
       @tuple
    end
    
+   def type!()
+      @tuple.type
+   end
+   
    def method_missing( symbol, *args, &block )
       if @tuple.member?(symbol) && args.empty? then
          return @tuple[symbol].marker(Productions::Accessor.new(self, symbol))

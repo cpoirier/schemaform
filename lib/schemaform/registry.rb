@@ -28,13 +28,18 @@ class Registry
 
    def initialize( owner_description, member_description = "an object", chain = nil )
       @registry           = {}
-      @chain              = nil
+      @chain              = chain
       @owner_description  = owner_description
       @member_description = member_description
    end
    
    def empty?()
       @registry.empty?
+   end
+   
+   def chain=( registry )
+      assert(@chain.nil?, "[#{@owner_description.to_s}] already has a chained registry")
+      @chain = registry
    end
    
 
@@ -86,6 +91,24 @@ class Registry
       end
       
       definition
+   end
+   
+   
+   #
+   # Finds the specified object and renames it. Note that the element itself will be renamed 
+   # if it supports name=()
+   
+   def rename( from, to )
+      check do
+         assert(@registry.member?(from), "[#{@owner_descrpition.to_s}] cannot rename [#{from}], as the name is not in use")
+         assert(!@registry.member?(to) , "[#{@owner_descrpition.to_s}] cannot rename [#{from}] to [#{to}], as the name is already in use")
+      end
+      
+      if object = @registry.delete(from) then
+         object.name = to if object.responds_to?(:name=)
+         @registry[to] = object
+         @chain.rename(from, to) if @chain
+      end
    end
    
    

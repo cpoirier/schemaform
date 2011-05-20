@@ -41,7 +41,7 @@ class EntityTuple < Tuple
    end
    
    def related!( entity_name, link_attribute = nil, &link_expression )
-      related_entity = @definition.schema.entities.find(entity_name)
+      related_entity = @entity.schema.entities.find(entity_name)
       link_path      = nil
       
       if link_expression then
@@ -50,9 +50,9 @@ class EntityTuple < Tuple
          fail "TODO: attribute name shortcut"
       else
          link_path = related_entity.search do |attribute, path|
-            next unless attribute.definition.is_a?(Schema::Scalar)
-            next unless attribute.definition.evaluated_type.is_a?(Schema::ReferenceType)
-            next unless attribute.definition.evaluated_type.entity_name == @entity.name
+            type = attribute.evaluated_type
+            next unless type.is_a?(Schema::ReferenceType)
+            next unless type.entity_name == @entity.name
             attribute.marker(path)
          end
       end
@@ -66,11 +66,7 @@ class EntityTuple < Tuple
       end
       
       warn_once("TODO: if the link attribute for a related lookup is part of a key, the result should be a single (optional) record")
-
-      relation
-      
-      
-      link_path
+      fail "what now?"
    end
    
    def method_missing( symbol, *args, &block )

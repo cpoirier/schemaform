@@ -148,10 +148,10 @@ class Tuple < Element
    def recreate_children_in( new_context, changes = nil )
       if changes.nil? then
          @attributes.each do |attribute|
-            attribute.recreate_in(new_context)
+            new_context.register attribute.recreate_in(new_context)
          end
          @tuples.each do |tuple|
-            tuple.recreate_in(new_context)
+            new_context.register_tuple tuple.recreate_in(new_context)
          end
       else
          fail "TODO: import of nested tuples with changes"

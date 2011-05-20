@@ -43,6 +43,10 @@ class Attribute < Element
       type.evaluated_type
    end
    
+   def singular_type()
+      type.singular_type
+   end
+   
    def recreate_in( new_context, changes = nil )
       self.class.new(@name, new_context, @type)
    end

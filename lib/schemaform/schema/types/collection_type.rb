@@ -43,6 +43,10 @@ class CollectionType < Type
       true
    end
    
+   def singular_type()
+      @member_type.singular_type()
+   end
+   
    def best_common_type( rhs_type )
       common_type = super( rhs_type )
 

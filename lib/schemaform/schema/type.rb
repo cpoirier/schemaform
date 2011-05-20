@@ -76,6 +76,10 @@ class Type < Element
       self
    end
    
+   def singular_type()
+      self
+   end
+   
    
    #
    # Returns an anonymous wrapper on this type with the supplied constraints.

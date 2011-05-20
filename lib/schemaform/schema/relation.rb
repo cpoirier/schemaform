@@ -31,12 +31,17 @@ class Relation < Element
    def initialize( heading, context = nil, name = nil )
       super(context || heading.context, name)
       @heading = heading
+      @type    = SetType.build(heading.type, :context => context)
    end
    
    def heading()
       @heading
    end
-
+   
+   def type()
+      @type
+   end
+   
    def project( *attributes )
       Relation.new(heading.project(*attributes), schema)
    end

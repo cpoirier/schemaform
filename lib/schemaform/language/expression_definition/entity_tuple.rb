@@ -43,11 +43,15 @@ class EntityTuple < Tuple
    def related!( entity_name, link_attribute = nil, &link_expression )
       related_entity = @entity.schema.entities.find(entity_name)
       link_path      = nil
+
+      if link_attribute then
+         link_expression = lambda do |tuple|
+            tuple.send(link_attribute)
+         end
+      end
       
       if link_expression then
          link_path = link_expression.call(related_entity.formula_context)
-      elsif link_attribute then
-         fail "TODO: attribute name shortcut"
       else
          link_path = related_entity.search do |attribute, path|
             type = attribute.evaluated_type
@@ -61,12 +65,18 @@ class EntityTuple < Tuple
          fail "couldn't find any way to relate records from #{@entity_name} to #{@entity.full_name}"
       elsif !link_path.is_an?(Attribute) then
          fail "expected Attribute result from the link expression"
-      elsif !link_path._definition.evaluated_type.is_a?(Schema::ReferenceType) || link_path._definition.evaluated_type.entity_name != @entity.name then
+      end
+      
+      reference_type = link_path.definition!.singular_type.evaluated_type
+      if !reference_type.is_a?(Schema::ReferenceType) then
+         fail "expected reference result from the link expression, found #{reference_type.class.name}"
+      elsif reference_type.entity_name != @entity.name then
          fail "expected reference to #{@entity.full_name} as the result of the link expression"
       end
       
       warn_once("TODO: if the link attribute for a related lookup is part of a key, the result should be a single (optional) record")
-      fail "what now?"
+
+      return @entity.type.marker(Productions::RelatedTuples.new(@entity, link_path))
    end
    
    def method_missing( symbol, *args, &block )

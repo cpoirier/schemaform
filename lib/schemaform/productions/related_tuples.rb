@@ -27,11 +27,9 @@ module Schemaform
 module Productions
 class RelatedTuples 
    
-   def initialize( tuple, entity_name, link_attribute )
-      super()
-      @tuple          = tuple
-      @entity_name    = entity_name
-      @link_attribute = link_attribute
+   def initialize( entity, link_path )
+      @entity    = entity
+      @link_path = link_path
    end
    
 

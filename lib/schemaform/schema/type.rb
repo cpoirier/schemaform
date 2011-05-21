@@ -100,6 +100,10 @@ class Type < Element
       return @base_type.description if @base_type
       return "an unnamed type"
    end
+   
+   def describe( indent = "", name_override = nil, suffix = nil )
+      super( indent, description )
+   end
 
 
    #

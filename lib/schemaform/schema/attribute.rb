@@ -52,7 +52,8 @@ class Attribute < Element
    end
    
    def describe( indent = "", name_override = nil, suffix = nil )
-      super(indent, name_override, "— " + type().description)
+      super(indent, name_override)
+      type.describe(indent + "   ", "")
    end
    
 end # Attribute

@@ -81,7 +81,7 @@ class Entity < Relation
    
    def describe( indent = "", name_override = nil, suffix = nil )
       super
-      @heading.describe(indent + "   ")
+      @heading.describe(indent + "   ", @declared_heading.name)
    end
    
    

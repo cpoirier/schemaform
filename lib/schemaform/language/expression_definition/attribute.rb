@@ -51,7 +51,7 @@ class Attribute < Base
    def present?( true_value = nil, false_value = nil )
       true_value  = Base.markup(true_value )
       false_value = Base.markup(false_value)      
-      result_type = Base.merge_types(Base.type(:boolean), true_value, false_value)
+      result_type = true_value ? Base.merge_types(true_value, false_value) : Base.type(:boolean)
 
       result_type.marker(Productions::PresentCheck.new(self, true_value, false_value))
    end

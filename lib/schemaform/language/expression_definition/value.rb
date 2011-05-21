@@ -33,21 +33,21 @@ class Value < Base
       @production = production
    end
    
-   def +( rhs )  ; Value.binary_operator(:+, self, rhs)  ; end
-   def -( rhs )  ; Value.binary_operator(:-, self, rhs)  ; end
-   def *( rhs )  ; Value.binary_operator(:*, self, rhs)  ; end
-   def /( rhs )  ; Value.binary_operator(:/, self, rhs)  ; end
-   def %( rhs )  ; Value.binary_operator(:%, self, rhs)  ; end
-   def <( rhs )  ; Value.binary_operator(:<, self, rhs)  ; end
-   def >( rhs )  ; Value.binary_operator(:>, self, rhs)  ; end
+   def +(  rhs ) ; Value.binary_operator(:+ , self, rhs)  ; end
+   def -(  rhs ) ; Value.binary_operator(:- , self, rhs)  ; end
+   def *(  rhs ) ; Value.binary_operator(:* , self, rhs)  ; end
+   def /(  rhs ) ; Value.binary_operator(:/ , self, rhs)  ; end
+   def %(  rhs ) ; Value.binary_operator(:% , self, rhs)  ; end
+   def <(  rhs ) ; Value.binary_operator(:< , self, rhs)  ; end
+   def >(  rhs ) ; Value.binary_operator(:> , self, rhs)  ; end
 
    def <=( rhs ) ; Value.binary_operator(:<=, self, rhs) ; end
    def >=( rhs ) ; Value.binary_operator(:>=, self, rhs) ; end
    
-   def apply( method, *parameters )
+   def apply( method, type, *parameters )
       parameters = parameters.collect{|p| Base.markup(p)}
       production = Productions::Application.new(self, method, parameters)
-      Base.type(:unknown).marker(production)
+      Base.type(type).marker(production)
    end
 
    def sum()   ; Value.aggregation(:sum  , self) ; end

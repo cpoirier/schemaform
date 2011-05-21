@@ -41,6 +41,11 @@ class TupleType < Type
    def description()
       @tuple.description
    end
+   
+   def describe( indent = "", name_override = nil, suffix = nil )
+      @tuple.describe(indent, name_override, suffix)
+   end
+   
 
 end # TupleType
 end # Schema

@@ -28,6 +28,7 @@ class Registry
 
    def initialize( owner_description, member_description = "an object", chain = nil )
       @registry           = {}
+      @order              = []
       @chain              = chain
       @owner_description  = owner_description
       @member_description = member_description
@@ -71,8 +72,8 @@ class Registry
    # Iterates of the registered objects. Passes only the object (not the name).
    
    def each()
-      @registry.each do |name, object|
-         yield(object)
+      @order.each do |name|
+         yield(@registry[name])
       end
    end
    
@@ -81,7 +82,7 @@ class Registry
    # Returns the names of all registered objects.
    
    def names()
-      @registry.keys
+      @order
    end
 
    
@@ -95,6 +96,7 @@ class Registry
       unless @registry.member?(name) && @registry[name].object_id == definition.object_id then
          check{ assert(!@registry.member?(name), "[#{@owner_descrpition.to_s}] already has [#{@member_description.to_s}] named [#{name}]", ":registered" => @registry.keys ) }         
          @registry[name] = definition
+         @order << name
          @chain.register(definition, name) if @chain
       end
       
@@ -115,6 +117,7 @@ class Registry
       if object = @registry.delete(from) then
          object.name = to if object.responds_to?(:name=)
          @registry[to] = object
+         @order[@order.index(from)] = to
          @chain.rename(from, to) if @chain
       end
    end

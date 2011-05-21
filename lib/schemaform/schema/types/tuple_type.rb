@@ -30,8 +30,16 @@ class TupleType < Type
    
    attr_reader :tuple
    
+   def type()
+      @tuple.type
+   end
+   
+   def effective_type()
+      @tuple.tuple.effective_type
+   end
+   
    def description()
-      fail
+      @tuple.description
    end
 
 end # TupleType

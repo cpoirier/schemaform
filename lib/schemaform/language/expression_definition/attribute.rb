@@ -36,19 +36,7 @@ class Attribute < Base
       @effective  = definition.type.marker(Productions::ImpliedContext.new(self))
    end
    
-   def production!()
-      @production
-   end
-   
-   def effective!()
-      @effective
-   end
-   
-   def definition!()
-      @definition
-   end
-   
-   def type!()
+   def type()
       @definition.type
    end
    
@@ -61,12 +49,9 @@ class Attribute < Base
    # attribute (default values will be present otherwise).
 
    def present?( true_value = nil, false_value = nil )
-      true_value  = markup!(true_value )
-      false_value = markup!(false_value)      
-      
-      result_type = Thread[:expression_contexts].top.boolean_type
-      result_type = true_value.type!                                if true_value
-      result_type = result_type.best_common_type(false_value.type!) if false_value
+      true_value  = Base.markup(true_value )
+      false_value = Base.markup(false_value)      
+      result_type = Base.merge_types(Base.type(:boolean), true_value, false_value)
 
       result_type.marker(Productions::PresentCheck.new(self, true_value, false_value))
    end

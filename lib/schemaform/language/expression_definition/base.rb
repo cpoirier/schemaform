@@ -31,40 +31,60 @@ class Base
    include QualityAssurance
 
    def initialize( type = nil )
-      @type       = type
+      @type = type
    end
    
-   def namer!()
-      @namer
-   end
-   
-   def effective!()
-      self
-   end
-   
-   def type!()
-      @type ? @type : fail_unless_overridden(self, :type!)
+   def type()
+      @type ? @type : fail_unless_overridden(self, :type)
    end
    
    def []( name )
       method_missing(name)
    end
    
-   def markup!( object )
+   def self.markup( object )
       case object
       when Base
          return object
       when NilClass
          return nil
       when Array
-         return LiteralList.new(*object.collect{|e| markup!(e)})
+         return LiteralList.new(*object.collect{|e| markup(e)})
       when Set
-         return LiteralSet.new(*object.collect{|e| markup!(e)})
+         return LiteralSet.new(*object.collect{|e| markup(e)})
       when FalseClass, TrueClass
-         return LiteralScalar.new(object, Thread[:expression_contexts].top.boolean_type)
+         return LiteralScalar.new(object, type(:boolean))
+      when Integer
+         return LiteralScalar.new(object, type(:integer))
+      when Float
+         return LiteralScalar.new(object, type(:real))
       else
-         fail "no support for #{object.class.name}"
+         fail "Base.markup() does not currently handle objects of type #{object.class.name}"
       end
+   end
+   
+   def self.lookup( container, symbol, args, block )
+      return nil unless args.empty? && block.nil?
+      return container[symbol] if container.member?(symbol)
+
+      alternate = symbol.to_s.tr("!", "").intern
+      container.fetch(alternate, nil)
+   end
+   
+   def self.merge_types( *objects )
+      result = type(:unknown)
+      
+      objects.each do |object|
+         next if object.nil?
+         result = result.best_common_type(object.is_a?(Schema::Type) ? object : object.type)
+      end
+
+      result
+   end
+   
+   def self.type( symbol )
+      schema = Thread[:expression_contexts].top
+      schema.types.member?(symbol) ? schema.types[symbol] : schema.send((symbol.to_s + "_type").intern)
    end
    
 end # Base

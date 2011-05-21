@@ -60,6 +60,14 @@ class Registry
    
    
    #
+   # Returns the named object or your default.
+   
+   def fetch( name, value = nil )
+      @registry.fetch(name, value)
+   end
+   
+   
+   #
    # Iterates of the registered objects. Passes only the object (not the name).
    
    def each()

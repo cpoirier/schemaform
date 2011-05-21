@@ -33,32 +33,48 @@ class Value < Base
       @production = production
    end
    
-   def production!()
-      @production
-   end
-   
-   def +( rhs )
-      rhs = markup!(rhs)
-      
-      result_type = self.type!.best_common_type(rhs.type!)
-      result_type.marker(Productions::BinaryOperator.new(:+, self, rhs))
-   end
-   
-   def *( rhs )
-      rhs = markup!(rhs)
+   def +( rhs )  ; Value.binary_operator(:+, self, rhs)  ; end
+   def -( rhs )  ; Value.binary_operator(:-, self, rhs)  ; end
+   def *( rhs )  ; Value.binary_operator(:*, self, rhs)  ; end
+   def /( rhs )  ; Value.binary_operator(:/, self, rhs)  ; end
+   def %( rhs )  ; Value.binary_operator(:%, self, rhs)  ; end
+   def <( rhs )  ; Value.binary_operator(:<, self, rhs)  ; end
+   def >( rhs )  ; Value.binary_operator(:>, self, rhs)  ; end
 
-      result_type = self.type!.best_common_type(rhs.type!)
-      result_type.marker(Productions::BinaryOperator.new(:*, self, rhs))
+   def <=( rhs ) ; Value.binary_operator(:<=, self, rhs) ; end
+   def >=( rhs ) ; Value.binary_operator(:>=, self, rhs) ; end
+   
+   def apply( method, *parameters )
+      parameters = parameters.collect{|p| Base.markup(p)}
+      production = Productions::Application.new(self, method, parameters)
+      Base.type(:unknown).marker(production)
    end
+
+   def sum()   ; Value.aggregation(:sum  , self) ; end
+   def count() ; Value.aggregation(:count, self) ; end
+   
    
    def method_missing( symbol, *args, &block )
-      if result_type = @type.method_type(symbol, *args, &block) then
-         Value.new(result_type, Productions::MethodCall.new(self, symbol, *args, &block))
-      else
-         super
-      end
+      result_type = @type.method_type(symbol, *args, &block) or return super
+      result_type.marker(Productions::MethodCall.new(self, symbol, *args, &block))
    end
    
+   def self.binary_operator( operator, lhs, rhs )
+      lhs         = Base.markup(lhs)
+      rhs         = Base.markup(rhs)
+      result_type = Base.merge_types(lhs.type, rhs.type)
+      production  = Productions::BinaryOperator.new(operator, lhs, rhs)
+      
+      result_type.marker(production)
+   end
+   
+   def self.aggregation( operator, marker )
+      if marker.type.is_a?(Schema::CollectionType) then
+         marker.type.member_type.marker(Productions::Aggregation.new(operator, marker))
+      else
+         marker
+      end
+   end
 
 end # Value
 end # ExpressionDefinition

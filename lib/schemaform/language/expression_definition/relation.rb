@@ -35,13 +35,18 @@ class Relation < Base
       @definition = definition
    end
    
-   def definition!()
-      @definition
+   def method_missing( symbol, *args, &block )
+      attribute  = Base.lookup(@definition.heading.attributes, symbol, args, block) or return super
+      projection = attribute.marker(Productions::Projection.new(self, symbol))
+      Schema::SetType.build(projection.type).marker(projection)
    end
    
-   def method_missing( symbol, *args, &block )
-      return super unless @definition.heading.member?(symbol)
-      @definition.project(symbol).marker(Productions::Projection.new(self, symbol))
+   def count()
+      Base.type(:integer).marker(Productions::Aggregation.new(:count, self))
+   end
+   
+   def type()
+      @definition.type
    end
    
 end # Relation

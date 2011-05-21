@@ -88,7 +88,7 @@ class Tuple < Element
    end
    
    def description()
-      name() || @type.description
+      name.to_s || @type.description
    end
    
    def width()

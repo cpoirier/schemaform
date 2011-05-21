@@ -108,29 +108,37 @@ class Schema
       end
       
       def analyze_formula()
-         if @analysis.nil? then
+         result = nil
+         
+         unless @analyzing
             debug("processing in #{full_name}")
 
             Thread[:expression_contexts] = [] unless Thread.key?(:expression_contexts)
             Thread[:expression_contexts].push_and_pop(schema()) do
                begin
-                  @analysis = false  # Set false to ensure any self-references don't retrigger analysis
-                  @analysis = @proc.call(formula_context())
-                  assert(!@analysis.type!.unknown_type?, "#{full_name}'s is self-referential and the type cannot be inferred")
+                  @analyzing = true  # Set false to ensure any self-references don't retrigger analysis
+                  result = @proc.call(formula_context())
+                  type_check(:result, result, Language::ExpressionDefinition::Base)
                ensure
-                  @analysis = nil unless @analysis
+                  @analyzing = false
                end
             end
          end
          
-         @analysis ? @analysis.type! : nil
+         if result && !result.type.unknown_type? then
+            debug("#{full_name} resolved to #{result.type.description}")
+            result.type
+         else
+            debug("#{full_name} could not be resolved at this time")
+            nil
+         end
       end
    end
    
    class VolatileAttribute < DerivedAttribute
       
       def type()
-         @type ||= marker.type!
+         @type ||= marker.type
       end
       
       #
@@ -140,6 +148,7 @@ class Schema
       def marker( production = nil )
          warn_once("TODO: must recursion be excluded from volatile attributes?")
          
+         result = nil
          if @analyzing then
             fail "#{full_name} is a self-referencing volatile attribute, which is not presently supported"
          else
@@ -150,12 +159,15 @@ class Schema
                begin
                   warn_once("TODO: shouldn't the formula_context for a Volatile attribute link in with the context Production?")
                   @analyzing = true  # Set true to ensure any self-references are detected
-                  return @proc.call(formula_context(production))
+                  result = @proc.call(formula_context(production))
+                  type_check(:result, result, Language::ExpressionDefinition::Base)
                ensure
                   @analyzing = false
                end
             end
          end
+         
+         return result
       end
    end
 
@@ -163,7 +175,7 @@ class Schema
 
    class Relation < Element
       def marker( production = nil )
-         Language::ExpressionDefinition::Relation.new(context, self, production)
+         Language::ExpressionDefinition::Relation.new(self, production)
       end
    end
    

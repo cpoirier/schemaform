@@ -38,8 +38,10 @@ class Entity < Relation
       # Import the base entity identifier attributes.
 
       @base_entity = base_entity
+      @pedigree    = [self]
 
       if base_entity then
+         @pedigree = base_entity.pedigree + [self]
          base_entity.identifiers.each do |id| 
             @identifiers.register(id.recreate_in(@identifiers))
          end
@@ -53,12 +55,12 @@ class Entity < Relation
       @keys = {}
    end
    
-   attr_reader :keys, :identifiers, :declared_heading
+   attr_reader :keys, :identifiers, :declared_heading, :pedigree
    
    def id()
       (@declared_heading.name.to_s.identifier_case + "_id").intern
    end
-
+   
    def has_base_entity?()
       @base_entity.exists?
    end

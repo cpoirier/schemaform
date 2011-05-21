@@ -34,13 +34,10 @@ class EntityTuple < Tuple
    def initialize( entity, production = nil )
       super(entity.heading, production)
       @entity = entity
+      @names  = entity.pedigree.collect{|e| e.name}
    end
    
-   def entity!()
-      @entity
-   end
-   
-   def related!( entity_name, link_attribute = nil, &link_expression )
+   def related( entity_name, link_attribute = nil, &link_expression )
       related_entity = @entity.schema.entities.find(entity_name)
       link_path      = nil
 
@@ -56,27 +53,27 @@ class EntityTuple < Tuple
          link_path = related_entity.search do |attribute, path|
             type = attribute.evaluated_type
             next unless type.is_a?(Schema::ReferenceType)
-            next unless type.entity_name == @entity.name
+            next unless @names.member?(type.entity_name)
             attribute.marker(path)
          end
       end
       
       if link_path.nil? then
-         fail "couldn't find any way to relate records from #{@entity_name} to #{@entity.full_name}"
+         fail "couldn't find any way to relate records from #{related_entity.full_name} to #{@entity.full_name}"
       elsif !link_path.is_an?(Attribute) then
          fail "expected Attribute result from the link expression"
       end
       
-      reference_type = link_path.definition!.singular_type.evaluated_type
+      reference_type = link_path.instance_variable_get(:@definition).singular_type.evaluated_type
       if !reference_type.is_a?(Schema::ReferenceType) then
          fail "expected reference result from the link expression, found #{reference_type.class.name}"
-      elsif reference_type.entity_name != @entity.name then
+      elsif !@names.member?(reference_type.entity_name) then
          fail "expected reference to #{@entity.full_name} as the result of the link expression"
       end
       
       warn_once("TODO: if the link attribute for a related lookup is part of a key, the result should be a single (optional) record")
 
-      return @entity.type.marker(Productions::RelatedTuples.new(@entity, link_path))
+      return related_entity.marker(Productions::RelatedTuples.new(@entity, link_path))
    end
    
    def method_missing( symbol, *args, &block )

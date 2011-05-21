@@ -18,27 +18,20 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("base.rb")
 
 
 module Schemaform
-module Language
-module ExpressionDefinition
-class LiteralScalar < Base
+module Productions
+class IfThenElse
 
-   def initialize( value, type = nil )
-      super(type || value.type)
-      @value = value
+   def initialize( condition, true_branch, false_branch )
+      super()
+      
+      @condition    = condition
+      @true_branch  = true_branch
+      @false_branch = false_branch
    end
-   
-   # def *( rhs )
-   #    result_type = self.type.best_common_type(rhs.type)
-   #    result_type.marker(Productions::BinaryOperator.new(:*, self, rhs))
-   # end
-   
-   
-end # LiteralScalar
-end # ExpressionDefinition
-end # Language
-end # Schemaform
 
+end # IfThenElse
+end # Productions
+end # Schemaform

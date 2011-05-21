@@ -36,20 +36,24 @@ class Tuple < Base
       @tuple      = tuple
    end
    
-   def tuple!()
-      @tuple
-   end
-   
-   def type!()
+   def type()
       @tuple.type
    end
    
+   def if_then_else( condition, true_branch, false_branch = nil )
+      condition    = Base.markup(condition   )
+      true_branch  = Base.markup(true_branch )
+      false_branch = Base.markup(false_branch)
+      
+      # assert(condition.type.boolean_type, "the if_then_else condition must have a boolean type")
+      
+      production = Productions::IfThenElse.new(condition, true_branch, false_branch)
+      Base.merge_types(true_branch, false_branch).marker(production)
+   end
+   
    def method_missing( symbol, *args, &block )
-      if @tuple.member?(symbol) && args.empty? then
-         return @tuple[symbol].marker(Productions::Accessor.new(self, symbol))
-      else
-         return super
-      end
+      attribute = Base.lookup(@tuple.attributes, symbol, args, block) or return super
+      attribute.marker(Productions::Accessor.new(self, symbol))
    end
    
 

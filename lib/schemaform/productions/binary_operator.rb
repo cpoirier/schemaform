@@ -20,9 +20,6 @@
 
 
 
-#
-# Indicates the present? flag of the source should be checked.
-
 module Schemaform
 module Productions
 class BinaryOperator

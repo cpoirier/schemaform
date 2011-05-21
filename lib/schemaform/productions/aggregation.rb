@@ -18,27 +18,19 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("base.rb")
 
 
 module Schemaform
-module Language
-module ExpressionDefinition
-class LiteralScalar < Base
+module Productions
+class Aggregation
 
-   def initialize( value, type = nil )
-      super(type || value.type)
-      @value = value
+   def initialize( operator, collection )
+      super()
+      
+      @operator   = operator
+      @collection = collection
    end
-   
-   # def *( rhs )
-   #    result_type = self.type.best_common_type(rhs.type)
-   #    result_type.marker(Productions::BinaryOperator.new(:*, self, rhs))
-   # end
-   
-   
-end # LiteralScalar
-end # ExpressionDefinition
-end # Language
-end # Schemaform
 
+end # BinaryOperator
+end # Productions
+end # Schemaform

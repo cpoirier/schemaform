@@ -31,7 +31,7 @@ class LiteralSet < Base
       
       member_type = Thread[:expression_contexts].top.unknown_type
       members.each do |member|
-         member_type = member_type.best_common_type(member.type!)
+         member_type = member_type.best_common_type(member.type)
       end
       
       super(Thread[:expression_contexts].top.build_set_type(member_type))

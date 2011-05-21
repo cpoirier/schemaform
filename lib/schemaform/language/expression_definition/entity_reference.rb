@@ -36,10 +36,6 @@ class EntityReference < Base
       @effective  = reference_type.referenced_entity.formula_context(Productions::ImpliedContext.new(self))
    end
    
-   def effective!()
-      @effective
-   end
-   
    def method_missing( symbol, *args, &block )
       @effective.send(symbol, *args, &block)
    end

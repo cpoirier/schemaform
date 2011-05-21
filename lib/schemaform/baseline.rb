@@ -750,7 +750,7 @@ module Baseline
       # Dumps a debug message to $stderr.
       
       def debug( message )
-         $stderr.puts( (message =~ /^[A-Z]+: / ? "" : "DEBUG: ") + message )
+         # $stderr.puts( (message =~ /^[A-Z]+: / ? "" : "DEBUG: ") + message )
       end
    
    

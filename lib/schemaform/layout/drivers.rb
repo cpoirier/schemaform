@@ -37,8 +37,12 @@ class Schema
    
    class Entity < Relation
       def lay_out( into )
-         table = into.define_table(name)
-         @heading.lay_out(table)
+         id_name = id()
+         table   = into.define_table(name, id_name)
+         @heading.attributes.each do |attribute|
+            next if attribute.name == id_name
+            attribute.lay_out(table)
+         end
       end
    end
 
@@ -83,6 +87,7 @@ class Schema
    
    class ReferenceType < Type
       def lay_out( into )
+         type_check(:into, into, Layout::SQL::Group)
          warn_once("TODO: reference field link")
          into.define_field(nil, schema.identifier_type)
       end
@@ -90,6 +95,7 @@ class Schema
    
    class ScalarType < Type
       def lay_out( into )         
+         type_check(:into, into, Layout::SQL::Group)
          into.define_field(nil, self)
       end
    end
@@ -100,15 +106,30 @@ class Schema
       end
    end
 
-   class SetType < CollectionType
+   class CollectionType
       def lay_out( into )
-         table = into.define_table(:values)
-         @member_type.lay_out(table)
+         type_check(:into, into, Layout::SQL::Group)
+         table = into.define_table(:members)
+         if @member_type.is_a?(TupleType) then
+            @member_type.lay_out(table)
+         else
+            group = table.define_group(:member)
+            @member_type.lay_out(group)
+         end
+      end
+   end
+   
+   class ListType < CollectionType
+      def lay_out( into )
+         super
+         into.define_field(:first, schema.identifier_type)
+         into.define_field(:last , schema.identifier_type)
       end
    end
    
    class UnknownType < Type
       def lay_out( into )
+         type_check(:into, into, Layout::SQL::Group)
          into.top.describe
          fail
       end

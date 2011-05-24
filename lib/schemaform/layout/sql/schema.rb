@@ -37,8 +37,8 @@ class Schema < Component
    attr_reader :definition
    alias :tables :children
    
-   def define_table( name )
-      add_child Table.new(self, name)
+   def define_table( name, id_name = nil )
+      add_child Table.new(self, name, id_name)
    end
 
    def define_owner_fields( into )      
@@ -46,6 +46,12 @@ class Schema < Component
    
    def identifier_type()
       @definition.identifier_type
+   end
+   
+   def flatten()
+      @children.each do |table|
+         table.flatten
+      end
    end
    
 

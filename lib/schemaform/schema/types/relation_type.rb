@@ -33,9 +33,6 @@ class RelationType < SetType
       @tuple_type = member_type()
    end
    
-   def description()
-      "[" + @tuple_type.description + "]"
-   end
 
 
 end # RelationType

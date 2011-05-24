@@ -46,8 +46,8 @@ class Component
    end
    
    def add_child( child )
-      @children = {} if @children.nil?
-      @children[child.name] = child
+      @children = Registry.new() if @children.nil?
+      @children.register child
       child
    end
    
@@ -59,7 +59,7 @@ class Component
       puts "#{indent}#{self.class.name.split("::").last}: #{name_override || @name}#{suffix ? " " + suffix : ""}"
       if @children then
          child_indent = indent + "   "
-         @children.each do |name, child|
+         @children.each do |child|
             child.describe(child_indent)
          end
       end

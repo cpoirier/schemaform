@@ -31,7 +31,7 @@ class Relation < Element
    def initialize( heading, context = nil, name = nil )
       super(context || heading.context, name)
       @heading = heading
-      @type    = SetType.build(heading.type, :context => context)
+      @type    = SetType.build(TupleType.new(heading), :context => context)
    end
    
    def heading()

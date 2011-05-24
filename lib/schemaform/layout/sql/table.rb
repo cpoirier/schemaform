@@ -41,7 +41,7 @@ class Table < Component
    def define_field( name, type, references_field = nil )
       add_child Field.new(self, name, type, references_field)
    end
-
+   
    def define_owner_fields( into )
       into.define_field(:__parent_id, schema.identifier_type, @id_field)
    end

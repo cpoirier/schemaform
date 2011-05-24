@@ -40,7 +40,7 @@ class SetType < CollectionType
    end
 
    def description()
-      "set of #{member_type.description}"
+      "(" + @member_type.description + ")"
    end
    
 end # SetType

@@ -23,7 +23,8 @@ module Schemaform
 class Schema
 class TupleType < Type
 
-   def initialize( tuple, attrs )
+   def initialize( tuple, attrs = {} )
+      attrs[:context] = tuple.context unless attrs.member?(:context)
       super attrs
       @tuple = tuple
    end

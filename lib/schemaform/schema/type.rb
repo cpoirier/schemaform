@@ -98,7 +98,7 @@ class Type < Element
    def description()
       return full_name.to_s if name
       return @base_type.description if @base_type
-      return "an unnamed type"
+      return "an unnamed #{self.class.name.sub("Type", "").sub(/.*::/, "").identifier_case} type"
    end
    
    def describe( indent = "", name_override = nil, suffix = nil )

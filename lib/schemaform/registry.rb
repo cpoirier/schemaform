@@ -26,7 +26,7 @@ module Schemaform
 class Registry
    include QualityAssurance
 
-   def initialize( owner_description, member_description = "an object", chain = nil )
+   def initialize( owner_description = "the registry", member_description = "an object", chain = nil )
       @registry           = {}
       @order              = []
       @chain              = chain
@@ -41,6 +41,10 @@ class Registry
    def chain=( registry )
       assert(@chain.nil?, "[#{@owner_description.to_s}] already has a chained registry")
       @chain = registry
+   end
+   
+   def count()
+      @order.count
    end
    
 

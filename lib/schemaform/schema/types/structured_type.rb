@@ -54,7 +54,11 @@ class StructuredType < Type
    
    def description()
       # Bad for lazy resolution: "{" + @members.collect{|name, type| ":" + name.to_s + " => " + type.description}.join(", ") + "}"
-      "{" + @members.keys.join(", ") + "}"
+      "{" + names.join(", ") + "}"
+   end
+   
+   def names()
+      @members.keys + (@lookup ? @lookup.call(nil) : [])
    end
    
    def member?( name )

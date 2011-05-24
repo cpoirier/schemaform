@@ -33,7 +33,7 @@ class Tuple < Element
       super(context, name)
 
       @type = StructuredType.new(:context => self) do |name|
-         @attributes[name].type
+         name.nil? ? @attributes.names : @attributes[name].type
       end
 
       @attributes = Registry.new(self, "an attribute" , registry_chain)
@@ -88,7 +88,7 @@ class Tuple < Element
    end
    
    def description()
-      name.to_s || @type.description
+      name.to_s != "" ? name.to_s : @type.description
    end
    
    def width()

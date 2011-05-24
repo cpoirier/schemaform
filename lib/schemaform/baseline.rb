@@ -555,8 +555,6 @@ end
 #                                          Set Extensions
 # =============================================================================================
 
-require 'set'
-
 #
 # Note: we don't explicitly require 'set' beforehand, so this is at worst harmless.
 
@@ -750,7 +748,7 @@ module Baseline
       # Dumps a debug message to $stderr.
       
       def debug( message )
-         # $stderr.puts( (message =~ /^[A-Z]+: / ? "" : "DEBUG: ") + message )
+         $stderr.puts( (message =~ /^[A-Z]+: / ? "" : "DEBUG: ") + message )
       end
    
    

@@ -25,6 +25,7 @@
 module Schemaform
 class Registry
    include QualityAssurance
+   include Enumerable
 
    def initialize( owner_description = "the registry", member_description = "an object", chain = nil )
       @registry           = {}

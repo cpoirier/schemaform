@@ -67,7 +67,7 @@ class Schema
    
    class UserDefinedType < Type
       def marker( production = nil )
-         fail "TODO: how does this interact with effective type?"
+         fail_todo "how does this interact with effective type?"
       end
    end
    

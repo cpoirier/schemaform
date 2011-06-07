@@ -18,6 +18,7 @@
 #             limitations under the License.
 # =============================================================================================
 
+require "sequel/extensions/inflector.rb"
 require Schemaform.locate("schemaform/schema.rb")
 
 
@@ -36,45 +37,60 @@ class Schema
    
    
    class Entity < Relation
-      def lay_out( into )
-         id_name = id()
-         table   = into.define_table(name, id_name)
-         @heading.attributes.each do |attribute|
-            next if attribute.name == id_name
-            attribute.lay_out(table)
+      def lay_out( into = nil )
+         if into then
+            id_name = id()
+            table   = into.define_table(name, id_name)
+            @heading.attributes.each do |attribute|
+               next if attribute.name == id_name
+               attribute.lay_out(table)
+            end
+         else
+            fail_todo "what here?"
          end
       end
    end
 
 
    class Tuple < Element
-      def lay_out( into )
-         @attributes.each do |attribute|
-            attribute.lay_out(into)
+      def lay_out( into = nil )
+         if into then
+            @attributes.each do |attribute|
+               attribute.lay_out(into)
+            end
+         else
+            fail_todo "what here?"
          end
       end
    end
 
 
    class Attribute < Element
-      def lay_out( into )
-         into.define_group(self.name).tap do |group|
-            type.lay_out(group)
+      def lay_out( into = nil )
+         if into then
+            into.define_group(self.name).tap do |group|
+               @lay_out = group
+               type.lay_out(group)
+            end
+         else
+            schema.lay_out() if @lay_out.nil?
+            @lay_out
          end
       end
    end
 
 
    class OptionalAttribute < WritableAttribute
-      def lay_out( into )
+      def lay_out( into = nil )
          group = super(into)
-         group.define_field(:__present, schema.boolean_type)
+         group.define_field(:__present, schema.boolean_type) if into
       end   
    end 
    
    
    class VolatileAttribute < DerivedAttribute
-      def lay_out( into )
+      def lay_out( into = nil )
+         nil
       end
    end 
    

@@ -154,7 +154,7 @@ class Tuple < Element
             new_context.register_tuple tuple.recreate_in(new_context)
          end
       else
-         fail "TODO: import of nested tuples with changes"
+         fail_todo "import of nested tuples with changes"
          
          (@attributes.names + changes.names).uniq.each do |name|
             if changes.member?(name) then

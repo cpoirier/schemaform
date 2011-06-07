@@ -18,39 +18,24 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("component.rb")
-
 
 #
-# A table, possibly nested, (for naming purposes only). 
+# Base class for things that apply defined requirements and controls to a runtime object.
 
 module Schemaform
-module Layout
-module SQL
-class Table < Component
-
-   def initialize( context, name, id_name = nil )
-      super(context, name)
-      @id_field = define_field(id_name || :__id, schema.identifier_type)
-      context.define_owner_fields(self)
-   end
+module Materials
+class Contoller
+   include QualityAssurance
+   extend  QualityAssurance
    
-   attr_reader :id_field
-   alias :fields :children
    
-   def define_field( name, type, references_field = nil )
-      add_child Field.new(self, name, type, references_field)
-   end
-   
-   def define_owner_fields( into )
-      into.define_field(:__parent_id, schema.identifier_type, @id_field)
-   end
-   
-   def to_sql()
+   def initialize()
       
    end
 
-end # Table
-end # SQL
-end # Layout
+end # Contoller
+end # Materials
 end # Schemaform
+
+
+Dir[Schemaform.locate("controllers/*.rb")].each{|path| require path}

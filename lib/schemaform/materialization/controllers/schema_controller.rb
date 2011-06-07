@@ -18,39 +18,33 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("component.rb")
-
 
 #
-# A table, possibly nested, (for naming purposes only). 
+# Wraps a defined Schema for use at runtime.
 
 module Schemaform
-module Layout
-module SQL
-class Table < Component
+module Materials
+class SchemaController < Controller
+   
+   #
+   # Defines a subclass into some container.
 
-   def initialize( context, name, id_name = nil )
-      super(context, name)
-      @id_field = define_field(id_name || :__id, schema.identifier_type)
-      context.define_owner_fields(self)
+   def self.define( name, into )
+      define_subclass(name, into) do
+         @@constraints = []
+      end
    end
    
-   attr_reader :id_field
-   alias :fields :children
    
-   def define_field( name, type, references_field = nil )
-      add_child Field.new(self, name, type, references_field)
+   #
+   # Runs any Schema-level validations.
+   
+   def validate()
+      fail_todo
    end
    
-   def define_owner_fields( into )
-      into.define_field(:__parent_id, schema.identifier_type, @id_field)
-   end
-   
-   def to_sql()
-      
-   end
 
-end # Table
-end # SQL
-end # Layout
+
+end # SchemaController
+end # Materials
 end # Schemaform

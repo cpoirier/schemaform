@@ -18,39 +18,46 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("component.rb")
-
+require Schemaform.locate("tuple_class.rb")
 
 #
-# A table, possibly nested, (for naming purposes only). 
+# Base class for all Entity-backed Tuple materials. Entity-backed tuples keep track of things
+# like IDs and keys, in order to provide additional features.
 
 module Schemaform
-module Layout
-module SQL
-class Table < Component
+module Materials
+class EntityTuple < Tuple
 
-   def initialize( context, name, id_name = nil )
-      super(context, name)
-      @id_field = define_field(id_name || :__id, schema.identifier_type)
-      context.define_owner_fields(self)
-   end
-   
-   attr_reader :id_field
-   alias :fields :children
-   
-   def define_field( name, type, references_field = nil )
-      add_child Field.new(self, name, type, references_field)
-   end
-   
-   def define_owner_fields( into )
-      into.define_field(:__parent_id, schema.identifier_type, @id_field)
-   end
-   
-   def to_sql()
-      
+   #
+   # Defines a subclass into some container.
+
+   def self.define( name, into )
+      define_subclass( name, into ) do
+         @@defaults = {}
+         
+         def self.default_for( name, tuple = nil )
+            return nil unless @@defaults.member?(name)
+            default = @@defaults[name]
+            default.is_a?(Proc) ? default.call(tuple) : default
+         end
+         
+         def self.load( name, entity_tuple )
+            if entity = entity_tuple.instance_eval{@entity} then
+               fail_todo "build EntityTuple::load() for entity-linked tuple"
+            else
+               default_for(name, entity_tuple)
+            end
+         end
+      end
    end
 
-end # Table
-end # SQL
-end # Layout
+
+   def initialize( attributes = {}, entity = nil )
+      super( attributes )
+      @entity = entity
+   end
+   
+
+end # EntityTuple
+end # Materials
 end # Schemaform

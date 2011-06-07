@@ -48,10 +48,12 @@ class Schema < Component
       @definition.identifier_type
    end
    
-   def flatten()
-      @children.each do |table|
-         table.flatten
+   def to_sql()
+      table_sql = @children.collect do |table|
+         table.to_sql
       end
+      
+      table_sql.join("\n\n")
    end
    
 

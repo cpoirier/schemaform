@@ -787,6 +787,18 @@ module Baseline
       
       
       #
+      # Raises an AssertionFailure indicating a method is incomplete.
+      
+      def fail_todo( message = nil )
+         if message then
+            fail("TODO: #{message}")
+         else
+            fail("TODO")
+         end
+      end
+      
+      
+      #
       # Asserts that condition is true, but still outputs the message.
    
       def assert_and_warn_once( condition, message, data = nil, &block )

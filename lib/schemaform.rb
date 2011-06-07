@@ -22,6 +22,7 @@
 require "rubygems"
 require "sequel"
 require "set"
+
 require File.expand_path(File.dirname(__FILE__)) + "/schemaform/baseline.rb"
 
 
@@ -58,9 +59,9 @@ module Schemaform
    # Creates a Schema and calls your block to fill it in (see Schema::DefinitionLanguage).
 
    def self.define( name, into_registry = nil, &block )
-      Schema.new(name).tap do |schema|
+      Schema.new(name, into_register || @@schemas).tap do |schema|
+         schema.namespace.register(schema)   
          Language::SchemaDefinition.process(schema, &block)         
-         (into_registry || @@schemas).register(schema)   
       end
    end
    
@@ -132,7 +133,7 @@ private
    require locate("schemaform/registry.rb")
    require locate("schemaform/schema.rb")
    
-   ["language", "productions", "layout"].each do |directory|
+   ["language", "productions", "layout", "materialization"].each do |directory|
       Dir[Schemaform.locate("schemaform/#{directory}/*.rb")].each do |path|
          require path
       end

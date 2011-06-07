@@ -22,8 +22,7 @@ require "monitor"
 require "sequel/extensions/inflector.rb"
 
 require Schemaform.locate("schemaform/schema.rb")
-require Schemaform.locate("tuple.rb")
-require Schemaform.locate("entity_tuple.rb")
+require Schemaform.locate("controller.rb")
 
 
 module Schemaform
@@ -115,8 +114,6 @@ class Schema
    end
    
    
-   class WriteableAttribute
-
 
    # class Attribute < Element
    #    def lay_out( into = nil )

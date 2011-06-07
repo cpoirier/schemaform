@@ -59,7 +59,7 @@ module Schemaform
    # Creates a Schema and calls your block to fill it in (see Schema::DefinitionLanguage).
 
    def self.define( name, into_registry = nil, &block )
-      Schema.new(name, into_register || @@schemas).tap do |schema|
+      Schema.new(name, into_registry || @@schemas).tap do |schema|
          schema.namespace.register(schema)   
          Language::SchemaDefinition.process(schema, &block)         
       end

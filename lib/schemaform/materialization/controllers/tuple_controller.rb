@@ -23,7 +23,7 @@
 # A wrapper on a Schema-defined Tuple that provides services to a runtime Tuple class. 
 
 module Schemaform
-module Materialization
+module Materials
 class TupleController < Controller
 
    
@@ -96,5 +96,5 @@ class TupleController < Controller
 
 
 end # TupleController
-end # Materialization
+end # Materials
 end # Schemaform

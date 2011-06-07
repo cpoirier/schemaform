@@ -24,7 +24,7 @@
 
 module Schemaform
 module Materials
-class Contoller
+class Controller
    include QualityAssurance
    extend  QualityAssurance
    

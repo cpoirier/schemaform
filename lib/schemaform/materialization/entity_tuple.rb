@@ -18,46 +18,45 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("tuple_class.rb")
 
-#
-# Base class for all Entity-backed Tuple materials. Entity-backed tuples keep track of things
-# like IDs and keys, in order to provide additional features.
-
-module Schemaform
-module Materials
-class EntityTuple < Tuple
-
-   #
-   # Defines a subclass into some container.
-
-   def self.define( name, into )
-      define_subclass( name, into ) do
-         @@defaults = {}
-         
-         def self.default_for( name, tuple = nil )
-            return nil unless @@defaults.member?(name)
-            default = @@defaults[name]
-            default.is_a?(Proc) ? default.call(tuple) : default
-         end
-         
-         def self.load( name, entity_tuple )
-            if entity = entity_tuple.instance_eval{@entity} then
-               fail_todo "build EntityTuple::load() for entity-linked tuple"
-            else
-               default_for(name, entity_tuple)
-            end
-         end
-      end
-   end
-
-
-   def initialize( attributes = {}, entity = nil )
-      super( attributes )
-      @entity = entity
-   end
-   
-
-end # EntityTuple
-end # Materials
-end # Schemaform
+# #
+# # Base class for all Entity-backed Tuple materials. Entity-backed tuples keep track of things
+# # like IDs and keys, in order to provide additional features.
+# 
+# module Schemaform
+# module Materials
+# class EntityTuple < Tuple
+# 
+#    #
+#    # Defines a subclass into some container.
+# 
+#    def self.define( name, into )
+#       define_subclass( name, into ) do
+#          @@defaults = {}
+#          
+#          def self.default_for( name, tuple = nil )
+#             return nil unless @@defaults.member?(name)
+#             default = @@defaults[name]
+#             default.is_a?(Proc) ? default.call(tuple) : default
+#          end
+#          
+#          def self.load( name, entity_tuple )
+#             if entity = entity_tuple.instance_eval{@entity} then
+#                fail_todo "build EntityTuple::load() for entity-linked tuple"
+#             else
+#                default_for(name, entity_tuple)
+#             end
+#          end
+#       end
+#    end
+# 
+# 
+#    def initialize( attributes = {}, entity = nil )
+#       super( attributes )
+#       @entity = entity
+#    end
+#    
+# 
+# end # EntityTuple
+# end # Materials
+# end # Schemaform

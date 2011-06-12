@@ -47,16 +47,6 @@ class NumericType < ScalarType
       end
    end
    
-   def method_type( symbol, *args, &block )
-      case symbol
-      when :floor
-         schema.types[:integer]
-      else
-         super
-      end
-   end
-   
-   
 end # NumericType
 end # Schema
 end # Schemaform

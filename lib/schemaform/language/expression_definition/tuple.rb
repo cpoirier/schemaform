@@ -53,7 +53,7 @@ class Tuple < Base
    
    def method_missing( symbol, *args, &block )
       attribute = Base.lookup(@tuple.attributes, symbol, args, block) or return super
-      attribute.marker(Productions::Accessor.new(self, symbol))
+      attribute.marker(Productions::MethodCall.new(self, symbol))
    end
    
 

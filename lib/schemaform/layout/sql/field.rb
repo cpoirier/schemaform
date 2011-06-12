@@ -39,7 +39,7 @@ class Field < Component
    attr_reader :type, :references_field
    
    def describe( indent = "", name_override = nil, suffix = nil )
-      super indent, name_override, @type.description
+      super indent, name_override, @references_field.nil? ? @type.description : "#{@type.description} references #{@references_field.to_s}"
    end
    
 

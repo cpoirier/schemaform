@@ -47,7 +47,7 @@ class Entity < Relation
          end
       end
 
-      @identifiers.register(IDAttribute.new(@identifiers))
+      @identifiers.register(IDAttribute.new(@identifiers, self))
 
       #
       # Other stuff.
@@ -59,6 +59,11 @@ class Entity < Relation
    
    def id()
       (@declared_heading.name.to_s.identifier_case + "_id").intern
+   end
+   
+   def reference_type( context = nil )
+      context = @context if context.nil?
+      ReferenceType.new(@name, :context => context)
    end
    
    def has_base_entity?()

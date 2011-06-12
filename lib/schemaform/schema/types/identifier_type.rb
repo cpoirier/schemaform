@@ -18,26 +18,38 @@
 #             limitations under the License.
 # =============================================================================================
 
-
-require Schemaform.locate("writable_attribute.rb")
-
-
 #
-# An ID attribute within the tuple. This is automatically generated and should never be created
-# by the schema designer.
+# Similar to a ReferenceType, except that the IdentifierType creates the thing that can be
+# referenced.
 
 module Schemaform
 class Schema
-class IDAttribute < WritableAttribute
-   
-   def initialize( tuple, entity, name = :id, type = nil )
-      super(name, tuple, IdentifierType.new(entity))
+class IdentifierType < Type
+
+   def initialize( entity, attrs = {} )
+      attrs[:context  ] = entity unless attrs.member?(:context)
+      attrs[:base_type] = attrs.fetch(:context).schema.identifier_type unless attrs.member?(:base_type)
+      super attrs
+      @entity = entity
    end
    
-   def recreate_in( new_context, changes = nil )
-      self.class.new(new_context, @type.entity, @name, @type)
+   attr_reader :entity
+   
+   def naming_type?
+      true
    end
    
-end # IDAttribute
+   def referenced_entity()
+      @entity
+   end
+   
+   def description()
+      "#{@entity.name} identifier"
+   end
+   
+   
+   
+
+end # IdentifierType
 end # Schema
 end # Schemaform

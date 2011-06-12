@@ -33,6 +33,10 @@ class TabulationType < ListType
       @tuple_type = member_type()
    end
 
+   def naming_type?
+      true
+   end
+   
    def description()
       "[" + @tuple_type.description.to_s + "]"
    end

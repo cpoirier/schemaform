@@ -29,6 +29,7 @@ module Language
 module ExpressionDefinition
 class Base
    include QualityAssurance
+   extend  QualityAssurance
 
    def initialize( type = nil )
       @type = type

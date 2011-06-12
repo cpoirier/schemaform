@@ -42,15 +42,6 @@ class ListType < CollectionType
       "list of #{member_type.description}"
    end
    
-   def method_type( symbol, *args, &block )
-      case symbol
-      when :join
-         schema.text_type()
-      else
-         super
-      end
-   end
-
 end # ListType
 end # Schema
 end # Schemaform

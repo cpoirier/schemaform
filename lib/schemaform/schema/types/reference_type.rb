@@ -26,15 +26,28 @@ class ReferenceType < Type
    def initialize( entity_name, attrs )
       attrs[:base_type] = attrs.fetch(:context).schema.identifier_type unless attrs.member?(:base_type)
       super attrs
-      @entity_name = entity_name
-      type_check(:entity_name, entity_name, Symbol)
+      if entity_name.is_an?(Entity) then
+         @entity_name = entity_name.name
+         @entity      = entity
+         warn_once("is there a downside to initializing a ReferenceType directly to an Entity?")
+      else
+         type_check(:entity_name, entity_name, Symbol)
+         @entity_name = entity_name
+         @entity      = nil
+      end
    end
    
    attr_reader :entity_name
    
    def referenced_entity()
-      schema.entities.find(@entity_name)
+      @entity ||= schema.entities.find(@entity_name)
    end
+   
+   def description()
+      "#{referenced_entity.name} reference"
+   end
+   
+   
    
    
 

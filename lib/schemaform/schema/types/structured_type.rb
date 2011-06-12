@@ -44,7 +44,7 @@ class StructuredType < Type
       end
    end
    
-   def structured_type?
+   def naming_type?
       true
    end
    

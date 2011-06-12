@@ -105,7 +105,14 @@ class Schema
       def lay_out( into )
          type_check(:into, into, Layout::SQL::Group)
          warn_once("TODO: reference field link")
-         into.define_field(nil, schema.identifier_type)
+         into.define_field(nil, schema.identifier_type, @entity_name)
+      end
+   end
+   
+   class IdentifierType < Type
+      def lay_out( into )
+         type_check(:into, into, Layout::SQL::Group)
+         into.define_field(nil, self)
       end
    end
    

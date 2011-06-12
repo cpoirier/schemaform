@@ -73,7 +73,7 @@ class EntityTuple < Tuple
       
       warn_once("TODO: if the link attribute for a related lookup is part of a key, the result should be a single (optional) record")
 
-      return related_entity.marker(Productions::RelatedTuples.new(@entity, link_path))
+      return Schema::SetType.build(related_entity.reference_type).marker(Productions::RelatedTuples.new(@entity, link_path))
    end
    
    def method_missing( symbol, *args, &block )

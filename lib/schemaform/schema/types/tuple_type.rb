@@ -31,6 +31,10 @@ class TupleType < Type
    
    attr_reader :tuple
    
+   def naming_type?
+      true
+   end
+   
    def type()
       @tuple.type
    end

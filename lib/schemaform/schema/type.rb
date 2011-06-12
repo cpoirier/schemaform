@@ -60,10 +60,8 @@ class Type < Element
    attr_reader :base_type, :default
    
    def scalar_type?     ; false ; end
-   def tuple_type?      ; false ; end
    def collection_type? ; false ; end
-   def relation_type?   ; false ; end
-   def structured_type? ; false ; end
+   def naming_type?     ; false ; end
    def simple_type?     ; false ; end
    def unknown_type?    ; false ; end
    
@@ -77,6 +75,10 @@ class Type < Element
    end
    
    def singular_type()
+      self
+   end
+   
+   def effective_type()
       self
    end
    
@@ -105,14 +107,6 @@ class Type < Element
       super( indent, description )
    end
 
-
-   #
-   # Returns the type for a method applied to this type, or nil.
-    
-   def method_type( symbol, *args, &block )
-      return nil
-   end
-   
 
    #
    # Attributes include:

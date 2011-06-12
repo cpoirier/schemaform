@@ -23,6 +23,58 @@ Dir[Schemaform.locate("expression_definition/*.rb")].each{|path| require path}
 
 
 # =============================================================================================
+#                                         Method Typing
+# =============================================================================================
+
+module Schemaform
+class Schema
+
+   class Type < Element
+      def method_type( symbol, *args, &block )
+         return nil
+      end
+   end
+   
+   class NumericType < ScalarType
+      def method_type( symbol, *args, &block )
+         case symbol
+         when :floor
+            schema.types[:integer]
+         else
+            super
+         end
+      end
+   end
+   
+   class ListType < CollectionType
+      def method_type( symbol, *args, &block )
+         case symbol
+         when :join
+            schema.text_type()
+         else
+            super
+         end
+      end
+   end
+   
+   class TupleType < Type
+      def method_type( symbol, *args, &block )
+         case symbol
+         when :floor
+            schema.types[:integer]
+         else
+            super
+         end
+      end
+   end
+
+end # Schema
+end # Schemaform
+
+
+
+
+# =============================================================================================
 #                                        Marker Production
 # =============================================================================================
 
@@ -60,6 +112,12 @@ class Schema
    end
    
    class ReferenceType < Type
+      def marker( production = nil )
+         Language::ExpressionDefinition::EntityReference.new(self, production)
+      end
+   end
+   
+   class IdentifierType < Type
       def marker( production = nil )
          Language::ExpressionDefinition::EntityReference.new(self, production)
       end

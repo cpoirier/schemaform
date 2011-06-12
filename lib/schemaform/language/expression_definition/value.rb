@@ -55,8 +55,7 @@ class Value < Base
    
    
    def method_missing( symbol, *args, &block )
-      result_type = @type.method_type(symbol, *args, &block) or return super
-      result_type.marker(Productions::MethodCall.new(self, symbol, *args, &block))
+      Value.resolve(symbol, type(), @production, *args, &block) or return super
    end
    
    def self.binary_operator( operator, lhs, rhs )
@@ -69,10 +68,23 @@ class Value < Base
    end
    
    def self.aggregation( operator, marker )
-      if marker.type.is_a?(Schema::CollectionType) then
-         marker.type.member_type.marker(Productions::Aggregation.new(operator, marker))
+      if marker.type.effective_type.collection_type? then
+         check{ assert(!marker.type.effective_type.member_type.collection_type?, "how do we do aggregation across nested collections?") }
+         marker.type.effective_type.member_type.marker(Productions::Aggregation.new(operator, marker))
       else
          marker
+      end
+   end
+   
+   def self.resolve( symbol, type, production, *args, &block )
+      type = type.evaluated_type
+      if result_type = type.method_type(symbol, *args, &block) then
+         result_type.marker(Productions::MethodCall.new(self, symbol, *args, &block))
+      elsif type.collection_type? then
+         production = resolve(symbol, type.member_type, production, *args, &block) or return nil
+         type.class.build(production.type).marker(production)
+      else   
+         type.marker(production).send(symbol, *args, &block)
       end
    end
 

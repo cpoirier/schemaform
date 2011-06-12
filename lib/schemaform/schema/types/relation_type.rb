@@ -33,6 +33,10 @@ class RelationType < SetType
       @tuple_type = member_type()
    end
    
+   def naming_type?
+      true
+   end
+   
 
 
 end # RelationType

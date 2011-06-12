@@ -18,7 +18,7 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("base.rb")
+require Schemaform.locate("value.rb")
 
 
 #
@@ -27,17 +27,16 @@ require Schemaform.locate("base.rb")
 module Schemaform
 module Language
 module ExpressionDefinition
-class EntityReference < Base
+class EntityReference < Value
    
    def initialize( reference_type, production = nil )
-      super()
-      @production = production
-      @tuple      = reference_type.referenced_entity.heading
-      @effective  = reference_type.referenced_entity.formula_context(Productions::ImpliedContext.new(self))
+      @tuple     = reference_type.referenced_entity.heading
+      @effective = reference_type.referenced_entity.formula_context(Productions::ImpliedContext.new(self))
+      super(reference_type, production)
    end
    
    def method_missing( symbol, *args, &block )
-      @effective.send(symbol, *args, &block)
+      @effective.send(symbol, *args, &block) || super
    end
    
    

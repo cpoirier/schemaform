@@ -29,7 +29,7 @@ class Schema
 class StringType < ScalarType
 
    def initialize( attrs )
-      @length = attrs.delete(:length)
+      @length = attrs.delete(:length)      
       super attrs
    end
    
@@ -37,13 +37,16 @@ class StringType < ScalarType
    # For the undimensioned type, handles dimensioning.
    
    def make_specific( modifiers )
-      if @length && modifiers.fetch(:length, 0) > 0 then
+      if !@length && modifiers.fetch(:length, 0) > 0 then
          self.class.new(:base_type => self, :length => modifiers.delete(:length))
       else
          super
       end
    end
    
+   def description()
+      (@length.exists? && @length > 0) ? (super + "[#{@length}]") : super
+   end
    
 
 end # StringType

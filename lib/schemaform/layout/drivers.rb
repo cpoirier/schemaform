@@ -43,6 +43,8 @@ class Schema
             table   = into.define_table(name, id_name)
             @heading.attributes.each do |attribute|
                next if attribute.name == id_name
+               next if @base_entity && @base_entity.declared_heading.member?(attribute.name)
+               
                attribute.lay_out(table)
             end
          else
@@ -132,21 +134,24 @@ class Schema
    class CollectionType
       def lay_out( into )
          type_check(:into, into, Layout::SQL::Group)
-         table = into.define_table(:members)
-         if @member_type.is_a?(TupleType) then
-            @member_type.lay_out(table)
-         else
-            group = table.define_group(:member)
-            @member_type.lay_out(group)
+         into.define_table(:members).tap do |table|
+            if @member_type.is_a?(TupleType) then
+               @member_type.lay_out(table)
+            else
+               group = table.define_group(:member)
+               @member_type.lay_out(group)
+            end
          end
       end
    end
    
    class ListType < CollectionType
       def lay_out( into )
-         super
+         collection_table = super
          into.define_field(:first, schema.identifier_type)
          into.define_field(:last , schema.identifier_type)
+         collection_table.define_field(:__next    , schema.identifier_type, collection_table.id_field)
+         collection_table.define_field(:__previous, schema.identifier_type, collection_table.id_field)
       end
    end
    

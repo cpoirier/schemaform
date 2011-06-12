@@ -47,7 +47,7 @@ class Entity < Relation
          end
       end
 
-      @identifiers.register(IDAttribute.new(@identifiers, self))
+      @identifier = @identifiers.register(IDAttribute.new(@identifiers, self))
 
       #
       # Other stuff.
@@ -55,10 +55,14 @@ class Entity < Relation
       @keys = {}
    end
    
-   attr_reader :keys, :identifiers, :declared_heading, :pedigree
+   attr_reader :keys, :identifiers, :declared_heading, :pedigree, :base_entity
    
    def id()
       (@declared_heading.name.to_s.identifier_case + "_id").intern
+   end
+   
+   def identifier_type( context = nil )
+      @identifier.type
    end
    
    def reference_type( context = nil )

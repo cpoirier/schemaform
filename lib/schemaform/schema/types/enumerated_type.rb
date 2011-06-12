@@ -43,7 +43,8 @@ class EnumeratedType < ScalarType
          string_length = 0
          values.each do |value|
             all_integers  = false if all_integers and !value.is_an?(Integer)
-            string_length = value.to_s.length
+            value_length  = value.to_s.length
+            string_length = value_length if value_length > string_length
          end
       
          attrs[:base_type] = all_integers ? IntegerType.new(:context => context) : StringType.new(:context => context, :length => string_length)

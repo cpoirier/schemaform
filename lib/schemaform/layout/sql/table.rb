@@ -31,7 +31,7 @@ class Table < Component
 
    def initialize( context, name, id_name = nil )
       super(context, name)
-      @id_field = define_field(id_name || :__id, schema.identifier_type)
+      @id_field = define_field(id_name || :__record_id, schema.identifier_type)
       context.define_owner_fields(self)
    end
    
@@ -43,7 +43,7 @@ class Table < Component
    end
    
    def define_owner_fields( into )
-      into.define_field(:__parent_id, schema.identifier_type, @id_field)
+      into.define_field(:__context_id, schema.identifier_type, @id_field)
    end
    
    def to_sql()

@@ -153,7 +153,7 @@ class Schema
    # 
    # class ReferenceType < Type
    #    def lay_out( into )
-   #       type_check(:into, into, Layout::SQL::Group)
+   #       type_check(:into, into, Adapters::SQL::Group)
    #       warn_once("TODO: reference field link")
    #       into.define_field(nil, schema.identifier_type)
    #    end
@@ -161,7 +161,7 @@ class Schema
    # 
    # class ScalarType < Type
    #    def lay_out( into )         
-   #       type_check(:into, into, Layout::SQL::Group)
+   #       type_check(:into, into, Adapters::SQL::Group)
    #       into.define_field(nil, self)
    #    end
    # end
@@ -174,7 +174,7 @@ class Schema
    # 
    # class CollectionType
    #    def lay_out( into )
-   #       type_check(:into, into, Layout::SQL::Group)
+   #       type_check(:into, into, Adapters::SQL::Group)
    #       table = into.define_table(:members)
    #       if @member_type.is_a?(TupleType) then
    #          @member_type.lay_out(table)
@@ -195,7 +195,7 @@ class Schema
    # 
    # class UnknownType < Type
    #    def lay_out( into )
-   #       type_check(:into, into, Layout::SQL::Group)
+   #       type_check(:into, into, Adapters::SQL::Group)
    #       into.top.describe
    #       fail
    #    end

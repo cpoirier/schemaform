@@ -18,39 +18,43 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("scalar_type.rb")
+require Schemaform.locate("component.rb")
 
 
 #
-# The base class for types that implement a string of data (text and binary).
+# A field within a table. Unlike attributes in the definition series, fields have only a name
+# and a type.
 
 module Schemaform
-class Schema
-class StringType < ScalarType
+module Adapters
+module Generic
+class Field < Component
 
-   def initialize( attrs )
-      @length = attrs.delete(:length)      
-      super attrs
+   def initialize( context, name, sf_type, sql_type = nil, *modifiers )
+      super( context, name )
+      @sf_type   = sf_type
+      @sql_type  = sql_type
+      @modifiers = modifiers
    end
    
-   attr_reader :length
+   attr_reader :sf_type, :sql_type, :modifiers
    
-   #
-   # For the undimensioned type, handles dimensioning.
-   
-   def make_specific( modifiers )
-      if !@length && modifiers.fetch(:length, 0) > 0 then
-         self.class.new(:base_type => self, :length => modifiers.delete(:length))
+   def describe( indent = "", name_override = nil, suffix = nil )
+      type_descriptor = if @sql_type then
+         [@sql_type, *modifiers].join(" ")
       else
-         super
+         @sf_type.description()
       end
+      
+      super indent, name_override, type_descriptor
    end
    
-   def description()
-      (@length.exists? && @length > 0) ? (super + "[#{@length}]") : super
+   def to_sql( name_prefix = nil )
+      [name_prefix ? name_prefix.to_s + @name.to_s : @name.to_s, @sql_type, *modifiers].join(" ")
    end
    
 
-end # StringType
-end # Schema
+end # Field
+end # Generic
+end # Adapters
 end # Schemaform

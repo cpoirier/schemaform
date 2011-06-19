@@ -18,52 +18,30 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("component.rb")
+require Schemaform.locate("field.rb")
 
 
 #
-# Acts like both a field and a table, for the purpose of grouping a set of fields and subtables 
-# together and applying a prefix to the names.
+# An auto-generated identifier field within a table.
 
 module Schemaform
-module Layout
-module SQL
-class Group < Component
+module Adapters
+module Generic
+class ReferenceField < Field
 
-   def initialize( context, name )
-      super(context, name)
-      @fields = Registry.new()
-   end
-   
-   attr_reader :fields
-   alias :tables :children
+   def initialize( context, name, referenced_table, deferrable, required, field_type = "integer" )
+      modifiers = []
+      modifiers << "not null" if required
+      modifiers << "references #{referenced_table.name}(#{referenced_table.id_field.name})"
+      modifiers << "deferrable initially deferred" if deferrable
 
-   def define_field( name, type, references_field = nil )
-      add_child Field.new(self, name, type, references_field)
+      @referenced_table = referenced_table
+      super( context, name, nil, field_type, *modifiers)
    end
-   
-   def define_table( name, id_name = nil )
-      add_child Table.new(self, name, id_name)
-   end
-   
-   
-   def describe( indent = "", name_override = nil, suffix = nil )
-      if @children then
-         case @children.count
-         when 0
-            return
-         when 1
-            @children.each do |child|
-               child.describe(indent, @name)
-            end
-         else
-            super
-         end
-      end
-   end
-   
 
-end # Group
-end # SQL
-end # Layout
+   attr_reader :referenced_table
+   
+end # ReferencedField
+end # Generic
+end # Adapters
 end # Schemaform

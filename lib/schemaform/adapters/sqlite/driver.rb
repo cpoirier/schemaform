@@ -18,39 +18,20 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("scalar_type.rb")
-
 
 #
-# The base class for types that implement a string of data (text and binary).
+# Walks a Schema to lay out structures in tables and fields.
 
 module Schemaform
-class Schema
-class StringType < ScalarType
+module Adapters
+module SQLite
+class Driver < Generic::Driver
 
-   def initialize( attrs )
-      @length = attrs.delete(:length)      
-      super attrs
-   end
    
-   attr_reader :length
    
-   #
-   # For the undimensioned type, handles dimensioning.
-   
-   def make_specific( modifiers )
-      if !@length && modifiers.fetch(:length, 0) > 0 then
-         self.class.new(:base_type => self, :length => modifiers.delete(:length))
-      else
-         super
-      end
-   end
-   
-   def description()
-      (@length.exists? && @length > 0) ? (super + "[#{@length}]") : super
-   end
    
 
-end # StringType
-end # Schema
+end # Driver
+end # SQLite
+end # Adapters
 end # Schemaform

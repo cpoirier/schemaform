@@ -39,6 +39,8 @@ class NumericType < ScalarType
       super
    end
    
+   attr_reader :range
+   
    def make_specific( modifiers )
       if !@range && modifiers.fetch(:range, nil).is_a?(Range) then
          self.class.new(:base_type => self, :range => modifiers.delete(:range))

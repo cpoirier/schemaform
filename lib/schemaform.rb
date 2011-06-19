@@ -42,25 +42,29 @@ module Schemaform
    #
    # Returns the named Schema definition.
    
-   def self.[]( name )
-      @@schemas[name]
+   def self.[]( name, version = nil )
+      @@schemas[name][version]
    end
-   
-   
+
+
    #
    # Returns true if the named Schema is already defined.
    
-   def self.defined?( name )
-      @@schemas.member?(name)
+   def self.defined?( name, version = nil )
+      return false unless @@schemas.member?(name)
+      @@schemas[name].member?(version)
    end
    
    
    #
    # Creates a Schema and calls your block to fill it in (see Schema::DefinitionLanguage).
 
-   def self.define( name, into_registry = nil, &block )
-      Schema.new(name, into_registry || @@schemas).tap do |schema|
-         schema.namespace.register(schema)   
+   def self.define( name, version, &block )
+      @@schemas.register(VersionSet.new(name)) unless @@schemas.member?(name)
+      assert(!@@schemas[name].member?(version), "Schema #{name} version #{version} is already defined")
+      
+      Schema.new(name, version).tap do |schema|
+         @@schemas[name][version] = schema
          Language::SchemaDefinition.process(schema, &block)         
       end
    end
@@ -130,10 +134,11 @@ module Schemaform
       
 private
    
-   require locate("schemaform/registry.rb")
-   require locate("schemaform/schema.rb")
+   require locate("schemaform/registry.rb"   )
+   require locate("schemaform/version_set.rb")
+   require locate("schemaform/schema.rb"     )
    
-   ["language", "productions", "layout", "materialization"].each do |directory|
+   ["language", "productions", "adapters", "materialization"].each do |directory|
       Dir[Schemaform.locate("schemaform/#{directory}/*.rb")].each do |path|
          require path
       end

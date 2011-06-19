@@ -39,6 +39,10 @@ class IdentifierType < Type
       true
    end
    
+   def entity_name()
+      @entity.name
+   end
+   
    def referenced_entity()
       @entity
    end

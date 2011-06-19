@@ -106,7 +106,8 @@ class Type < Element
    def describe( indent = "", name_override = nil, suffix = nil )
       super( indent, description )
    end
-
+   
+   
 
    #
    # Attributes include:

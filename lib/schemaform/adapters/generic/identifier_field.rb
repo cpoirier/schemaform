@@ -18,39 +18,22 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("component.rb")
+require Schemaform.locate("field.rb")
 
 
 #
-# A table, possibly nested, (for naming purposes only). 
+# An auto-generated identifier field within a table.
 
 module Schemaform
-module Layout
-module SQL
-class Table < Component
+module Adapters
+module Generic
+class IdentifierField < Field
 
-   def initialize( context, name, id_name = nil )
-      super(context, name)
-      @id_field = define_field(id_name || :__record_id, schema.identifier_type)
-      context.define_owner_fields(self)
-   end
-   
-   attr_reader :id_field
-   alias :fields :children
-   
-   def define_field( name, type, references_field = nil )
-      add_child Field.new(self, name, type, references_field)
-   end
-   
-   def define_owner_fields( into )
-      into.define_field(:__context_id, schema.identifier_type, @id_field)
-   end
-   
-   def to_sql()
-      
+   def initialize( context, name, sf_type, field_type = "integer" )
+      super( context, name, sf_type, field_type, "not null", "primary key", "autoincrement" )
    end
 
-end # Table
-end # SQL
-end # Layout
+end # IdentifierField
+end # Generic
+end # Adapters
 end # Schemaform

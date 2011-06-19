@@ -18,46 +18,45 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("component.rb")
-
 
 #
-# Anchors a set of tables to the source Schema definition.
+# Tracks a set of versions of something (generally Schemas).
 
 module Schemaform
-module Layout
-module SQL
-class Schema < Component
+class VersionSet
 
-   def initialize( definition )
-      super(nil, definition.name)
-      @definition = definition
+   def initialize( name )
+      @name     = name
+      @versions = {}
+      @current  = nil
    end
    
-   attr_reader :definition
-   alias :tables :children
+   attr_reader :name
    
-   def define_table( name, id_name = nil )
-      add_child Table.new(self, name, id_name)
-   end
-
-   def define_owner_fields( into )      
+   def current()
+      @current ? @versions[@current] : nil
    end
    
-   def identifier_type()
-      @definition.identifier_type
-   end
-   
-   def to_sql()
-      table_sql = @children.collect do |table|
-         table.to_sql
+   def []( version )
+      if version.nil? then
+         @current ? @versions[@current] : nil
+      else
+         @versions.fetch(version, nil)
       end
-      
-      table_sql.join("\n\n")
    end
    
+   def []=( version, object )
+      @versions[version] = object
+   end
+   
+   def member?( version )
+      if version.nil? then
+         @current.exists?
+      else
+         @versions.member?(version)
+      end
+   end
 
-end # Schema
-end # SQL
-end # Layout
+
+end # VersionSet
 end # Schemaform

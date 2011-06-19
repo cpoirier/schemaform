@@ -32,6 +32,10 @@ class Database
    
    attr_reader :connection_string
    
+   def type()
+      @sequel_database.database_type
+   end
+   
    
    #
    # Returns the (global) Database object for the specified database URL.  The URL will be passed to the
@@ -44,9 +48,9 @@ class Database
       
       @@monitor.synchronize do
          if @@databases.member?(key) then
-            @@databases[key].configure( configuration )
+            @@databases[key].configure(configuration)
          else
-            @@databases[key] = new( connection_string, configuration )
+            @@databases[key] = new(connection_string, configuration)
          end
       end
       
@@ -61,19 +65,19 @@ class Database
    
    def transaction()
       thread    = Thread.current
-      handle    = @transaction_handles.fetch( thread, nil )
+      handle    = @transaction_handles.fetch(thread, nil)
       outermost = handle.nil?
 
       begin
          @sequel_database.transaction do |connection|
             if outermost then
-               @transaction_handles[thread] = handle = TransactionHandle.new( self, connection )
+               @transaction_handles[thread] = handle = TransactionHandle.new(self, connection)
             end
             
-            yield( handle )
+            yield(handle)
             
             if outermost then
-               warn_once( "TODO: deal with transaction constraint checks" )
+               warn_once("TODO: deal with transaction constraint checks")
             end
          end
       ensure
@@ -91,7 +95,7 @@ class Database
    
    def []( name, prefix = nil )
       @connected_schemas[name] = {} unless @connected_schema.member?(name)
-      @connected_schemas[name][prefix] = ConnectedSchema.build( self, Definitions::Schema[name] ) unless @connected_schema[name].member?(prefix)
+      @connected_schemas[name][prefix] = ConnectedSchema.build(self, Definitions::Schema[name]) unless @connected_schema[name].member?(prefix)
       @connected_schemas[name][prefix]
    end
    
@@ -106,10 +110,10 @@ class Database
 private
    def initialize( connection_string, properties = {} )
       @connection_string   = connection_string      
-      @sequel_database     = Sequel.connect( connection_string, :test => true )
+      @sequel_database     = Sequel.connect(connection_string, :test => true)
       @connected_schemas   = {}      
       @transaction_handles = {}
-      configure( properties )
+      configure(properties)
    end
 
    @@monitor   = Monitor.new()

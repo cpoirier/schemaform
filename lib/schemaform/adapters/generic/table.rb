@@ -22,29 +22,41 @@ require Schemaform.locate("component.rb")
 
 
 #
-# A field within a table. Unlike attributes in the definition series, fields have only a name
-# and a type.
+# A table, possibly nested, (for naming purposes only). 
 
 module Schemaform
-module Layout
-module SQL
-class Field < Component
+module Adapters
+module Generic
+class Table < Component
 
-   def initialize( context, name, type, references_field = nil )
-      super( context, name || :__value )
-      @type = type
-      @references_field = references_field
+   def initialize( context, name, id_name = nil )
+      super(context, name)
+      @id_field = add_field(IdentifierField.new(self, id_name || context.id_field, nil))
+      context.define_owner_fields(self)
    end
    
-   attr_reader :type, :references_field
+   attr_reader :id_field
+   alias :fields :children
    
-   def describe( indent = "", name_override = nil, suffix = nil )
-      description = @type.evaluated_type.description
-      super indent, name_override, @references_field.nil? ? description : "#{description} references #{@references_field.to_s}"
+   def add_field( field )
+      add_child field
    end
    
+   def define_table( name, id_name = nil )
+      qualified_name = @name.to_s + "__" + name.to_s
+      @context.define_table(qualified_name, id_name || "id")
+   end
 
-end # Field
-end # SQL
-end # Layout
+   def define_owner_fields( into )
+      into.add_field ReferenceField.new(into, :__owner, self, false, true)
+   end
+   
+   def to_sql( name_prefix = nil )
+      fields = @children.collect{|c| c.to_sql()}.join(",\n   ")
+      "create table #{name_prefix}#{@name}\n(\n   #{fields}\n)"
+   end
+
+end # Table
+end # Generic
+end # Adapters
 end # Schemaform

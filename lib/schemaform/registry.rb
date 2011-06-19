@@ -99,7 +99,7 @@ class Registry
       assert( name, "unable to find a name to use", :definition => definition )
       
       unless @registry.member?(name) && @registry[name].object_id == definition.object_id then
-         check{ assert(!@registry.member?(name), "[#{@owner_descrpition.to_s}] already has [#{@member_description.to_s}] named [#{name}]", ":registered" => @registry.keys ) }         
+         check{ assert(!@registry.member?(name), "[#{@owner_descrpition.to_s}] already has [#{@member_description.to_s}] named [#{name}]", :registered => @registry.keys.join(", ") ) }         
          @registry[name] = definition
          @order << name
          @chain.register(definition, name) if @chain

@@ -44,7 +44,7 @@ class Schema
    #                                       Public Interface
    # ==========================================================================================
 
-   attr_reader :supervisor, :types, :entities, :relations, :tuples, :dsl, :name, :namespace
+   attr_reader :supervisor, :types, :entities, :relations, :tuples, :dsl, :name, :version
    
    def schema()
       self
@@ -109,9 +109,9 @@ protected
    #                                          Internals
    # ==========================================================================================
 
-   def initialize( name, namespace, &block )      
+   def initialize( name, version, &block )      
       @name        = name
-      @namespace   = namespace
+      @version     = version
       @tuples      = Registry.new("schema [#{@name}]", "a tuple"              )
       @relations   = Registry.new("schema [#{@name}]", "a relation"           )
       @entities    = Registry.new("schema [#{@name}]", "an entity", @relations)

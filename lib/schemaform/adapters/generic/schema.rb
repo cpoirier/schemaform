@@ -18,58 +18,46 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("component.rb")
+
 
 #
-# A component within the Layout tree.
+# Anchors a set of tables to the source Schema definition.
 
 module Schemaform
-module Layout
-module SQL
-class Component
-   include QualityAssurance
+module Adapters
+module Generic
+class Schema < Component
 
-   def initialize( context, name )
-      @context  = context
-      @schema   = context ? context.schema : self
-      @name     = name
-      @children = nil
+   def initialize( definition )
+      super(nil, definition.name)
+      @definition = definition
    end
    
-   attr_reader :context, :name, :children, :schema
+   attr_reader :definition
+   alias :tables :children
    
-   def top()
-      @context ? @context.top : self
+   def define_table( name, id_name = nil )
+      add_child Table.new(self, name, id_name)
    end
 
-   def define_group( name )
-      add_child Group.new(self, name)
+   def define_owner_fields( into )      
    end
    
-   def add_child( child )
-      @children = Registry.new() if @children.nil?
-      @children.register child
-      child
+   def identifier_type()
+      @definition.identifier_type
    end
    
-   def define_owner_fields( into )
-      @context.define_owner_fields(into)
-   end
-
-   def describe( indent = "", name_override = nil, suffix = nil )
-      puts "#{indent}#{self.class.name.split("::").last}: #{name_override || @name}#{suffix ? " " + suffix : ""}"
-      if @children then
-         child_indent = indent + "   "
-         @children.each do |child|
-            child.describe(child_indent)
-         end
+   def to_sql( name_prefix = nil )
+      table_sql = @children.collect do |table|
+         table.to_sql(name_prefix)
       end
+      
+      table_sql.join("\n\n")
    end
    
-   
-end # Component
-end # SQL
-end # Layout
+
+end # Schema
+end # Generic
+end # Adapters
 end # Schemaform
-
-require Schemaform.locate("group.rb")
-

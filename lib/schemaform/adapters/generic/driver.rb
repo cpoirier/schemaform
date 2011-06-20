@@ -40,8 +40,27 @@ class Driver
       
    def self.lay_out_schema( schema )
       Schema.new(schema).tap do |layout|
+         names = {}
+
+         #
+         # Create the master tables first. We need them in place for references.
+
          schema.entities.each do |entity|
-            lay_out(entity, layout)
+            names[entity.name] = entity.name.to_s.identifier_case
+            layout.define_table(names[entity.name], entity.id)
+         end
+         
+         #
+         # Now, fill them in.
+
+         schema.entities.each do |entity|
+            master_table = layout.schema.tables[names[entity.name]]
+            entity.heading.attributes.each do |attribute|
+               next if attribute.name == entity.id
+               next if entity.base_entity && entity.base_entity.declared_heading.member?(attribute.name)
+
+               lay_out(attribute, master_table)
+            end
          end
       end
    end
@@ -51,15 +70,7 @@ class Driver
    end
    
    def self.lay_out_entity( entity, container, prefix = nil )
-      id_name = entity.id()
-      container.define_table(entity.name.to_s.identifier_case, id_name).tap do |table|
-         entity.heading.attributes.each do |attribute|
-            next if attribute.name == id_name
-            next if entity.base_entity && entity.base_entity.declared_heading.member?(attribute.name)
-         
-            lay_out(attribute, table)
-         end
-      end
+      fail "this should have been handled in lay_out_schema"
    end
 
    def self.lay_out_tuple( tuple, container, prefix = nil )
@@ -92,8 +103,7 @@ class Driver
       if referenced_table = container.schema.tables[type.entity_name.to_s.identifier_case] then
          container.add_field ReferenceField.new(container, name, referenced_table, true, false)
       else
-         container.add_field Field.new(container, name.to_s + "__" + type.entity_name.to_s.identifier_case, nil, "???")
-         warn_once("TODO: reference to un-laid-out table")
+         fail "reference to un-laid-out table -- how is this possible?"
       end
    end
 

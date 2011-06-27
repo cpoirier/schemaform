@@ -27,12 +27,12 @@ module Schemaform
 module Productions
 class MethodCall 
    
-   def initialize( marker, symbol, *args, &block )
+   def initialize( receiver, symbol, args = [], block = nil )
       super()
-      @marker = marker
-      @symbol = symbol
-      @args   = args
-      @block  = block
+      @receiver = receiver
+      @symbol   = symbol
+      @args     = args
+      @block    = block
    end
    
 

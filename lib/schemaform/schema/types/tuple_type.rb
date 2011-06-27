@@ -50,6 +50,10 @@ class TupleType < Type
    def describe( indent = "", name_override = nil, suffix = nil )
       @tuple.describe(indent, name_override, suffix)
    end
+
+   def attribute?( attribute_name )
+      @tuple.attribute?(attribute_name)
+   end
    
 
 end # TupleType

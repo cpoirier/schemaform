@@ -46,7 +46,6 @@ class Relation < Element
       Relation.new(heading.project(*attributes), schema)
    end
    
-
 end # Relation
 end # Schema
 end # Schemaform

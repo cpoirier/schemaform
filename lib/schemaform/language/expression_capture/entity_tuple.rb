@@ -28,7 +28,7 @@ require Schemaform.locate("tuple.rb")
 
 module Schemaform
 module Language
-module ExpressionDefinition
+module ExpressionCapture
 class EntityTuple < Tuple
 
    def initialize( entity, production = nil )
@@ -54,14 +54,14 @@ class EntityTuple < Tuple
             type = attribute.evaluated_type
             next unless type.is_a?(Schema::ReferenceType)
             next unless @names.member?(type.entity_name)
-            attribute.marker(path)
+            attribute.capture(path)
          end
       end
       
       if link_path.nil? then
          fail "couldn't find any way to relate records from #{related_entity.full_name} to #{@entity.full_name}"
       elsif !link_path.is_an?(Attribute) then
-         fail "expected Attribute result from the link expression"
+         fail "expected Attribute result from the link expression; found #{link_path.class.name} instead"
       end
       
       reference_type = link_path.instance_variable_get(:@definition).singular_type.evaluated_type
@@ -73,7 +73,7 @@ class EntityTuple < Tuple
       
       warn_once("TODO: if the link attribute for a related lookup is part of a key, the result should be a single (optional) record")
 
-      return Schema::SetType.build(related_entity.reference_type).marker(Productions::RelatedTuples.new(@entity, link_path))
+      return Schema::SetType.build(related_entity.reference_type).capture(Productions::RelatedTuples.new(@entity, link_path))
    end
    
    def method_missing( symbol, *args, &block )
@@ -82,6 +82,6 @@ class EntityTuple < Tuple
 
 
 end # EntityTuple
-end # ExpressionDefinition
+end # ExpressionCapture
 end # Language
 end # Schemaform

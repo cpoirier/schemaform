@@ -49,7 +49,7 @@ class Schema
    #          table   = into.define_table(name, id_name)
    #          @heading.attributes.each do |attribute|
    #             next if attribute.name == id_name
-   #             next if @base_entity && @base_entity.declared_heading.member?(attribute.name)
+   #             next if @base_entity && @base_entity.declared_heading.attribute?(attribute.name)
    #             
    #             attribute.lay_out(table)
    #          end

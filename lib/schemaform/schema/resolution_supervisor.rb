@@ -41,7 +41,7 @@ class ResolutionSupervisor
       return annotate_errors( annotation ) do
          check( @entries.push_and_pop(scope) { yield() } ) do |result|
             assert( result.exists?, "unable to resolve expression for [#{description}]" )
-            type_check( :result, result, Language::ExpressionDefinition::Marker )
+            type_check( :result, result, Language::ExpressionCapture::Marker )
             warn_once( "DEBUG: #{description} resolved to #{class_name_for(result.type)} #{type.description}" ) if report_worthy
          end
       end

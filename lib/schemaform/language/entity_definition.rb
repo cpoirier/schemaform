@@ -105,7 +105,16 @@ class EntityDefinition
    # Defines a constraint on the entity that will be checked on save.
    
    def constrain( description, proc = nil, &block )
-      warn_once("TODO: constraint support in Tuple")
+      warn_once("TODO: constraint support in Entity")
+   end
+   
+   
+   #
+   # Defines an operation on the entity. Operations are free-form methods added to the
+   # Entity class internally.
+   
+   def operation( name, &block )
+      warn_once("TODO: operation support in Entity")
    end
    
 

@@ -216,6 +216,7 @@ class Type < Element
       #
       # Short cut the hard work, if the answer is obvious . . . 
 
+      return self     if rhs_type.nil?
       return rhs_type if unknown_type?
       return self     if rhs_type.unknown_type?
       return self     if assignable_from?(rhs_type)

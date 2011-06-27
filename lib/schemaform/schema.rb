@@ -129,6 +129,8 @@ protected
       @types.register  NumericType.new(:name => :real      , :base_type => @types[:any] , :default => 0.0 )
       @types.register  IntegerType.new(:name => :integer   , :base_type => @types[:real]   )
       @types.register  NumericType.new(:name => :identifier, :base_type => @types[:integer])
+
+      @types.register UserDefinedType.new(:name => :ip, :base_type => @types[:text].make_specific(:length => 15))
       
       # @dsl.instance_eval do
       #    define_type :symbol, :text, :length => 80, :check => lambda {|i| !!i.to_sym && i.to_sym.inspect !~ /"/}

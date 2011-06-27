@@ -18,27 +18,43 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("base.rb")
+require Schemaform.locate("value.rb")
 
+
+#
+# Provides access to a Tuple and its attributes.
 
 module Schemaform
 module Language
-module ExpressionDefinition
-class LiteralScalar < Base
+module ExpressionCapture
+class Attribute < Value
 
-   def initialize( value, type = nil )
-      super(type || value.type)
-      @value = value
+   def initialize( definition, production = nil )
+      super(definition.type, production)
+      @definition = definition
+      @effective  = definition.type.capture(Productions::ImpliedContext.new(self))
    end
    
-   # def *( rhs )
-   #    result_type = self.type.best_common_type(rhs.type)
-   #    result_type.marker(Productions::BinaryOperator.new(:*, self, rhs))
-   # end
+   def method_missing( symbol, *args, &block )
+      @effective.send(symbol, *args, &block)
+   end
+   
+   #
+   # Builds an expression that branches based on whether or not a value has been stored in the
+   # attribute (default values will be present otherwise).
+
+   def present?( true_value = nil, false_value = nil )
+      true_value  = ExpressionCapture.capture(true_value )
+      false_value = ExpressionCapture.capture(false_value)      
+      result_type = true_value ? ExpressionCapture.merge_types(true_value, false_value) : ExpressionCapture.resolve_type(:boolean)
+
+      result_type.capture(Productions::PresentCheck.new(self, true_value, false_value))
+   end
+
    
    
-end # LiteralScalar
-end # ExpressionDefinition
+end # Attribute
+end # ExpressionCapture
 end # Language
 end # Schemaform
 

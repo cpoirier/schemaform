@@ -18,38 +18,30 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("base.rb")
+require Schemaform.locate("value.rb")
 
-
-#
-# Provides access to a Tuple and its attributes.
 
 module Schemaform
 module Language
-module ExpressionDefinition
-class Relation < Base
-
-   def initialize( definition, production = nil )
-      super()
-      @production = production
-      @definition = definition
+module ExpressionCapture
+class LiteralSet < Value
+   
+   def initialize( *members )
+      @members = members
+      
+      member_type = Thread[:expression_contexts].top.unknown_type
+      members.each do |member|
+         member_type = member_type.best_common_type(member.type)
+      end
+      
+      super(Thread[:expression_contexts].top.build_set_type(member_type))
    end
    
-   def method_missing( symbol, *args, &block )
-      attribute  = Base.lookup(@definition.heading.attributes, symbol, args, block) or return super
-      projection = attribute.marker(Productions::Projection.new(self, symbol))
-      Schema::SetType.build(projection.type).marker(projection)
-   end
    
-   def count()
-      Base.type(:integer).marker(Productions::Aggregation.new(:count, self))
-   end
    
-   def type()
-      @definition.type
-   end
    
-end # Relation
-end # ExpressionDefinition
+end # LiteralSet
+end # ExpressionCapture
 end # Language
 end # Schemaform
+

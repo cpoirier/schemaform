@@ -57,7 +57,7 @@ class Driver
             master_table = layout.schema.tables[names[entity.name]]
             entity.heading.attributes.each do |attribute|
                next if attribute.name == entity.id
-               next if entity.base_entity && entity.base_entity.declared_heading.member?(attribute.name)
+               next if entity.base_entity && entity.base_entity.declared_heading.attribute?(attribute.name)
 
                lay_out(attribute, master_table)
             end

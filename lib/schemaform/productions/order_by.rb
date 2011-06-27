@@ -18,48 +18,18 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("base.rb")
-
-
-#
-# Provides access to a Tuple and its attributes.
 
 module Schemaform
-module Language
-module ExpressionDefinition
-class Attribute < Base
+module Productions
+class OrderBy
 
-   def initialize( definition, production = nil )
+   def initialize( set, ordering )
       super()
-      @production = production
-      @definition = definition
-      @effective  = definition.type.marker(Productions::ImpliedContext.new(self))
-   end
-   
-   def type()
-      @definition.type
-   end
-   
-   def method_missing( symbol, *args, &block )
-      @effective.send(symbol, *args, &block)
-   end
-   
-   #
-   # Builds an expression that branches based on whether or not a value has been stored in the
-   # attribute (default values will be present otherwise).
-
-   def present?( true_value = nil, false_value = nil )
-      true_value  = Base.markup(true_value )
-      false_value = Base.markup(false_value)      
-      result_type = true_value ? Base.merge_types(true_value, false_value) : Base.type(:boolean)
-
-      result_type.marker(Productions::PresentCheck.new(self, true_value, false_value))
+      
+      @set      = set
+      @ordering = ordering
    end
 
-   
-   
-end # Attribute
-end # ExpressionDefinition
-end # Language
+end # OrderBy
+end # Productions
 end # Schemaform
-

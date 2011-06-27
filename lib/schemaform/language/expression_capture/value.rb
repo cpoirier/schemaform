@@ -18,30 +18,30 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("value.rb")
-
 
 #
-# Provides access to a Tuple and its attributes.
+# Base class for values.
 
 module Schemaform
 module Language
-module ExpressionDefinition
-class EntityReference < Value
-   
-   def initialize( reference_type, production = nil )
-      @tuple     = reference_type.referenced_entity.heading
-      @effective = reference_type.referenced_entity.formula_context(Productions::ImpliedContext.new(self))
-      super(reference_type, production)
+module ExpressionCapture
+class Value
+   include QualityAssurance
+   extend  QualityAssurance
+
+   def initialize( type, production = nil )
+      @type       = type
+      @production = production
    end
+   
+   attr_reader :type, :production
    
    def method_missing( symbol, *args, &block )
-      @effective.send(symbol, *args, &block) || super
+      @type.capture_method(self, symbol, args, block) or fail "cannot dispatch [#{symbol}] on type #{@type.description} (#{@type.class.name})"
    end
    
-   
-end # EntityReference
-end # ExpressionDefinition
+end # Value
+end # ExpressionCapture
 end # Language
 end # Schemaform
 

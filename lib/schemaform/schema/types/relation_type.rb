@@ -36,8 +36,11 @@ class RelationType < SetType
    def naming_type?
       true
    end
-   
 
+   def attribute?( attribute_name )
+      @tuple_type.attribute?(attribute_name)
+   end
+   
 
 end # RelationType
 end # Schema

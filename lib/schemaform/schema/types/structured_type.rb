@@ -61,9 +61,11 @@ class StructuredType < Type
       @members.keys + (@lookup ? @lookup.call(nil) : [])
    end
    
-   def member?( name )
+   def attribute?( name )
       @members.member?(name) || (@lookup && @lookup.call(name))
    end
+   
+   alias member? attribute?
    
    def register( name, type = nil )
       check do 

@@ -46,9 +46,10 @@ class ReferenceType < Type
    def description()
       "#{referenced_entity.name} reference"
    end
-   
-   
-   
+
+   def attribute?( attribute_name )
+      referenced_entity.attribute?(attribute_name)
+   end
    
 
 end # ReferenceType

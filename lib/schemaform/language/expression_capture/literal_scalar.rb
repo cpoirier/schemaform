@@ -18,46 +18,22 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("base.rb")
+require Schemaform.locate("value.rb")
 
-
-#
-# Provides access to a Entity-examplar Tuple and its attributes. This is the Marker passed
-# to the Formula for a derived attribute.
 
 module Schemaform
 module Language
-module ExpressionDefinition
-class Tuple < Base
+module ExpressionCapture
+class LiteralScalar < Value
 
-   def initialize( tuple, production = nil )
-      super()
-      @production = production
-      @tuple      = tuple
+   def initialize( value, type = nil )
+      super(type || value.type)
+      @value = value
    end
    
-   def type()
-      @tuple.type
-   end
    
-   def if_then_else( condition, true_branch, false_branch = nil )
-      condition    = Base.markup(condition   )
-      true_branch  = Base.markup(true_branch )
-      false_branch = Base.markup(false_branch)
-      
-      # assert(condition.type.boolean_type, "the if_then_else condition must have a boolean type")
-      
-      production = Productions::IfThenElse.new(condition, true_branch, false_branch)
-      Base.merge_types(true_branch, false_branch).marker(production)
-   end
-   
-   def method_missing( symbol, *args, &block )
-      attribute = Base.lookup(@tuple.attributes, symbol, args, block) or return super
-      attribute.marker(Productions::MethodCall.new(self, symbol))
-   end
-   
-
-end # Tuple
-end # ExpressionDefinition
+end # LiteralScalar
+end # ExpressionCapture
 end # Language
 end # Schemaform
+

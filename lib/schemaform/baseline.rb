@@ -297,6 +297,27 @@ end
 
 class Exception
 
+   #
+   # Defines a simple Exception class that takes a standard parameter list and provides
+   # retrievers to access them.
+   
+   def self.define( *parameters )
+      Class.new(self) do
+         @@parameters = parameters
+         
+         parameters.each do |name|
+            define_method(name) do
+               @data[name]
+            end
+         end
+         
+         define_method(:initialize) do |*values|
+            @data = {}
+            @@parameters.each{|name| @data[name] = values.shift}
+         end
+      end         
+   end
+
    #===========================================================================================
    if !method_defined?(:failsafe_message) then
       
@@ -371,6 +392,7 @@ class Exception
       end
    end
 end
+
 
 
 
@@ -609,6 +631,51 @@ class Thread
       Thread.current.key?(name)
    end
 end
+
+
+
+# =============================================================================================
+#                                        Time Extensions
+# =============================================================================================
+
+class Time
+   
+   #
+   # Returns a Time far in the future, or offset from now.
+   
+   def self.future( offsets = {} )
+      if offsets.empty? then
+         Time.utc(9999, 12, 31, 23, 59, 59, 999999)
+      else
+         days    = offsets.fetch(:days   , offsets.fetch(:day   , 0))
+         hours   = offsets.fetch(:hours  , offsets.fetch(:hour  , 0))
+         minutes = offsets.fetch(:minutes, offsets.fetch(:minute, 0))
+         seconds = offsets.fetch(:seconds, offsets.fetch(:second, 0))
+         
+         Time.now() + ((((((days * 24) + hours) * 60) + minutes) * 60) + seconds)
+      end
+   end
+
+
+   #
+   # Returns a Time far in the past, or offset from now.
+   
+   def self.past( offsets = {} )
+      if offsets.empty? then
+         Time.utc(200,1,1,0,0,0)
+      else
+         days    = offsets.fetch(:days   , offsets.fetch(:day   , 0))
+         hours   = offsets.fetch(:hours  , offsets.fetch(:hour  , 0))
+         minutes = offsets.fetch(:minutes, offsets.fetch(:minute, 0))
+         seconds = offsets.fetch(:seconds, offsets.fetch(:second, 0))
+         
+         Time.now() - ((((((days * 24) + hours) * 60) + minutes) * 60) + seconds)
+      end
+   end
+   
+
+end
+
 
 
 

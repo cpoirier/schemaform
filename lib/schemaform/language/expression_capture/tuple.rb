@@ -18,30 +18,29 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("base.rb")
+require Schemaform.locate("value.rb")
 
+
+#
+# Provides access to a Entity-examplar Tuple and its attributes. This is the Marker passed
+# to the Formula for a derived attribute.
 
 module Schemaform
 module Language
-module ExpressionDefinition
-class LiteralSet < Base
-   
-   def initialize( *members )
-      @members = members
-      
-      member_type = Thread[:expression_contexts].top.unknown_type
-      members.each do |member|
-         member_type = member_type.best_common_type(member.type)
-      end
-      
-      super(Thread[:expression_contexts].top.build_set_type(member_type))
+module ExpressionCapture
+class Tuple < Value
+
+   def initialize( tuple, production = nil )
+      super(tuple.type, production)
+      @tuple = tuple
    end
    
+   def method_missing( symbol, *args, &block )
+      @tuple.capture_method(self, symbol, args, block) or fail "cannot dispatch [#{symbol}] on tuple #{@tuple.full_name}"
+   end
    
-   
-   
-end # LiteralSet
-end # ExpressionDefinition
+
+end # Tuple
+end # ExpressionCapture
 end # Language
 end # Schemaform
-

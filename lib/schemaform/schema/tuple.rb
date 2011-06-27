@@ -55,9 +55,11 @@ class Tuple < Element
       @attributes.each(&block)
    end
    
-   def member?( name )
+   def attribute?( name )
       @attributes.member?(name)
    end   
+   
+   alias member? attribute?
    
    def empty?()
       @attributes.empty? && @tuples.empty?

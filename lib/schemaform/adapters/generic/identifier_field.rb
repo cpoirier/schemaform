@@ -30,7 +30,7 @@ module Generic
 class IdentifierField < Field
 
    def initialize( context, name, sf_type, field_type = "integer" )
-      super( context, name, sf_type, field_type, "not null", "primary key", "autoincrement" )
+      super( context, name, sf_type, field_type, "not null", "autoincrement" )
    end
 
 end # IdentifierField

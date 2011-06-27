@@ -29,9 +29,15 @@ module Adapters
 module Generic
 class Table < Component
 
-   def initialize( context, name, id_name = nil )
+   def initialize( context, name, id_name = nil, id_table = nil )
       super(context, name)
-      @id_field = add_field(IdentifierField.new(self, id_name || context.id_field, nil))
+      
+      if id_name && id_table then
+         @id_field = add_field(ReferenceField.new(self, id_name, id_table, false, true))
+      else
+         @id_field = add_field(IdentifierField.new(self, id_name || context.id_field, nil))
+      end
+      
       context.define_owner_fields(self)
    end
    
@@ -42,9 +48,9 @@ class Table < Component
       add_child field
    end
    
-   def define_table( name, id_name = nil )
+   def define_table( name, id_name = nil, id_table = nil )
       qualified_name = @name.to_s + "__" + name.to_s
-      @context.define_table(qualified_name, id_name || "id")
+      @context.define_table(qualified_name, id_name || "id", id_table)
    end
 
    def define_owner_fields( into )
@@ -52,8 +58,11 @@ class Table < Component
    end
    
    def to_sql( name_prefix = nil )
-      fields = @children.collect{|c| c.to_sql()}.join(",\n   ")
-      "create table #{name_prefix}#{@name}\n(\n   #{fields}\n)"
+      fields = @children.collect{|c| c.to_sql()}
+      keys   = ["primary key (#{@id_field.name})"]
+      body   = fields.join("\n   ") + "\n\n   " + keys.join("\n   ")
+      
+      "create table #{name_prefix}#{@name}\n(\n   #{body}\n)"
    end
 
 end # Table

@@ -31,8 +31,7 @@ class Entity < Relation
       
    def initialize( name, base_entity, schema )
       super(Tuple.new(self), schema, name)
-      @identifiers      = Tuple.new(self, :identifiers, heading.attributes)
-      @declared_heading = Tuple.new(self, nil         , heading.attributes)
+      @declared_heading = Tuple.new(self, nil, heading.attributes)
 
       #
       # Import the base entity identifier attributes.
@@ -41,13 +40,11 @@ class Entity < Relation
       @pedigree    = [self]
 
       if base_entity then
-         @pedigree = base_entity.pedigree + [self]
-         base_entity.identifiers.each do |id| 
-            @identifiers.register(id.recreate_in(@identifiers))
-         end
+         @pedigree   = base_entity.pedigree + [self]
+         @identifier = @heading.register(RequiredAttribute.new(:id, @heading, @base_entity.reference_type))  # @base_entity.reference_@base_entity.identifier)   # base_entity.identifier.recreate_in(@heading))
+      else
+         @identifier = @heading.register(IDAttribute.new(@heading, self))
       end
-
-      @identifier = @identifiers.register(IDAttribute.new(@identifiers, self))
 
       #
       # Other stuff.
@@ -55,7 +52,7 @@ class Entity < Relation
       @keys = {}
    end
    
-   attr_reader :keys, :identifiers, :declared_heading, :pedigree, :base_entity
+   attr_reader :keys, :identifier, :declared_heading, :pedigree, :base_entity
    
    def id()
       (@declared_heading.name.to_s.identifier_case + "_id").intern

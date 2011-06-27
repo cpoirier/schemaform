@@ -37,8 +37,8 @@ class Schema < Component
    attr_reader :definition
    alias :tables :children
    
-   def define_table( name, id_name = nil )
-      add_child Table.new(self, name, id_name)
+   def define_table( name, id_name = nil, id_table = nil )
+      add_child Table.new(self, name, id_name, id_table)
    end
 
    def define_owner_fields( into )      

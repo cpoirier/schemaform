@@ -47,8 +47,8 @@ class Component
       child
    end
    
-   def define_table( name, id_name = nil )
-      @context.define_table(@name.to_s + "__" + name.to_s, id_name)
+   def define_table( name, id_name = nil, id_table = nil )
+      @context.define_table(@name.to_s + "__" + name.to_s, id_name, id_table)
    end
    
    def define_owner_fields( into )

@@ -53,7 +53,7 @@ class EntityDefinition
          TupleDefinition.process(tuple, &block)
       end
 
-      @entity.identifiers.rename(:id, @entity.id())
+      @entity.heading.rename(:id, @entity.id())
    end   
    
 

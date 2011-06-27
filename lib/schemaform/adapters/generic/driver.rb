@@ -47,7 +47,7 @@ class Driver
 
          schema.entities.each do |entity|
             names[entity.name] = entity.name.to_s.identifier_case
-            layout.define_table(names[entity.name], entity.id)
+            layout.define_table(names[entity.name], entity.id, entity.has_base_entity? ? layout.tables[names[entity.base_entity.name]] : nil)
          end
          
          #

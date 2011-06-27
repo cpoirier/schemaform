@@ -99,7 +99,7 @@ class Type < Element
    
    def description()
       return full_name.to_s if name
-      return @base_type.description if @base_type
+      return base_type.description if base_type
       return "an unnamed #{self.class.name.sub("Type", "").sub(/.*::/, "").identifier_case} type"
    end
    
@@ -221,12 +221,12 @@ class Type < Element
       return self     if rhs_type.unknown_type?
       return self     if assignable_from?(rhs_type)
       return rhs_type if rhs_type.assignable_from?(self)
-
+      
       #
       # If we are going to have to do the work, search each pedigree
       # for a member that is assignable from the other side.
       
-      if @base_type.nil? || rhs_type.base_type.nil? then
+      if base_type.nil? || rhs_type.base_type.nil? then
          return self.class.new(:context => context()) if self.class == rhs_type.class || self.is_a?(rhs_type.class)
          return rhs_type.class.new(:context => context()) if rhs_type.is_a?(self.class)
          return schema.unknown_type()
@@ -246,7 +246,7 @@ class Type < Element
                break
             end
          end
-
+         
          return schema.unknown_type if lhs_common.nil? && rhs_common.nil?
          return rhs_common if lhs_common.nil?
          return lhs_common if rhs_common.nil?

@@ -47,7 +47,7 @@ class EnumeratedType < ScalarType
             string_length = value_length if value_length > string_length
          end
       
-         attrs[:base_type] = all_integers ? IntegerType.new(:context => context) : StringType.new(:context => context, :length => string_length)
+         attrs[:base_type] = all_integers ? context.schema.integer_type : context.schema.text_type(string_length)
       end
       
       super attrs

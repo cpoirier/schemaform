@@ -62,12 +62,20 @@ class Schema
       @types[:identifier]
    end
    
+   def integer_type()
+      @types[:integer]
+   end
+   
    def boolean_type()
       @types[:boolean]
    end
    
-   def text_type()
-      @types[:text]
+   def text_type( length = nil )
+      if length then
+         @types[:text].make_specific(:length => length)
+      else
+         @types[:text]
+      end
    end
    
    def build_list_type( member_type )

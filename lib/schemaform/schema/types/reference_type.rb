@@ -24,7 +24,7 @@ class Schema
 class ReferenceType < Type
 
    def initialize( entity_name, attrs )
-      attrs[:base_type] = attrs.fetch(:context).schema.identifier_type unless attrs.member?(:base_type)
+      attrs.delete(:base_type)
       super attrs
       if entity_name.is_an?(Entity) then
          @entity_name = entity_name.name
@@ -38,6 +38,14 @@ class ReferenceType < Type
    end
    
    attr_reader :entity_name
+   
+   def base_type()
+      if @entity && @entity.has_base_entity? then
+         @entity.base_entity.identifier_type
+      else
+         schema.identifier_type
+      end
+   end
    
    def referenced_entity()
       @entity ||= schema.entities.find(@entity_name)

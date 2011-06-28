@@ -18,74 +18,85 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("controller.rb")
+
 
 #
-# Provides the runtime representation of a defined Tuple.
+# A wrapper on a Schema-defined Tuple that provides services to a runtime Tuple class. 
 
 module Schemaform
-module Layout
-module Ruby
-class TupleClass
+module Materials
+class TupleController < Controller
+
    
    #
-   # Defines a subclass and associates it with the Layout::Master.
-   
-   def self.define( name, master )
-      define_subclass( name, master.schema_class ) do
-         @@master   = master
+   # Defines a subclass into some container.
+
+   def self.define( name, into )
+      define_subclass(name, into) do
          @@defaults = {}
-         def self.master()
-            @@master
-         end
+         
          def self.default_for( name, tuple = nil )
             return nil unless @@defaults.member?(name)
             default = @@defaults[name]
             default.is_a?(Proc) ? default.call(tuple) : default
          end
+         
+         def self.load( name, tuple )
+            self.default_for(name, tuple)
+         end
+         
       end
    end
-   
+
 
    #
    # Defines an attribute reader for the specified name.
-   
+
    def self.define_attribute_reader( name, &preamble )
       define_instance_method( name, preamble ) do
-         instance_variable_get( "@#{name.to_s}" )
+         @attributes[name] || self.class.load(name, self)
       end
    end
-   
-   
+
+
    #
    # Defines an attribute writer for the specified name
-   
+
    def self.define_attribute_writer( name, &preamble )
       define_instance_method( "#{name.to_s}=", preamble ) do |value|
-         @_dirty = true
-         instance_variable_set( "@#{name.to_s}", value )
+         @dirty = true
+         @attributes[name] = value
       end
    end
-   
-   
+
+
    #
-   # Defines a default value (or value-producing Proc) for an attribute.  This is
+   # Defines a default value (or value-producing Proc) for an attribute. This is
    # used if the value is not defined when the Tuple is instantiated.
-   
+
    def self.define_attribute_default( name, value )
       class_eval( "@@defaults[name] = value" )
    end
 
 
 
-   def initialize( attributes = {}, on_missing = :defaults )
-      @_dirty      = false
-      @_on_missing = on_missing   # :defaults, :load
-      
+   def initialize( attributes = {} )
+      @attributes = attributes
+      @dirty      = false
+   end
+   
+   def present?( name )
+      !@attributes.fetch(name, nil).nil?
+   end
+   
+   def dirty?()
+      @dirty
    end
 
    warn_once( "TODO: apply on_demand and defaults policies to accessors" )
-   
-end # TupleClass
-end # Ruby
-end # Layout
+
+
+end # TupleController
+end # Materials
 end # Schemaform

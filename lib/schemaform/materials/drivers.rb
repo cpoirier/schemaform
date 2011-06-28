@@ -22,97 +22,77 @@ require "monitor"
 require "sequel/extensions/inflector.rb"
 
 require Schemaform.locate("schemaform/schema.rb")
-require Schemaform.locate("controller.rb")
 
 
 module Schemaform
 class Schema
    
-   @@materialization_monitor    = Monitor.new()
-   @@materialization_namespaces = {} 
+   def material()
+      unless @material
+         @monitor.synchronize do
+            @material = materialize_controllers() unless @material.exists?
+         end
+      end
+      
+      @material
+   end
    
    #
-   # Creates runtime classes for your Schema within the module you specify.
+   # Creates runtime classes for your tuples within the module you specify.
    
    def materialize( into_module )
       type_check(:into_module, into_module, Module)
-      
-      #
-      # The public Tuple and Entity class are materialized into the supplied into_module 
-      # (meaning you can materialize them in multiple places). However, these components are 
-      # backed by descriptors that are global -- one set per Schema. We materialize these 
-      # descriptors into a private namespace that we create within the Schemaform hierarchy.
-      # Each Schema is associated with a namespace (generally the Registry it is stored in,
-      # but it could be any Object), and we assign a module name to each such namespace on a
-      # first-come, first-serve basis.
 
-      unless controller_module = @@materialized_namespaces.fetch(@namespace, nil)
-         controller_module = Module.new()
-         
-         @@materialization_monitor.synchronize do
-            module_index = @@materialized_namespaces.length
-            module_name  = "Controllers#{module_index > 0 ? module_index : ""}"
-            
-            @@materialized_namespaces[@namespace] = Schemaform.const_set(module_name, controller_module)
+      # @tuples.each do |tuple|
+      #    fail_todo
+      #    # tuple.materialize(into_module, controller_module)
+      # end
+   end
+   
+   
+   #
+   # Creates controller classes for your schema. Automatically called for you by materialize(), 
+   # so you generally won't call this yourself.
+
+   def materialize_controllers( into_module = Schemaform::MaterializedSchemas )
+      Materials::SchemaController.define((@name.to_s + "__Version" + @version.to_s).intern, into_module).tap do |schema_controller|
+         # @tuples.each do |tuple|
+         #    tuple.materialize_controllers(schema_controller)
+         # end
+      
+         @entities.each do |entity|
+            entity.materialize_controllers(schema_controller)
          end
-         
-         materialize_controllers( controller_module )
-      end
-      
-      #
-      # With the descriptors materialized, we now create the public Tuple and Entity classes.
-      
-      @entities.each do |entity|
-         entity.materialize(into_module, controller_module)
-      end
-      
-      @tuples.each do |tuple|
-         tuple.materialize(into_module, controller_module)
       end
    end
    
-   
-   def materialze_controllers( into_module )
-      schema_class = Materials::SchemaController.define(@name, into_module)
-      
-      @entities.each do |entity|
-         entity.materialize_controllers(schema_class)
-      end
-      
-      @tuples.each do |tuple|
-         tuple.materialize_controllers(schema_class)
-      end      
-   end
    
    
    
    
    
    class Entity < Relation
-      def materialize( into_module, controller_module )
-         Runtime::Tuple.define_subclass(@declared_heading.name, into_module) do |tuple_class|
-            
-         end
-      end
-
       def materialize_controllers( into_module )
-         tuple_class = @heading.materialize_controllers(into_module, @declared_heading.name)
-         Materials::EntityController.define_subclass(@name, tuple_class, into_module)
-      end
-      
-   end
-   
-
-   class Tuple < Element
-      def materialize_controllers( into_module, name_override = nil )
-         Materials::TupleController.define_subclass((name_override || @name).to_s.camelize.intern, into_module).tap do |tuple_class|
-            @attributes.each do |attribute|
-               attribute.materialize_controllers( tuple_class )
+         operations = @operations
+         Materials::EntityController.define(@name, into_module) do
+            operations.each do |name, block|
+               define_method(name, block)
             end
          end
       end
    end
    
+
+   # class Tuple < Element
+   #    def materialize_controllers( into_module, name_override = nil )
+   #       Materials::TupleController.define_subclass((name_override || @name).to_s.camelize.intern, into_module).tap do |tuple_class|
+   #          @attributes.each do |attribute|
+   #             attribute.materialize_controllers( tuple_class )
+   #          end
+   #       end
+   #    end
+   # end
+   # 
    
 
    # class Attribute < Element
@@ -206,8 +186,15 @@ end # Schema
 end # Schemaform
 
 
-# ["sql"].each do |directory|
-#    Dir[Schemaform.locate("#{directory}/*.rb")].each do |path|
-#       require path
-#    end
-# end
+#
+# The namespace where the system materializes the Controllers.
+
+module Schemaform
+module MaterializedSchemas
+end
+end
+
+
+
+Dir[Schemaform.locate("controllers/*.rb")].each{|path| require path}
+

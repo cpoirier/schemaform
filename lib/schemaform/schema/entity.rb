@@ -49,10 +49,11 @@ class Entity < Relation
       #
       # Other stuff.
       
-      @keys = {}
+      @keys       = Registry.new("entity #{full_name}", "a key"       )
+      @operations = Registry.new("entity #{full_name}", "an operation")
    end
    
-   attr_reader :keys, :identifier, :declared_heading, :pedigree, :base_entity
+   attr_reader :keys, :operations, :identifier, :declared_heading, :pedigree, :base_entity
    
    def id()
       (@declared_heading.name.to_s.identifier_case + "_id").intern

@@ -125,6 +125,7 @@ protected
       @entities    = Registry.new("schema [#{@name}]", "an entity", @relations)
       @types       = TypeRegistry.new("schema [#{@name}]")
       @supervisor  = ResolutionSupervisor.new(self)
+      @monitor     = Monitor.new()
          
       @types.register  UnknownType.new(:name => :unknown   , :context => self )
       @types.register     VoidType.new(:name => :void      , :base_type => @types[:unknown])

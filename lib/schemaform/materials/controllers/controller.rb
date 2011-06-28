@@ -20,37 +20,20 @@
 
 
 #
-# Provides easily flattened "dotted" naming.
+# Base class for things that apply defined requirements and controls to a runtime object.
 
 module Schemaform
-module Layout
-module SQL
-class DottedName
+module Materials
+class Controller
+   include QualityAssurance
+   extend  QualityAssurance
    
-   def self.build( *components )
-      components.inject(new()){|result, current| result + current}
+   
+   def initialize()
+      
    end
 
-   def initialize( *components )
-      @components = components
-   end
-   
-   def empty?()
-      @components.empty?
-   end
-   
-   def to_s( adapter = nil )
-      return adapter ? adapter.flatten_name(@components) : @components.join(".")
-   end
-   
-   def +( component )
-      self.class.new( *(@components + (component.is_a?(DottedName) ? component.components : [component])) )
-   end
-
-protected
-   attr_reader :components
-
-end # DottedName
-end # SQL
-end # Layout
+end # Contoller
+end # Materials
 end # Schemaform
+

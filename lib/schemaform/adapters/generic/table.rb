@@ -60,7 +60,7 @@ class Table < Component
    def to_sql( name_prefix = nil )
       fields = @children.collect{|c| c.to_sql()}
       keys   = ["primary key (#{@id_field.name})"]
-      body   = fields.join("\n   ") + "\n\n   " + keys.join("\n   ")
+      body   = fields.join(",\n   ") + (keys.empty? ? "" : ",") + "\n\n   " + keys.join(",\n   ")
       
       "create table #{name_prefix}#{@name}\n(\n   #{body}\n)"
    end

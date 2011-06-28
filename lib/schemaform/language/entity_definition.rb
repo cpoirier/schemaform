@@ -114,7 +114,7 @@ class EntityDefinition
    # Entity class internally.
    
    def operation( name, &block )
-      warn_once("TODO: operation support in Entity")
+      @entity.operations.register(block, name)
    end
    
 

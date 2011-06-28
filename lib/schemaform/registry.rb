@@ -76,9 +76,15 @@ class Registry
    #
    # Iterates of the registered objects. Passes only the object (not the name).
    
-   def each()
-      @order.each do |name|
-         yield(@registry[name])
+   def each( &block )
+      if block.arity == 2 then
+         @order.each do |name|
+            yield(name, @registry[name])
+         end
+      else
+         @order.each do |name|
+            yield(@registry[name])
+         end
       end
    end
    

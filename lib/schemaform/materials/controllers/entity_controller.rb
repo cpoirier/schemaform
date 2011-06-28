@@ -18,23 +18,37 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("controller.rb")
+
 
 #
-# An expression wrapper for a sequence Attribute.
+# Wraps a Schema-defined Entity for use at runtime.
 
 module Schemaform
-module Expressions
-module Attributes
+module Materials
+class EntityController < Controller
    
-class SequenceAttribute < Attribute
+   #
+   # Defines a subclass into some container.
 
-   def initialize( definition )
-      super( definition )
-      fail "TODO"
+   def self.define( name, into, &block )
+      define_subclass(name, into) do
+         @@constraints = []
+         class_exec(&block) if block
+      end
    end
+   
+   
+   #
+   # Instantiates the controller on a Runtime::TransactionHandle.
+   
+   def initialize( transaction )
+      @transaction = transaction
+   end
+   
+   attr_reader :transaction
 
-end # SequenceAttribute
 
-end # Attributes
-end # Expressions
+end # EntityController
+end # Materials
 end # Schemaform

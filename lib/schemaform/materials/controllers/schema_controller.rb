@@ -18,50 +18,35 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("controller.rb")
+
 
 #
-# Captures dotted expressions of the form x.y
+# Wraps a defined Schema for use at runtime.
 
 module Schemaform
-module Expressions
-class DottedExpression 
+module Materials
+class SchemaController < Controller
+   
+   #
+   # Defines a subclass into some container.
 
-   def initialize( expression, attribute, type )
-      @expression = expression
-      @attribute  = attribute
-      @type       = type
-   end
-
-
-   def method_missing( symbol, *args, &block )
-      super unless args.empty? && block.nil?
-      
-      #
-      # Okay, it's a potential accessor.  Let's see if we can do something with it.
-      
-      case @type.resolve.type_info.to_s
-      when "scalar"
-         super
-
-      when "reference"
-         referenced_entity = @type.resolve.entity
-         tuple = referenced_entity.resolve.heading
-         super unless tuple.member?(symbol)
-         return DottedExpression.new(self, symbol, tuple.attributes[symbol].resolve()) 
-         
-      when "set"
-         member_type = @type.resolve.member_type.resolve
-         if member_type.
-            
-            
-         
-         Expressions.build_
+   def self.define( name, into )
+      define_subclass(name, into) do
+         @@constraints = []
       end
-      
-      send( @type.resolve.type_info.specialize("method_missing_for", "type"), symbol, *args, &block )
    end
+   
+   
+   #
+   # Runs any Schema-level validations.
+   
+   def validate()
+      fail_todo
+   end
+   
 
 
-end # DottedExpression
-end # Expressions
+end # SchemaController
+end # Materials
 end # Schemaform

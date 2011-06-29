@@ -29,11 +29,15 @@ class Schema
    include QualityAssurance
    
    def place( database_url, prefix = nil )
-      Runtime::Database.for_url(database_url).tap do |database|
+      Schemaform::Runtime::Database.for_url(database_url).tap do |database|
          database.associate_schema(self, prefix)
       end
    end
-   
+
+
+   def connect( database_url, configuration = {} )
+      place(database_url, configuration.delete(:prefix)).connect(configuration)
+   end
    
    
    # ==========================================================================================

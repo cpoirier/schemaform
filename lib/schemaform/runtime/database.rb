@@ -40,7 +40,7 @@ class Database
    # details that might change from use to use within the life of the process. Use configure() or
    # related API points for that stuff.
    
-   def self.for_url( url )
+   def self.for_url( url, migration_configuration = {} )
       assert(url !~ /@/, "the user@ connection string syntax is not compatible with Schemaform; please use the paramter format")
       key = url.split("?").shift.downcase
       
@@ -48,11 +48,11 @@ class Database
          if @@databases.member?(key) then
             check{assert(@@databases[key].url == url, "database [#{key}] does not match supplied URL", :requested_url => url, :existing_url => @@databases[key].url)}
          else
-            @@databases[key] = new(url)
+            @@databases[key] = new(url, migration_configuration)
          end
       end
       
-      @databases[key]
+      @@databases[key]
    end
    
    
@@ -86,7 +86,7 @@ class Database
       # the names cou
       
       if associated then
-         schema.upgrade(Sequel.connect(@url, migration_configuration), prefix)
+         schema.upgrade(Sequel.connect(@url, @migration_configuration), prefix)
          
          @monitor.synchronize do
             @by_schema_version_entity[schema.name] = {} unless @by_schema_version_entity.member?(schema.name)

@@ -4,7 +4,7 @@
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
-# [Copyright] Copyright 2004-2010 Chris Poirier
+# [Copyright] Copyright 2004-2011 Chris Poirier
 # [License]   Licensed under the Apache License, Version 2.0 (the "License");
 #             you may not use this file except in compliance with the License.
 #             You may obtain a copy of the License at
@@ -20,26 +20,33 @@
 
 
 #
-# Represents a single transaction on a Database.  
+# Provides a transaction scope and access to the entities for associated Schemas.
 
 module Schemaform
 module Runtime
-class TransactionHandle
+class Transaction
 
-   def initialize( database, sequel_connection )
-      @database          = database
-      @sequel_connection = sequel_connection
-      @thread            = Thread.current
+   def initialize( connection )
+      @connection = connection
+      @database   = connection.database
+      @sequel     = connection.instance_eval{@sequel}
+      @owner      = Thread.current
    end
    
-   def close()
-      @sequel_connection = nil
-   end
+   attr_reader :connection, :database, :owner
+
+
+   #
+   # Returns a runtime, connected version of the named entity for you to use. Address formats are:
+   #  * entity_name
+   #  * schema_name, entity_name
+   #  * schema_name, schema_version, entity_name
    
-   def closed?()
-      @sequel_connection.nil?
+   def []( *entity_address )
+      entity = @database[*entity_address]
+      entity ? entity.material.new(self) : nil
    end
-   
+
 
 end # Transaction
 end # Runtime

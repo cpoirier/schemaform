@@ -4,7 +4,7 @@
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
-# [Copyright] Copyright 2004-2010 Chris Poirier
+# [Copyright] Copyright 2004-2011 Chris Poirier
 # [License]   Licensed under the Apache License, Version 2.0 (the "License");
 #             you may not use this file except in compliance with the License.
 #             You may obtain a copy of the License at
@@ -38,56 +38,46 @@ module Schemaform
 module Runtime
 class Connection
    
-   attr_reader   :owner, :read_only, :idle_limit
-   attr_accessor :holder
+   def initialize( database, configuration = {} )
+      @database    = database
+      @read_only   = !!configuration.delete(:read_only)
+      @sequel      = Sequel.connect(database.url, configuration)
+      @transaction = nil
+   end
+   
+   attr_reader :read_only
 
-   def idle_limit=( seconds )
-      @idle_limit = seconds
-      @last_query = Time.now()
-   end
-   
-   def closed?()
-      !@connected
-   end
-   
-   def unused?()
-      Time.now() - @last_query > @idle_limit
-   end
-   
-   def initialize( owner, connection_string, read_only = false )
-      @owner        = owner
-      @holder       = nil
-      @read_only    = read_only
-      @idle_limit   = 0
-      @last_query   = Time.now()
-      @sequel       = Sequel.connect( connection_string, :max_connections => 1 )
-      @connected    = @sequel.exists?
-      @transactions = 0
-   end
-   
-   def assign_to( holder, idle_limit = 0 )
-      @holder     = holder
-      @idle_limit = idle_limit
-      @last_query = Time.now()
-   end
-   
-   def close()
-      @sequel.disconnect()
-      @connected = false
-   end
-   
+
+   #
+   # Calls your block with a transaction object against which you can do work. Note that transactions
+   # are thread-local, due to the way the underlying Sequel library works.
    
    def transaction()
-      @sequel.transaction( :isolation => @read_only ? :committed : :serializable ) do
-         begin
-            @transactions += 1
-            yield
-         ensure
-            @transactions -= 1
+      outermost = false
+      begin
+         @database.monitor.synchronize do
+            if @transaction.nil? then
+               @transaction = Transaction.new(self)
+               outermost    = true
+            elsif @transaction.owner != Thread.current then
+               fail "cannot use transaction from thread #{Thread.current}, as it belongs to thread #{@transaction.owner}"
+            end
+         end
+
+         @sequel.transaction(:isolation => (@read_only ? :committed : :serializable)) do
+            yield(@transaction)
+         end
+      ensure
+         if outermost then
+            begin
+               @transaction.rollback
+            ensure
+               @transaction = nil
+            end
          end
       end
    end
-   
+
 
 
 end # Connection

@@ -4,7 +4,7 @@
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
-# [Copyright] Copyright 2004-2010 Chris Poirier
+# [Copyright] Copyright 2004-2011 Chris Poirier
 # [License]   Licensed under the Apache License, Version 2.0 (the "License");
 #             you may not use this file except in compliance with the License.
 #             You may obtain a copy of the License at
@@ -28,16 +28,12 @@ module Schemaform
 class Schema
    include QualityAssurance
    
-   def connect( database_url, prefix = nil, user = nil, password = nil )
-      Schemaform.connect(self, database_url, prefix, user, password)
-      map = Mapping::Map.build( self, database_url )
-      fail
-
-      account  = user ? Runtime::Account.new( user, password ) : nil
-      database = Runtime::Database.for( database_url, account )
-      coupling = database.couple_with( schema, "sqlite://cms.rb", "cms", account )
-      coupling.connect( account )
+   def place( database_url, prefix = nil )
+      Runtime::Database.for_url(database_url).tap do |database|
+         database.associate_schema(self, prefix)
+      end
    end
+   
    
    
    # ==========================================================================================

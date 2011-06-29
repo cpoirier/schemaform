@@ -4,7 +4,7 @@
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
-# [Copyright] Copyright 2004-2010 Chris Poirier
+# [Copyright] Copyright 2004-2011 Chris Poirier
 # [License]   Licensed under the Apache License, Version 2.0 (the "License");
 #             you may not use this file except in compliance with the License.
 #             You may obtain a copy of the License at
@@ -20,46 +20,45 @@
 
 
 #
-# Couples a Schema to a Database, allowing you to create Connections for use.
+# Tracks a set of versions of something (generally Schemas).
 
 module Schemaform
-module Runtime
-class Coupling
-   include QualityAssurance
+class VersionSet
 
-   def connect( account = nil, for_reading = false )
-      assert( !for_reading, "read-only support not yet implemented" )
-      
+   def initialize( name )
+      @name     = name
+      @versions = {}
+      @current  = nil
    end
    
-   def connect_for_reading( account = nil )
-      connect( account, true )
+   attr_reader :name
+   
+   def current()
+      @current ? @versions[@current] : nil
    end
    
-   
-
-   attr_reader :database, :schema, :prefix
-   attr_writer :account
-   
-   def account()
-      return @account unless @account.nil?
-      return @database.master_account
-   end
-
-
-   def initialize( database, schema, prefix = nil, account = nil )
-      check do
-         type_check( :database, database, Database )
-         type_check( :schema  , schema  , Definitions::Schema )
+   def []( version )
+      if version.nil? then
+         @current ? @versions[@current] : nil
+      else
+         @versions.fetch(version, nil)
       end
-      
-      @database = database
-      @schema   = schema
-      @prefix   = prefix
-      @account  = account
    end
    
+   def []=( version, object )
+      @versions[version] = object
+   end
    
-end # Coupling
-end # Runtime
+   def version?( version )
+      if version.nil? then
+         @current.exists?
+      else
+         @versions.member?(version)
+      end
+   end
+   
+   alias member? version?
+
+
+end # VersionSet
 end # Schemaform

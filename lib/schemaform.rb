@@ -4,7 +4,7 @@
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
-# [Copyright] Copyright 2004-2010 Chris Poirier
+# [Copyright] Copyright 2004-2011 Chris Poirier
 # [License]   Licensed under the Apache License, Version 2.0 (the "License");
 #             you may not use this file except in compliance with the License.
 #             You may obtain a copy of the License at
@@ -23,7 +23,7 @@ require "rubygems"
 require "sequel"
 require "set"
 
-require File.expand_path(File.dirname(__FILE__)) + "/schemaform/baseline.rb"
+require File.expand_path(File.dirname(__FILE__)) + "/schemaform/utilities/baseline.rb"
 
 
 #
@@ -37,7 +37,6 @@ module Schemaform
    include QualityAssurance
 
    @@locator = Baseline::ComponentLocator.new( __FILE__, 2 )
-      
    
    #
    # Returns the named Schema definition.
@@ -70,7 +69,14 @@ module Schemaform
    end
    
    
+   #
+   # Connects to a database. You will need to associate your schemas with the database_url before 
+   # you will be able to use them (you can do that before or after connecting).
    
+   def self.connect( database_url, configuration = {} )
+      Runtime::Database.for_url(database_url).connect(configuration)
+   end
+      
    
    
    
@@ -134,11 +140,9 @@ module Schemaform
       
 private
    
-   require locate("schemaform/registry.rb"   )
-   require locate("schemaform/version_set.rb")
-   require locate("schemaform/schema.rb"     )
+   require locate("schemaform/schema.rb")
    
-   ["language", "productions", "adapters", "materials"].each do |directory|
+   ["utilities", "language", "productions", "adapters", "materials"].each do |directory|
       Dir[Schemaform.locate("schemaform/#{directory}/*.rb")].each do |path|
          require path
       end

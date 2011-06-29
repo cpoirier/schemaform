@@ -4,7 +4,7 @@
 # A high-level database construction and programming layer.
 #
 # [Website]   http://schemaform.org
-# [Copyright] Copyright 2004-2010 Chris Poirier
+# [Copyright] Copyright 2004-2011 Chris Poirier
 # [License]   Licensed under the Apache License, Version 2.0 (the "License");
 #             you may not use this file except in compliance with the License.
 #             You may obtain a copy of the License at
@@ -22,102 +22,128 @@ require 'monitor'
 
 
 #
-# Represents a single physical database within the system.
+# Represents a single physical database within the system. This is the master controller for
+# the Runtime system -- everything starts here.
 
 module Schemaform
 module Runtime
 class Database
    include QualityAssurance
-   extend QualityAssurance
+   extend  QualityAssurance
    
-   attr_reader :connection_string
+   attr_reader :url, :monitor
    
-   def type()
-      @sequel_database.database_type
-   end
-   
-   
+
    #
-   # Returns the (global) Database object for the specified database URL.  The URL will be passed to the
-   # Sequel library as a connection string.
+   # Returns the Database object for the specified database URL. The URL will be passed to the
+   # Sequel library as a connection string. It must *never* contain account credentials or other
+   # details that might change from use to use within the life of the process. Use configure() or
+   # related API points for that stuff.
    
-   def self.connect( connection_string, configuration = {} )
-      assert( connection_string !~ /@/, "the user@ connection string syntax is not compatible with Schemaform; please use the paramter format" )
-      url = connection_string.split("?").shift
-      key = url.downcase
+   def self.for_url( url )
+      assert(url !~ /@/, "the user@ connection string syntax is not compatible with Schemaform; please use the paramter format")
+      key = url.split("?").shift.downcase
       
       @@monitor.synchronize do
          if @@databases.member?(key) then
-            @@databases[key].configure(configuration)
+            check{assert(@@databases[key].url == url, "database [#{key}] does not match supplied URL", :requested_url => url, :existing_url => @@databases[key].url)}
          else
-            @@databases[key] = new(connection_string, configuration)
+            @@databases[key] = new(url)
          end
       end
       
-      @@databases[key]
+      @databases[key]
    end
    
    
    #
-   # Begins a transaction, in which you can do work.  You cannot do Schemaform work without one.
-   # Note that transactions are thread-local -- you cannot share a single transaction between 
-   # multiple threads, due to the way the Sequel library works.
+   # Associates a Schema with the database for use. Note that you can associate each Schema
+   # (object) only once. Runs migration immediately. 
+   #
+   # Be careful to do all association from a single thread. Assignment of default names is not
+   # done until migration of the new schema is complete, and if you do association from multiple
+   # threads, you may end up with random ordering.
    
-   def transaction()
-      thread    = Thread.current
-      handle    = @transaction_handles.fetch(thread, nil)
-      outermost = handle.nil?
+   def associate_schema( schema, prefix = nil )
 
-      begin
-         @sequel_database.transaction do |connection|
-            if outermost then
-               @transaction_handles[thread] = handle = TransactionHandle.new(self, connection)
-            end
-            
-            yield(handle)
-            
-            if outermost then
-               warn_once("TODO: deal with transaction constraint checks")
-            end
+      #
+      # First allocate a spot for the schema or fail (only one registration per schema).
+      
+      associated = false
+      @monitor.synchronize do
+         if @associated_schemas.member?(schema) then
+            check{ fail "schema [#{schema.full_name}] is already registered with database [#{@url}] under prefix [#{@associated_schemas[schema]}]" }
+         else
+            @associated_schemas[schema] = prefix
+            associated = true
          end
-      ensure
-         if outermost then
-            handle.close()
-            @transaction_handles[thread] = nil
+      end
+      
+      #
+      # If we did the association, ensure the schema is up-to-date, then register the names
+      # for lookup. Note that the upgrade could take some arbitrary length of time, so, to 
+      # ensure reliable assinand so
+      # the names cou
+      
+      if associated then
+         schema.upgrade(Sequel.connect(@url, migration_configuration), prefix)
+         
+         @monitor.synchronize do
+            @by_schema_version_entity[schema.name] = {} unless @by_schema_version_entity.member?(schema.name)
+            @by_schema_version_entity[schema.name][schema.version] = schema unless @by_schema_version_entity[schema.name].member?(schema.version)
+            
+            @by_schema_entity[schema.name] = schema unless @by_schema_entity.member?(schema.name)
+         
+            schema.entities.each do |entity|
+               @by_entity[entity.name] = entity unless @by_entity.member?(entity.name)
+            end
          end
       end
    end
    
    
    #
-   # Returns the connected Schema for the specified schema name.  The Schema must already be
-   # defined.
+   # Connects do the Database with the specified configuration.
    
-   def []( name, prefix = nil )
-      @connected_schemas[name] = {} unless @connected_schema.member?(name)
-      @connected_schemas[name][prefix] = ConnectedSchema.build(self, Definitions::Schema[name]) unless @connected_schema[name].member?(prefix)
-      @connected_schemas[name][prefix]
+   def connect( configuration = {} )
+      Connection.new(self, configuration)
    end
-   
-      
+
+
    #
-   # Sets configuration parameters on the Database.
+   # Returns the Schema::Entity for the specified name vector:
+   #    * entity_name
+   #    * schema_name, entity_name
+   #    * schema_name, schema_version, entity_name
    
-   def configure( configuration = {} )
+   def []( *address )
+      case address.length
+      when 1
+         @by_entity[address.shift]
+      when 2
+         @by_schema_entity[address.shift][address.shift]
+      when 3
+         @by_schema_version_entity[address.shift][address.shift][address.shift]
+      else
+         fail
+      end
    end
    
    
 private
-   def initialize( connection_string, properties = {} )
-      @connection_string   = connection_string      
-      @sequel_database     = Sequel.connect(connection_string, :test => true)
-      @connected_schemas   = {}      
-      @transaction_handles = {}
-      configure(properties)
+   def initialize( url, migration_configuration )
+      @url                      = url
+      @migration_configuration  = migration_configuration
+      @monitor                  = Monitor.new()
+      @associated_schemas       = {}       # Schema => SchemaInfo
+      @by_schema_version_entity = {}       # name => VersionSet
+      @by_schema_entity         = {}       # name => Schema
+      @by_entity                = {}       # name => Entity
    end
 
    @@monitor   = Monitor.new()
    @@databases = {} 
+
    
 end # Database
 end # Runtime

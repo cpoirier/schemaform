@@ -673,6 +673,15 @@ class Time
       end
    end
    
+   
+   #
+   # Measures the duration of the block you pass.
+   
+   def self.measure()
+      start_time = Time.now()
+      yield
+      Time.now() - start_time
+   end
 
 end
 

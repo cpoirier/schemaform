@@ -45,8 +45,8 @@ class Driver
       fail "unsupported element class #{element.class.name}"
    end
       
-   def self.lay_out_schema( schema )
-      prefix = schema.name.to_s.identifier_case
+   def self.lay_out_schema( schema, prefix = nil )
+      prefix = prefix.to_s + schema.name.to_s.identifier_case
       schema_class.new(schema, self).tap do |layout|
          names = {}
 

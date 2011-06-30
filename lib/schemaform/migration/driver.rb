@@ -18,48 +18,26 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("component.rb")
-
 
 #
-# Anchors a set of tables to the source Schema definition.
+# comment
 
 module Schemaform
-module Adapters
-module Generic
-class Schema < Component
+class Schema
 
-   def initialize( definition, driver )
-      @definition   = definition
-      @driver       = driver
-      @translations = {}
-      super(nil, definition.name)
-   end
-
-   attr_reader :definition, :driver, :translations
-   alias :tables :children
+   #
+   # Brings the database schema up to date.
    
-   def define_table( name, id_name = nil, id_table = nil )
-      add_child @driver.table_class.new(self, name, id_name, id_table)
-   end
-   
-   def define_owner_fields( into )      
-   end
-   
-   def identifier_type()
-      @definition.identifier_type
-   end
-   
-   def to_create_sql()
-      table_sql = @children.collect do |table|
-         table.to_create_sql()
+   def upgrade(sequel, prefix = nil)
+      layout = lay_out(sequel.database_type, prefix)
+      sequel.transaction do
+         layout.tables.each do |table|
+            sequel.execute_ddl(table.to_create_sql) unless sequel.table_exists?(table.name.to_s)
+         end
       end
-      
-      table_sql.join("\n\n")
+      puts layout.to_create_sql
+      exit
    end
-   
 
 end # Schema
-end # Generic
-end # Adapters
 end # Schemaform

@@ -49,8 +49,8 @@ class Field < Component
       super indent, name_override, type_descriptor
    end
    
-   def to_create_sql( name_prefix = nil )
-      [quote_identifier(name_prefix.to_s + @name.to_s), @sql_type, *modifiers].join(" ")
+   def to_create_sql()
+      [quote_identifier(@name.to_s), @sql_type, *modifiers].join(" ")
    end
    
    

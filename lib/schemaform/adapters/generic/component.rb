@@ -73,7 +73,7 @@ class Component
       end
    end
    
-   def to_create_sql( name_prefix = nil )
+   def to_create_sql()
       fail_unless_overridden self, :to_create_sql
    end
    

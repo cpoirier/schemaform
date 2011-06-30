@@ -27,7 +27,7 @@ module Adapters
 module SQLite
 class Table < Generic::Table
 
-   def to_create_sql( name_prefix = nil )
+   def to_create_sql()
       sql = super
       return sql unless sql.includes?("not null autoincrement")
       sql.sub("not null autoincrement", "primary key autoincrement").sub(/,\s*primary key \(.*?\)/, "")

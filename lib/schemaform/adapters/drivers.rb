@@ -24,19 +24,19 @@ require Schemaform.locate("schemaform/schema.rb")
 
 module Schemaform
 class Schema
-   def lay_out( database_type = nil )
+   def lay_out( database_type = nil, prefix = nil )
       @adapters = {} unless defined?(@adapters)
-      unless @adapters.member?(database_type)
-         @adapters[database_type] = case database_type
+      key = [database_type, prefix]
+      unless @adapters.member?(key)
+         @adapters[key] = case database_type
          when :sqlite
-            Schemaform::Adapters::SQLite::Driver.lay_out_schema(self)
+            Schemaform::Adapters::SQLite::Driver.lay_out_schema(self, prefix)
          else
-            Schemaform::Adapters::Generic::Driver.lay_out_schema(self)
-            # fail "lay_out not supported for database type #{database.type}"
+            fail "lay_out not supported for database type #{database.type}"
          end
       end
       
-      @adapters[database_type]
+      @adapters[key]
    end
    
 end # Schema

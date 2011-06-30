@@ -56,12 +56,12 @@ class Table < Component
       into.add_field schema.driver.reference_field_class.new(into, :__owner, self, false, true)
    end
    
-   def to_create_sql( name_prefix = nil )
+   def to_create_sql()
       fields = @children.collect{|c| c.to_create_sql()}
       keys   = ["primary key (#{quote_identifier(@id_field.name)})"]
       body   = fields.join(",\n   ") + (keys.empty? ? "" : ",") + "\n\n   " + keys.join(",\n   ")
       
-      "create table #{name_prefix}#{@name}\n(\n   #{body}\n);"
+      "create table #{@name}\n(\n   #{body}\n);"
    end
 
 end # Table

@@ -35,8 +35,6 @@ class Schema
             sequel.execute_ddl(table.to_create_sql) unless sequel.table_exists?(table.name.to_s)
          end
       end
-      puts layout.to_create_sql
-      exit
    end
 
 end # Schema

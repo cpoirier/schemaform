@@ -29,18 +29,20 @@ module Adapters
 module Generic
 class Schema < Component
 
-   def initialize( definition )
+   def initialize( definition, driver )
+      @definition   = definition
+      @driver       = driver
+      @translations = {}
       super(nil, definition.name)
-      @definition = definition
    end
-   
-   attr_reader :definition
+
+   attr_reader :definition, :driver, :translations
    alias :tables :children
    
    def define_table( name, id_name = nil, id_table = nil )
-      add_child Table.new(self, name, id_name, id_table)
+      add_child @driver.table_class.new(self, name, id_name, id_table)
    end
-
+   
    def define_owner_fields( into )      
    end
    
@@ -48,9 +50,9 @@ class Schema < Component
       @definition.identifier_type
    end
    
-   def to_sql( name_prefix = nil )
+   def to_create_sql( name_prefix = nil )
       table_sql = @children.collect do |table|
-         table.to_sql(name_prefix)
+         table.to_create_sql(name_prefix)
       end
       
       table_sql.join("\n\n")

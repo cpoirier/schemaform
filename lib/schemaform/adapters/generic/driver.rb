@@ -28,6 +28,13 @@ module Generic
 class Driver
    extend QualityAssurance
    
+   def self.schema_class()         ; Schema          ; end
+   def self.table_class()          ; Table           ; end
+   def self.field_class()          ; Field           ; end
+   def self.reference_field_class  ; ReferenceField  ; end
+   def self.identifier_field_class ; IdentifierField ; end
+   def self.separator              ; "__"            ; end
+         
    def self.lay_out( element, container, prefix = nil )
       current_class = element.class
       while current_class
@@ -39,22 +46,23 @@ class Driver
    end
       
    def self.lay_out_schema( schema )
-      Schema.new(schema).tap do |layout|
+      prefix = schema.name.to_s.identifier_case
+      schema_class.new(schema, self).tap do |layout|
          names = {}
 
          #
          # Create the master tables first. We need them in place for references.
 
          schema.entities.each do |entity|
-            names[entity.name] = entity.name.to_s.identifier_case
-            layout.define_table(names[entity.name], entity.id, entity.has_base_entity? ? layout.tables[names[entity.base_entity.name]] : nil)
+            layout.translations[entity.name] = table_name = make_name(entity.name.to_s.identifier_case, prefix)
+            layout.define_table(table_name, entity.id, entity.has_base_entity? ? layout.tables[layout.translations[entity.base_entity.name]] : nil)
          end
          
          #
          # Now, fill them in.
 
          schema.entities.each do |entity|
-            master_table = layout.schema.tables[names[entity.name]]
+            master_table = layout.tables[layout.translations[entity.name]]
             entity.heading.attributes.each do |attribute|
                next if attribute.name == entity.id
                next if entity.base_entity && entity.base_entity.declared_heading.attribute?(attribute.name)
@@ -85,7 +93,7 @@ class Driver
    
    def self.lay_out_optional_attribute( attribute, container, prefix = nil )
       lay_out_attribute(attribute, container, prefix)
-      container.add_field Field.new(container, make_name("present", make_name(attribute.name, prefix)), nil, boolean_field_type, "not null")
+      container.add_field field_class.new(container, make_name("present", make_name(attribute.name, prefix)), nil, boolean_field_type, "not null")
    end
 
    def self.lay_out_volatile_attribute( attribute, container, prefix = nil )
@@ -100,23 +108,24 @@ class Driver
    def self.lay_out_reference_type( type, container, name = nil )
       warn_once("TODO: reference field null/default handling")
       
-      if referenced_table = container.schema.tables[type.entity_name.to_s.identifier_case] then
-         container.add_field ReferenceField.new(container, name, referenced_table, true, false)
+      
+      if (referenced_table_name = container.schema.translations[type.entity_name]) && (referenced_table = container.schema.tables[referenced_table_name]) then
+         container.add_field reference_field_class.new(container, name, referenced_table, true, false)
       else
          fail "reference to un-laid-out table -- how is this possible?"
       end
    end
 
    def self.lay_out_identifier_type( type, container, name = nil )
-      if referenced_table = container.schema.tables[type.entity_name.to_s.identifier_case] then
-         container.add_field ReferenceField.new(container, name, referenced_table, false, true)
+      if (referenced_table_name = container.schema.translations[type.entity_name]) && (referenced_table = container.schema.tables[referenced_table_name]) then
+         container.add_field reference_field_class.new(container, name, referenced_table, false, true)
       else
          fail
       end
    end
 
    def self.lay_out_scalar_type( type, container, name = nil )
-      container.add_field Field.new(container, name, type, scalar_field_type(type))
+      container.add_field field_class.new(container, name, type, scalar_field_type(type))
    end
 
    def self.lay_out_tuple_type( type, container, prefix = nil )
@@ -125,7 +134,7 @@ class Driver
    
    def self.lay_out_collection_type( type, container, prefix = nil )
       container.define_table(prefix).tap do |table|
-         table.add_field ReferenceField.new(table, container.id_field.name, container, false, true)
+         table.add_field reference_field_class.new(table, container.id_field.name, container, false, true)
          if type.member_type.is_a?(Schemaform::Schema::ReferenceType) then
             referenced_name = type.member_type.referenced_entity.id
             referenced_name = make_name(referenced_name, prefix) if container.id_field.name == referenced_name
@@ -138,11 +147,11 @@ class Driver
    
    def self.lay_out_list_type( type, container, prefix = nil )
       lay_out_collection_type(type, container, prefix).tap do |collection_table|
-         container.add_field ReferenceField.new(container, make_name("first", prefix), collection_table, true, false)
-         container.add_field ReferenceField.new(container, make_name("last" , prefix), collection_table, true, false)
+         container.add_field reference_field_class.new(container, make_name("first", prefix), collection_table, true, false)
+         container.add_field reference_field_class.new(container, make_name("last" , prefix), collection_table, true, false)
 
-         collection_table.add_field ReferenceField.new(collection_table, make_name("next"    , prefix), collection_table, true, false)
-         collection_table.add_field ReferenceField.new(collection_table, make_name("previous", prefix), collection_table, true, false)
+         collection_table.add_field reference_field_class.new(collection_table, make_name("next"    , prefix), collection_table, true, false)
+         collection_table.add_field reference_field_class.new(collection_table, make_name("previous", prefix), collection_table, true, false)
       end
    end
    
@@ -198,11 +207,17 @@ class Driver
    def self.date_time_field_type()
       "datetime"
    end
-   
 
+
+   
    def self.make_name( name, prefix = nil )
-      prefix ? prefix + "__" + name.to_s : name.to_s
+      prefix ? prefix + separator + name.to_s : name.to_s
    end
+   
+   def self.quote_identifier(identifier)
+      "\"#{identifier.to_s}\""
+   end
+
    
 
 end # Driver

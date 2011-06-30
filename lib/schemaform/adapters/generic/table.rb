@@ -33,9 +33,9 @@ class Table < Component
       super(context, name)
       
       if id_name && id_table then
-         @id_field = add_field(ReferenceField.new(self, id_name, id_table, false, true))
+         @id_field = add_field(schema.driver.reference_field_class.new(self, id_name, id_table, false, true))
       else
-         @id_field = add_field(IdentifierField.new(self, id_name || context.id_field, nil))
+         @id_field = add_field(schema.driver.identifier_field_class.new(self, id_name || context.id_field, nil))
       end
       
       context.define_owner_fields(self)
@@ -49,20 +49,19 @@ class Table < Component
    end
    
    def define_table( name, id_name = nil, id_table = nil )
-      qualified_name = @name.to_s + "__" + name.to_s
-      @context.define_table(qualified_name, id_name || "id", id_table)
+      @context.define_table(make_name(name.to_s, @name.to_s), id_name || "id", id_table)
    end
 
    def define_owner_fields( into )
-      into.add_field ReferenceField.new(into, :__owner, self, false, true)
+      into.add_field schema.driver.reference_field_class.new(into, :__owner, self, false, true)
    end
    
-   def to_sql( name_prefix = nil )
-      fields = @children.collect{|c| c.to_sql()}
-      keys   = ["primary key (#{@id_field.name})"]
+   def to_create_sql( name_prefix = nil )
+      fields = @children.collect{|c| c.to_create_sql()}
+      keys   = ["primary key (#{quote_identifier(@id_field.name)})"]
       body   = fields.join(",\n   ") + (keys.empty? ? "" : ",") + "\n\n   " + keys.join(",\n   ")
       
-      "create table #{name_prefix}#{@name}\n(\n   #{body}\n)"
+      "create table #{name_prefix}#{@name}\n(\n   #{body}\n);"
    end
 
 end # Table

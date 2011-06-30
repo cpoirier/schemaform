@@ -32,7 +32,7 @@ class ReferenceField < Field
    def initialize( context, name, referenced_table, deferrable, required, field_type = "integer" )
       modifiers = []
       modifiers << "not null" if required
-      modifiers << "references #{referenced_table.name}(#{referenced_table.id_field.name})"
+      modifiers << "references #{referenced_table.name}(#{context.schema.quote_identifier(referenced_table.id_field.name)})"
       modifiers << "deferrable initially deferred" if deferrable
 
       @referenced_table = referenced_table

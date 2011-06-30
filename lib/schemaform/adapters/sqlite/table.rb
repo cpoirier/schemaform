@@ -25,10 +25,15 @@
 module Schemaform
 module Adapters
 module SQLite
-class Driver < Generic::Driver
+class Table < Generic::Table
 
-   def self.table_class() ; SQLite::Table ; end
-   def self.separator()   ; "$" ; end
+   def to_create_sql( name_prefix = nil )
+      sql = super
+      return sql unless sql.includes?("not null autoincrement")
+      sql.sub("not null autoincrement", "primary key autoincrement").sub(/,\s*primary key \(.*?\)/, "")
+   end
+   
+   
    
 
 end # Driver

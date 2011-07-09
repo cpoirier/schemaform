@@ -26,12 +26,12 @@ module Schemaform
 module Runtime
 class Transaction
 
-   def initialize( database, connection )
-      @database   = database
+   def initialize( workspace, connection )
+      @workspace  = workspace
       @connection = connection
    end
    
-   attr_reader :database, :connection
+   attr_reader :workspace, :connection
          
       
    #

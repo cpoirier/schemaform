@@ -80,9 +80,7 @@ protected
          end
       end
       
-      exit
-      
-      @workspaces[workspace_name] ||= Workspace.build(self, schemas)
+      @workspaces[workspace_name] ||= Workspace.new(self, schemas)
    end
 
    

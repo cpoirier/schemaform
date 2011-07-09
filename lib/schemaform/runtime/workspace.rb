@@ -37,61 +37,45 @@ class Workspace
    #
    # Builds a Workspace from a list of Schemas.
    
-   def self.build( schemas )
-      environment = Environment.build(self, template_name)
-      available_schemas.each do |schema|
+   def initialize( database, schemas )
+      @name           = self.class.name(schemas)
+      @database       = database
+      @version_lookup = {}
+      @schema_lookup  = {}
+      @entity_lookup  = {}
+
+      schemas.each do |schema|
+         @version_lookup[schema.name] = {} unless @version_lookup.member?(schema.name)
+         @version_lookup[schema.name][schema.version] = schema unless @version_lookup[schema.name].member?(schema.version)
          
+         @schema_lookup[schema.name] = schema unless @schema_lookup.member?(schema.name)
+         
+         schema.entities.each do |entity|
+            @entity_lookup[entity.name] = schema unless @entity_lookup.member?(schema.name)
+         end
       end
    end
    
+   #
+   # Returns the Schema::Entity for the specified name vector:
+   #    * entity_name
+   #    * schema_name, entity_name
+   #    * schema_name, schema_version, entity_name
    
-   #    #
-   #    # If we did the association, lay out the schema for use and ensure the physical schema is 
-   #    # up-to-date. Finally, register the names for lookup.
-   #    
-   #    if associated then
-   #       schema.upgrade(self, @associated_schemas[schema])
-   #       
-   #       @monitor.synchronize do
-   #          @by_schema_version_entity[schema.name] = {} unless @by_schema_version_entity.member?(schema.name)
-   #          @by_schema_version_entity[schema.name][schema.version] = schema unless @by_schema_version_entity[schema.name].member?(schema.version)
-   #          
-   #          @by_schema_entity[schema.name] = schema unless @by_schema_entity.member?(schema.name)
-   #       
-   #          schema.entities.each do |entity|
-   #             @by_entity[entity.name] = entity unless @by_entity.member?(entity.name)
-   #          end
-   #       end
-   #    end
-   # end
-   # 
-   # 
-   # #
-   # # Returns the Schema::Entity for the specified name vector:
-   # #    * entity_name
-   # #    * schema_name, entity_name
-   # #    * schema_name, schema_version, entity_name
-   # 
-   # def []( *address )
-   #    case address.length
-   #    when 1
-   #       @by_entity[address.shift]
-   #    when 2
-   #       @by_schema_entity[address.shift][address.shift]
-   #    when 3
-   #       @by_schema_version_entity[address.shift][address.shift][address.shift]
-   #    else
-   #       fail
-   #    end
-   # end
-   
-
-
-protected
-
-   def initialize()
-      
+   def []( *address )
+      case address.length
+      when 1
+         @entity_lookup[address.shift]
+      when 2
+         @schema_lookup[address.shift][address.shift]
+      when 3
+         @version_lookup[address.shift][address.shift][address.shift]
+      else
+         fail
+      end
    end
+   
+
    
 end # Workspace
 end # Runtime

@@ -43,6 +43,48 @@ class Workspace
          
       end
    end
+   
+   
+   #    #
+   #    # If we did the association, lay out the schema for use and ensure the physical schema is 
+   #    # up-to-date. Finally, register the names for lookup.
+   #    
+   #    if associated then
+   #       schema.upgrade(self, @associated_schemas[schema])
+   #       
+   #       @monitor.synchronize do
+   #          @by_schema_version_entity[schema.name] = {} unless @by_schema_version_entity.member?(schema.name)
+   #          @by_schema_version_entity[schema.name][schema.version] = schema unless @by_schema_version_entity[schema.name].member?(schema.version)
+   #          
+   #          @by_schema_entity[schema.name] = schema unless @by_schema_entity.member?(schema.name)
+   #       
+   #          schema.entities.each do |entity|
+   #             @by_entity[entity.name] = entity unless @by_entity.member?(entity.name)
+   #          end
+   #       end
+   #    end
+   # end
+   # 
+   # 
+   # #
+   # # Returns the Schema::Entity for the specified name vector:
+   # #    * entity_name
+   # #    * schema_name, entity_name
+   # #    * schema_name, schema_version, entity_name
+   # 
+   # def []( *address )
+   #    case address.length
+   #    when 1
+   #       @by_entity[address.shift]
+   #    when 2
+   #       @by_schema_entity[address.shift][address.shift]
+   #    when 3
+   #       @by_schema_version_entity[address.shift][address.shift][address.shift]
+   #    else
+   #       fail
+   #    end
+   # end
+   
 
 
 protected

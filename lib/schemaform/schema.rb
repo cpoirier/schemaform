@@ -28,16 +28,6 @@ module Schemaform
 class Schema
    include QualityAssurance
    
-   def place( database_url, prefix = nil )
-      Schemaform::Runtime::Database.connect_to(database_url).tap do |database|
-         database.register(self, prefix)
-      end
-   end
-
-
-   def connect( database_url, configuration = {} )
-      place(database_url, configuration.delete(:prefix)).connect(configuration)
-   end
    
    
    # ==========================================================================================

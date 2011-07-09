@@ -78,8 +78,8 @@ module Schemaform
    # Connects to a database. You will need to associate your schemas with the database_url before 
    # you will be able to use them (you can do that before or after connecting).
    
-   def self.connect( database_url, configuration = {} )
-      Runtime::Database.for_url(database_url).connect(configuration)
+   def self.connect( address, &block )
+      Runtime::Database.connect(address, &block)
    end
       
    

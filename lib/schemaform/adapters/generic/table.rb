@@ -44,6 +44,26 @@ class Table < Component
    attr_reader :id_field
    alias :fields :children
    
+   def []( *names )
+      return self[names] unless names.length == 1
+      
+      names = names.first
+      case names
+      when "*"
+         @children.members
+      when Hash
+         @children.select{|field| names.member?(field.name)}
+      when Array
+         [].tap do |fields|
+            @children.each do |name, field|
+               fields << field if names.member?(field.name)
+            end
+         end
+      else
+         [@children[names]]
+      end
+   end
+   
    def add_field( field )
       add_child field
    end
@@ -58,25 +78,19 @@ class Table < Component
    
    
    def to_sql_create( if_not_exists = true )
-      fields = @children.collect{|c| c.to_sql_create()}
-      keys   = ["primary key (#{quote_identifier(@id_field.name)})"]
-      body   = fields.join(",\n   ") + (keys.empty? ? "" : ",") + "\n\n   " + keys.join(",\n   ")
+      keys = ["primary key (#{quote_identifier(@id_field.name)})"]
+      body = @children.collect{|c| c.to_sql_create()}.join(",\n   ") + (keys.empty? ? "" : ",") + "\n\n   " + keys.join(",\n   ")
       
       "CREATE TABLE #{sql_name}\n(\n   #{body}\n);"
    end
    
    def to_sql_select( field_names = "*", restrictions = {} )      
-      fields = (field_names == "*") ? @children.members : field_names.to_array.collect{|n| @children[n]}
-
-      where = ""
+      fields = self[field_names] 
+      where  = ""
       if restrictions === false then
          where = " WHERE 1 = 0"
       else !restrictions.empty?
-         pairs = []
-         restrictions.each do |name, value|
-            assert(field = @children[name], "restriction field #{name} is not in Table #{@name}")
-            pairs << field.to_sql_comparison(value)
-         end
+         pairs = self[restrictions].collect{|field| field.to_sql_comparison(restrictions[field.name])}
          where = " WHERE #{pairs.join(" and ")}"
       end
 
@@ -88,11 +102,20 @@ class Table < Component
    end
 
    def to_sql_insert( values = {} )      
-      fields = @children.select{|c| values.member?(c.name)}
+      fields = self[values]
       quoted_values = fields.collect{|f| f.sql_value(values[f.name])}
       "INSERT INTO #{sql_name} (#{fields.collect{|f| f.sql_name}.join(", ")}) VALUES (#{quoted_values.join(", ")})"
    end
 
+   def to_sql_update( values = {}, restrictions = {} )
+      value_fields       = self[values]
+      restriction_fields = self[restrictions]
+      field_sets         = value_fields.collect{|f| f.to_sql_assignment(values[f.name])}
+      restriction_pairs  = restriction_fields.collect{|field| field.to_sql_comparison(restrictions[field.name])}
+      where_clause       = restriction_pairs.empty? ? "" : " WHERE #{restriction_pairs.join(" and ")}"
+      
+      "UPDATE #{sql_name} SET #{field_sets.join(", ")}#{where_clause}"
+   end
    
    
 end # Table

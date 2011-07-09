@@ -76,6 +76,10 @@ class Field < Component
          "#{sql_name()} #{operator} #{sql_value(value)}"
       end
    end
+   
+   def to_sql_assignment( value )
+      "#{sql_name()} = #{sql_value(value)}"
+   end
 
 
 end # Field

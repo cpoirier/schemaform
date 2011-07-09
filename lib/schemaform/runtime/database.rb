@@ -90,11 +90,14 @@ protected
       return if @versions.fetch(schema.name, 0) >= schema.version
       @monitor.synchronize do
          @adapter.transact do |connection|
-            installed_version = self.versions_table[schema.name, connection]
+            schema_name = schema.name.to_s.identifier_case
+            installed_version = self.versions_table[schema_name, connection]
             if installed_version == 0 then
-               schema.install(connection)
-               @versions[schema.name] = self.versions_table[schema.name, connection] = 1
-            else
+               @adapter.lay_out(schema).tables.each do |table|
+                  connection.execute(table.to_sql_create())
+               end
+               @versions[schema.name] = self.versions_table[schema_name, connection] = 1
+            elsif installed_version < schema.version then
                fail "no version upgrade support yet"
             end
          end

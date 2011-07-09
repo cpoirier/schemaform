@@ -39,6 +39,7 @@ class Schema < Component
       end
       
       @adapter = adapter
+      @translations = {}
    end
 
    attr_reader :definition, :adapter, :translations

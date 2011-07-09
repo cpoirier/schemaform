@@ -92,7 +92,7 @@ class Adapter
             @layouts[schema] = lay_out_schema(schema)
          end
       end
-      
+   
       @layouts[schema]
    end
    
@@ -143,7 +143,7 @@ class Adapter
                next if attribute.name == entity.id
                next if entity.base_entity && entity.base_entity.declared_heading.attribute?(attribute.name)
 
-               lay_out(attribute, master_table)
+               lay_out_element(attribute, master_table)
             end
          end
       end
@@ -152,7 +152,7 @@ class Adapter
    def lay_out_element( element, container, prefix = nil )
       current_class = element.class
       while current_class
-         assert(current_class != Schema::Element, "unsupported element class #{element.class.name}")
+         assert(current_class != Schemaform::Schema::Element, "unsupported element class #{element.class.name}")
          specialized = current_class.specialize_method_name("lay_out")
          return self.send(specialized, element, container, prefix) if self.responds_to?(specialized)
          current_class = current_class.superclass
@@ -165,12 +165,12 @@ class Adapter
 
    def lay_out_tuple( tuple, container, prefix = nil )
       tuple.attributes.each do |attribute|
-         lay_out(attribute, container, prefix)
+         lay_out_element(attribute, container, prefix)
       end      
    end
    
    def lay_out_attribute( attribute, container, prefix = nil )
-      lay_out(attribute.type, container, make_name(attribute.name, prefix))
+      lay_out_element(attribute.type, container, make_name(attribute.name, prefix))
    end
    
    def lay_out_optional_attribute( attribute, container, prefix = nil )
@@ -211,7 +211,7 @@ class Adapter
    end
 
    def lay_out_tuple_type( type, container, prefix = nil )
-      lay_out(type.tuple, container, prefix)
+      lay_out_element(type.tuple, container, prefix)
    end
    
    def lay_out_collection_type( type, container, prefix = nil )
@@ -220,9 +220,9 @@ class Adapter
          if type.member_type.is_a?(Schemaform::Schema::ReferenceType) then
             referenced_name = type.member_type.referenced_entity.id
             referenced_name = make_name(referenced_name, prefix) if container.id_field.name == referenced_name
-            lay_out(type.member_type, table, referenced_name)
+            lay_out_element(type.member_type, table, referenced_name)
          else 
-            lay_out(type.member_type, table, prefix)
+            lay_out_element(type.member_type, table, prefix)
          end
       end
    end
@@ -238,7 +238,7 @@ class Adapter
    end
    
    def lay_out_user_defined_type( type, container, prefix = nil )
-      lay_out(type.base_type, container, prefix)
+      lay_out_element(type.base_type, container, prefix)
    end
 
    def lay_out_unknown_type( type, container, prefix = nil )

@@ -18,25 +18,68 @@
 #             limitations under the License.
 # =============================================================================================
 
+require 'sqlite3'
 
-#
-# comment
 
 module Schemaform
-class Schema
-
-   #
-   # Brings the database schema up to date.
+module Adapters
+module SQLite
+class Connection < Generic::Connection
    
-   def upgrade(database, prefix = nil)
-      
-      layout = lay_out(sequel.database_type, prefix)
-      sequel.transaction do
-         layout.tables.each do |table|
-            sequel.execute_ddl(table.to_sql_create) unless sequel.table_exists?(table.name.to_s)
+   def initialize( adapter )
+      @adapter = adapter
+      @api     = ::SQLite3::Database.new(@adapter.path)
+   end
+   
+   
+   def close()
+      @api.close()
+   end
+   
+   
+   def transact()
+      if @api.transaction_active? then
+         yield
+      else
+         @api.transaction do
+            yield
          end
       end
    end
+   
+   
+   def query( sql, *parameters )
+      count = 0
+      debug(sql)
+      @api.execute(sql, *parameters) do |row|
+         count += 1
+         yield(row) if block_given?
+      end      
+      
+      return count
+   end
 
-end # Schema
+
+   def insert( sql, *parameters )
+      debug(sql)
+      @api.execute(sql, *parameters)
+      return @api.last_insert_row_id()
+   end
+
+   def update( sql, *parameters )
+      debug(sql)
+      @api.execute(sql, *parameters)
+      return @api.changes()
+   end
+   
+   def execute( sql )
+      debug(sql)
+      @api.execute(sql)
+   end
+   
+
+
+end # Connection
+end # Generic
+end # Adapters
 end # Schemaform

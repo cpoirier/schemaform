@@ -26,27 +26,29 @@ module Schemaform
 module Runtime
 class Transaction
 
-   def initialize( connection )
+   def initialize( database, connection )
+      @database   = database
       @connection = connection
-      @database   = connection.database
-      @sequel     = connection.instance_eval{@sequel}
-      @owner      = Thread.current
    end
    
-   attr_reader :connection, :database, :owner
-
-
+   attr_reader :database, :connection
+         
+      
    #
    # Returns a runtime, connected version of the named entity for you to use. Address formats are:
    #  * entity_name
    #  * schema_name, entity_name
    #  * schema_name, schema_version, entity_name
-   
+
    def []( *entity_address )
       entity = @database[*entity_address]
       entity ? entity.material.new(self) : nil
    end
-
+   
+   
+   def save(object)
+   end
+   
 
 end # Transaction
 end # Runtime

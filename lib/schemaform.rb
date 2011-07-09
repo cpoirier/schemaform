@@ -35,6 +35,11 @@ module Schemaform
    QualityAssurance = Baseline::QualityAssurance
    extend  QualityAssurance
    include QualityAssurance
+   
+   MasterName       = "Schemaform"
+   MasterVersion    = 1
+   MasterIdentifier = MasterName.identifier_case
+   
 
    @@locator = Baseline::ComponentLocator.new( __FILE__, 2 )
    

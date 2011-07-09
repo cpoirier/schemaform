@@ -20,23 +20,37 @@
 
 
 #
-# comment
+# Captures a set of schemas for use as a single runtime environment.
 
 module Schemaform
-class Schema
+module Runtime
+class Workspace
 
    #
-   # Brings the database schema up to date.
+   # Figures out a name for the specified list of schemas.
    
-   def upgrade(database, prefix = nil)
-      
-      layout = lay_out(sequel.database_type, prefix)
-      sequel.transaction do
-         layout.tables.each do |table|
-            sequel.execute_ddl(table.to_sql_create) unless sequel.table_exists?(table.name.to_s)
-         end
+   def self.name( schemas )
+      schemas.collect{|s| s.schema_id}.join("|")
+   end
+   
+   
+   #
+   # Builds a Workspace from a list of Schemas.
+   
+   def self.build( schemas )
+      environment = Environment.build(self, template_name)
+      available_schemas.each do |schema|
+         
       end
    end
 
-end # Schema
+
+protected
+
+   def initialize()
+      
+   end
+   
+end # Workspace
+end # Runtime
 end # Schemaform

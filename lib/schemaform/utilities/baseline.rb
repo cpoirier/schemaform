@@ -79,19 +79,25 @@ end
 # Ensures all objects can be converted to arrays. Individual objects are converted to
 # a list of one; nil is converted to an empty list.
 
-if !NilClass.method_defined?(:to_a) then
+if !NilClass.method_defined?(:to_array) then
    class NilClass
-      def to_a()
+      def to_array()
          return []
       end
    end
 end
 
-if !Object.method_defined?(:to_a) then
+if !Object.method_defined?(:to_array) then
    class Object
-      def to_a()
+      def to_array()
          return [self]
       end
+   end
+end
+
+if !Array.method_defined?(:to_array) then
+   class Array
+      alias to_array to_a
    end
 end
 
@@ -565,6 +571,12 @@ class String
    if !method_defined?(:identifier_case) then
       def identifier_case()
          self.gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').gsub(/([a-z\d])([A-Z])/,'\1_\2').tr("-", "_").downcase
+      end
+   end
+   
+   if !method_defined?(:camel_case) then
+      def camel_case()
+         identifier_case().gsub(/($|_)./,$2.upcase)
       end
    end
    

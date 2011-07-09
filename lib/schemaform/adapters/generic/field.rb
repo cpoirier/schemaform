@@ -30,11 +30,11 @@ module Adapters
 module Generic
 class Field < Component
 
-   def initialize( context, name, sf_type, sql_type = nil, *modifiers )
+   def initialize( context, name, sf_type, sql_info = nil, *modifiers )
       super( context, name )
       @sf_type   = sf_type
-      @sql_type  = sql_type
       @modifiers = modifiers
+      @sql_type, @quoted = *sql_info
    end
    
    attr_reader :sf_type, :sql_type, :modifiers
@@ -49,11 +49,34 @@ class Field < Component
       super indent, name_override, type_descriptor
    end
    
-   def to_create_sql()
-      [quote_identifier(@name.to_s), @sql_type, *modifiers].join(" ")
+   def sql_value( value )
+      if value.nil? then
+         "null"
+      elsif value == [] then
+         "?"
+      elsif @quoted then
+         quote_string(value.to_s)
+      else
+         value.to_s
+      end
    end
    
+   def to_sql_create()
+      [sql_name(), @sql_type, *modifiers].join(" ")
+   end
    
+   def to_sql_comparison( value, operator = "=" )
+      value_string = if value.nil? then 
+         if operator == "=" then
+            "#{sql_name()} is null"
+         else 
+            "#{sql_name()} is not null"
+         end
+      else
+         "#{sql_name()} #{operator} #{sql_value(value)}"
+      end
+   end
+
 
 end # Field
 end # Generic

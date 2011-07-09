@@ -20,18 +20,43 @@
 
 
 #
-# Walks a Schema to lay out structures in tables and fields.
+# The base class for DBMS-specific connection interfaces.
 
 module Schemaform
 module Adapters
-module SQLite
-class Driver < Generic::Driver
-
-   def self.table_class() ; SQLite::Table ; end
-   def self.separator()   ; "$" ; end
+module Generic
+class Connection
+   include QualityAssurance
+   extend  QualityAssurance
    
+   
+   def initialize( adapter )
+      @adapter = adapter      
+   end
+   
+   def escape_string( string )        ; @adapter.escape_string(string)        ; end
+   def quote_string( string )         ; @adapter.quote_string(string)         ; end
+   def quote_identifier( identifier ) ; @adapter.quote_identifier(identifier) ; end
+   
+   def query_value( field, default, sql, *parameters )
+      value = default
+      query(sql, *parameters) do |row|
+         value = row[field]
+         break
+      end
+      
+      value
+   end
+      
+   def query_row( sql, *parameters )
+      query(sql, *parameters) do |row|
+         return row
+      end
+      nil
+   end   
 
-end # Driver
-end # SQLite
+
+end # Connection
+end # Generic
 end # Adapters
 end # Schemaform

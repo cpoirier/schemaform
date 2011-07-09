@@ -33,9 +33,9 @@ class Table < Component
       super(context, name)
       
       if id_name && id_table then
-         @id_field = add_field(schema.driver.reference_field_class.new(self, id_name, id_table, false, true))
+         @id_field = add_field(schema.adapter.reference_field_class.new(self, id_name, id_table, false, true))
       else
-         @id_field = add_field(schema.driver.identifier_field_class.new(self, id_name || context.id_field, nil))
+         @id_field = add_field(schema.adapter.identifier_field_class.new(self, id_name || (context.responds_to?(:id_field) ? context.id_field : "id"), nil))
       end
       
       context.define_owner_fields(self)
@@ -53,17 +53,48 @@ class Table < Component
    end
 
    def define_owner_fields( into )
-      into.add_field schema.driver.reference_field_class.new(into, :__owner, self, false, true)
+      into.add_field schema.adapter.reference_field_class.new(into, :__owner, self, false, true)
    end
    
-   def to_create_sql()
-      fields = @children.collect{|c| c.to_create_sql()}
+   
+   def to_sql_create( if_not_exists = true )
+      fields = @children.collect{|c| c.to_sql_create()}
       keys   = ["primary key (#{quote_identifier(@id_field.name)})"]
       body   = fields.join(",\n   ") + (keys.empty? ? "" : ",") + "\n\n   " + keys.join(",\n   ")
       
-      "create table #{@name}\n(\n   #{body}\n);"
+      "CREATE TABLE #{sql_name}\n(\n   #{body}\n);"
+   end
+   
+   def to_sql_select( field_names = "*", restrictions = {} )      
+      fields = (field_names == "*") ? @children.members : field_names.to_array.collect{|n| @children[n]}
+
+      where = ""
+      if restrictions === false then
+         where = " WHERE 1 = 0"
+      else !restrictions.empty?
+         pairs = []
+         restrictions.each do |name, value|
+            assert(field = @children[name], "restriction field #{name} is not in Table #{@name}")
+            pairs << field.to_sql_comparison(value)
+         end
+         where = " WHERE #{pairs.join(" and ")}"
+      end
+
+      "SELECT #{fields.collect{|f| f.sql_name}.join(", ")} FROM #{sql_name}#{where}"
+   end
+   
+   def to_sql_existence_check()
+      "SELECT 1 FROM #{sql_name}"
    end
 
+   def to_sql_insert( values = {} )      
+      fields = @children.select{|c| values.member?(c.name)}
+      quoted_values = fields.collect{|f| f.sql_value(values[f.name])}
+      "INSERT INTO #{sql_name} (#{fields.collect{|f| f.sql_name}.join(", ")}) VALUES (#{quoted_values.join(", ")})"
+   end
+
+   
+   
 end # Table
 end # Generic
 end # Adapters

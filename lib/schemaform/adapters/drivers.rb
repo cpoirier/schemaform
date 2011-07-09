@@ -18,29 +18,32 @@
 #             limitations under the License.
 # =============================================================================================
 
-require "sequel/extensions/inflector.rb"
 require Schemaform.locate("schemaform/schema.rb")
 
 
 module Schemaform
-class Schema
-   def lay_out( database_type = nil, prefix = nil )
-      @adapters = {} unless defined?(@adapters)
-      key = [database_type, prefix]
-      unless @adapters.member?(key)
-         @adapters[key] = case database_type
-         when :sqlite
-            Schemaform::Adapters::SQLite::Driver.lay_out_schema(self, prefix)
-         else
-            fail "lay_out not supported for database type #{database.type}"
+
+   class Schema
+      def lay_out( database_type = nil, prefix = nil )
+         fail_todo "what now?"
+         
+         @adapters = {} unless defined?(@adapters)
+         key = [database_type, prefix]
+         unless @adapters.member?(key)
+            @adapters[key] = case database_type
+            when :sqlite
+               Schemaform::Adapters::SQLite::Driver.lay_out_schema(self, prefix)
+            else
+               fail "lay_out not supported for database type #{database.type}"
+            end
          end
-      end
       
-      @adapters[key]
-   end
+         @adapters[key]
+      end
    
-end # Schema
+   end # Schema
+
+
 end # Schemaform
 
 
-Dir[Schemaform.locate("*/*.rb")].each{|path| require path}

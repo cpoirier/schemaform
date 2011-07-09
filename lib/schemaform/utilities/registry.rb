@@ -95,6 +95,14 @@ class Registry
    def names()
       @order
    end
+   
+   
+   #
+   # Returns all registered objects, in registration order.
+   
+   def members()
+      @order.collect{|name| @registry[name]}
+   end
 
    
    #

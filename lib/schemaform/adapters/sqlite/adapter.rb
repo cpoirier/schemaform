@@ -18,6 +18,7 @@
 #             limitations under the License.
 # =============================================================================================
 
+require 'sqlite3'
 
 #
 # Walks a Schema to lay out structures in tables and fields.
@@ -25,18 +26,59 @@
 module Schemaform
 module Adapters
 module SQLite
-class Table < Generic::Table
-
-   def to_sql_create()
-      sql = super
-      return sql unless sql.includes?("not null autoincrement")
-      sql.sub("not null autoincrement", "primary key autoincrement").sub(/,\s*primary key \(.*?\)/, "")
+class Adapter < Generic::Adapter
+   
+   def self.build( coordinates )
+      adapter = nil
+      if path = File.expand_path(coordinates.fetch(:path, nil)) then
+         @@monitor.synchronize do
+            unless @@adapters.member?(path)
+               @@adapters[path] = adapter = new(path)
+            end
+         end
+      end
+      
+      return adapter
    end
    
+   def connect()
+      connection = Connection.new(self) 
+      if block_given? then
+         begin
+            yield(connection)
+         ensure 
+            connection.close()
+         end
+      else
+         connection
+      end
+   end
    
+   attr_reader :path
+
+   def escape_string( string )
+      ::SQLite3::Database.quote(string)
+   end
+
+   def table_class() ; SQLite::Table ; end
+   def separator()   ; "$" ; end
+   
+   
+protected
+   def initialize( path, url = nil )
+      super(url || "sqlite:#{path}")
+      @path = path
+   end
+   
+   @@monitor  = Monitor.new()
+   @@adapters = {}
    
 
-end # Driver
+end # Adapter
 end # SQLite
 end # Adapters
 end # Schemaform
+
+Schemaform::Adapters.register(:sqlite, :SQLite)
+
+

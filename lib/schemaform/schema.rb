@@ -29,8 +29,8 @@ class Schema
    include QualityAssurance
    
    def place( database_url, prefix = nil )
-      Schemaform::Runtime::Database.for_url(database_url).tap do |database|
-         database.associate_schema(self, prefix)
+      Schemaform::Runtime::Database.connect_to(database_url).tap do |database|
+         database.register(self, prefix)
       end
    end
 
@@ -106,8 +106,19 @@ class Schema
    end
    
    
-   
 
+   def schema_id()
+      @schema_id ||= name().to_s + "$" + @version.to_s
+   end
+   
+   def hash()
+      schema_id.hash()
+   end
+   
+   def eql?( rhs )
+      return super unless rhs.responds_to?(:schema_id)
+      return schema_id() == rhs.schema_id()
+   end
 
 
 
@@ -126,6 +137,7 @@ protected
       @types       = TypeRegistry.new("schema [#{@name}]")
       @supervisor  = ResolutionSupervisor.new(self)
       @monitor     = Monitor.new()
+      @schema_id   = {}
          
       @types.register  UnknownType.new(:name => :unknown   , :context => self )
       @types.register     VoidType.new(:name => :void      , :base_type => @types[:unknown])

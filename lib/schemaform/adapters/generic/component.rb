@@ -37,12 +37,20 @@ class Component
    
    attr_reader :context, :name, :children, :schema
    
+   def sql_name()
+      quote_identifier(@name)
+   end
+   
+   def quote_string( string )
+      @schema.adapter.quote_string(string)
+   end
+   
    def quote_identifier( identifier )
-      @schema.driver.quote_identifier(identifier)
+      @schema.adapter.quote_identifier(identifier)
    end
    
    def make_name( name, prefix = nil )
-      @schema.driver.make_name(name, prefix)
+      @schema.adapter.make_name(name, prefix)
    end
    
    def top()
@@ -56,7 +64,7 @@ class Component
    end
    
    def define_table( name, id_name = nil, id_table = nil )
-      @context.define_table(@schema.driver.make_name(name.to_s, @name.to_s), id_name, id_table)
+      @context.define_table(@schema.adapter.make_name(name.to_s, @name.to_s), id_name, id_table)
    end
    
    def define_owner_fields( into )
@@ -73,8 +81,8 @@ class Component
       end
    end
    
-   def to_create_sql()
-      fail_unless_overridden self, :to_create_sql
+   def to_sql_create()
+      fail_unless_overridden self, :to_sql_create
    end
    
    

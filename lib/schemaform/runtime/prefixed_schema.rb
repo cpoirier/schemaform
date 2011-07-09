@@ -20,23 +20,61 @@
 
 
 #
-# comment
+# Adds a prefix to a Schema name, for situations in which you need multiple copies of a 
+# Schema in the same physical database.
+
+module Schemaform
+module Runtime
+class PrefixedSchema
+
+   def initialize( schema, prefix )
+      @schema    = schema
+      @prefix    = prefix
+   end
+   
+   attr_reader :schema, :prefix
+   
+   def name()
+      @name ||= @prefix.to_s + "$" + @schema.name      
+   end
+   
+   def schema_id()
+      @schema_id ||= @prefix.to_s + "$" + @schema.schema_id
+   end
+   
+   def hash()
+      schema_id.hash()
+   end
+   
+   def eql?( rhs )
+      return super unless rhs.responds_to?(:schema_id)
+      return schema_id() == rhs.schema_id()
+   end
+   
+   def method_missing( symbol, *args, &block )
+      @schema.send(symbol, *args, &block)
+   end
+
+
+end # PrefixedSchema
+end # Runtime
+end # Schemaform
+
+
+
+
+#
+# Adds a convenience method to Schema to produce a PrefixedSchema.
 
 module Schemaform
 class Schema
 
    #
-   # Brings the database schema up to date.
+   # A convenience method to produce a PrefixedSchema from the Schema.
    
-   def upgrade(database, prefix = nil)
-      
-      layout = lay_out(sequel.database_type, prefix)
-      sequel.transaction do
-         layout.tables.each do |table|
-            sequel.execute_ddl(table.to_sql_create) unless sequel.table_exists?(table.name.to_s)
-         end
-      end
+   def prefix( prefix )
+      Runtime::PrefixedSchema.new(self, prefix)
    end
-
+   
 end # Schema
 end # Schemaform

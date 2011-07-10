@@ -23,15 +23,11 @@ module Schemaform
 class Schema
 class Key < Element
       
-   def initialize( attribute_names, context )
-      # warn_once "Key should probably be changed to use a backed StructuredType instead of a Tuple"
-      # 
-      # @attributes = Tuple.new()
-      # attribute_names.each do |name|
-      #    @attributes.add_attribute( name, entity.heading.attributes[name] )
-      # end
-      # # @attributes = attribute_names
+   def initialize(name, entity, attributes)
+      super(entity, name)
+      @attributes = attributes
    end
+
    # 
    # alias entity context
    # 

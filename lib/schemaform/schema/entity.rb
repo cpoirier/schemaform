@@ -49,11 +49,13 @@ class Entity < Relation
       #
       # Other stuff.
       
-      @keys       = Registry.new("entity #{full_name}", "a key"       )
-      @operations = Registry.new("entity #{full_name}", "an operation")
+      @keys        = Registry.new("entity #{full_name}", "a key"       )
+      @operations  = Registry.new("entity #{full_name}", "an operation")
+      @projections = Registry.new("entity #{full_name}", "a projection")
    end
    
-   attr_reader :keys, :operations, :identifier, :declared_heading, :pedigree, :base_entity
+   attr_reader :keys, :operations, :projection
+   attr_reader :identifier, :declared_heading, :pedigree, :base_entity
    
    def id()
       (@declared_heading.name.to_s.identifier_case + "_id").intern
@@ -108,6 +110,15 @@ class Entity < Relation
       return false
    end
 
+   
+   #
+   # Returns true if the named projection is defined in this or any base entity.
+   
+   def projection?( name )
+      return true if @projections.member?(name)
+      return @base_entity.projection?(name) if @base_entity.exists?
+      return false
+   end
    
    #
    # If true, this entity is enumerated.

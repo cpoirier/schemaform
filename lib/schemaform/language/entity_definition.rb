@@ -59,45 +59,52 @@ class EntityDefinition
 
    #
    # Defines a candidate key on the entity -- a subset of attributes that can uniquely identify
-   # a record within the set.  You can name the key by passing a one-entry hash instead of
-   # an array of attribute name.  If you supply no keys, the full set of stored attributes is used
-   # as the key.  Note: [:x, :y] is the same key as [:y, :x].  The system will not stop
-   # you from making both, but there is likely no benefit to you for doing so.
-   #
-   # Examples:
-   #   key :attribute_name
-   #   key :attribute_name, :other_attribute_name
-   #   key :key_name => :attribute_name
-   #   key :key_name => [:attribute_name]
-   #   key :key_name => [:attribute_name, :other_attribute_name]
+   # a record within the set. Configation parameters are passed as a hash after the attribute
+   # names. In particular, you can supply a value for :name. If you don't supply one, a name
+   # will be generated from the attribute names.
 
-   def key( *names )
-      warn_once("TODO: key support")
-      # @entity.instance_eval do 
-      #    key_name = nil
-      #    if names[0].is_a?(Hash) then
-      #       key_name = names[0].keys.first
-      #       names = names[0][key_name].as_array
-      #    end
-      #    
-      #    key_name = names.collect{|name| name.to_s}.join("_and_").intern if key_name.nil?
-      #    
-      #    check do
-      #       assert( !key?(key_name), "key name #{key_name} already exists in entity #{@name}" )
-      #       names.each do |name|
-      #          assert( attribute?(name), "key attribute #{name} is not a member of entity #{@name}" )
-      #       end
-      #    end
-      #    
-      #    @keys[key_name] = Key.new( self, key_name, names )
-      # 
-      #    #
-      #    # For the sake of expediency, we are making the primary key the first key 
-      #    # in the entity (or any of its base entities).  In the future, something more
-      #    # intelligent might be useful.
-      #    
-      #    @primary_key = key_name if primary_key.nil?
-      # end
+   def key( *names_and_configuration )
+      configuration = names_and_configuration.last.is_a?(Hash) ? names_and_configuration.pop : {}
+      names         = names_and_configuration
+      
+      @entity.instance_eval do
+         key_name = configuration[:name] || names.collect{|name| name.to_s.identifier_case}.join("_and_").intern
+         check do
+            assert(!key?(key_name), "key name #{key_name} already exists in entity #{full_name}")
+            names.each do |name|
+               assert(attribute?(name), "key attribute #{name} is not a member of entity #{full_name}")
+            end
+         end
+         
+         @keys.register Schema::Key.new(key_name, self, names.collect{|name| @heading[name]}.compact)
+      end
+   end
+   
+   
+   #
+   # Defines a projection of attributes for simplified access. You can supply a flat list of
+   # attribute names, or return an array of attributes from a block that takes the entity tuple.
+   # Note that the block method is considerably more flexible, in that you can project data from
+   # related tuples, as well.
+
+   def projection( projection_name, *attribute_names, &block )
+      assert(attribute_names.empty? ^ block.nil?, "please supply either a block or a list of attributes")
+
+      @entity.instance_eval do
+         check{assert(!projection?(projection_name), "projection name #{projection_name} already exists in entity #{full_name}")}
+         
+         attributes = if block then
+            fail_todo "projection :name, lambda {|et| [et.attribute, member.attribute.sub_attribute, member.reference.referred_field] }"
+            @projections.register Schema::CalculatedProjection.new(projection_name, block)
+         else
+            attributes = attribute_names.collect do |name|
+               check{assert(attribute?(name), "projection attribute #{name} is not a member of entity #{full_name}")}
+               @heading[name]
+            end
+            
+            @projections.register Schema::Projection.new(projection_name, self, attributes.compact)
+         end
+      end
    end
    
    

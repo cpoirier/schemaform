@@ -51,7 +51,7 @@ class Workspace
          @schema_lookup[schema.name] = schema unless @schema_lookup.member?(schema.name)
          
          schema.entities.each do |entity|
-            @entity_lookup[entity.name] = schema unless @entity_lookup.member?(schema.name)
+            @entity_lookup[entity.name] = entity unless @entity_lookup.member?(schema.name)
          end
       end
    end
@@ -63,13 +63,13 @@ class Workspace
    #    * schema_name, schema_version, entity_name
    
    def []( *address )
-      case address.length
+      entity = case address.length
       when 1
-         @entity_lookup[address.shift]
+         @entity_lookup.fetch(address.shift)
       when 2
-         @schema_lookup[address.shift][address.shift]
+         @schema_lookup.fetch(address.shift).fetch(address.shift)
       when 3
-         @version_lookup[address.shift][address.shift][address.shift]
+         @version_lookup.fetch(address.shift).fetch(address.shift).fetch(address.shift)
       else
          fail
       end

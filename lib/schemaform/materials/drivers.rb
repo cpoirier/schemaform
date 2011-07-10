@@ -27,60 +27,62 @@ require Schemaform.locate("schemaform/schema.rb")
 module Schemaform
 class Schema
    
-   def material()
-      unless @material
-         @monitor.synchronize do
-            @material = materialize_controllers() unless @material.exists?
-         end
-      end
-      
-      @material
-   end
-   
    #
-   # Creates runtime classes for your tuples within the module you specify.
+   # Creates contollers that representent and operate your entities and tuples at runtime. 
+   # You should never need to call this directly.
    
-   def materialize( into_module )
-      type_check(:into_module, into_module, Module)
+   def build_controllers( container = Schemaform::MaterializedSchemas )
+      @monitor.synchronize do
+         @control_material = Materials::SchemaController.define("#{@name}_V#{@version}".intern, container).tap do |schema_controller|
+            # @tuples.each do |tuple|
+            #    tuple.materialize_controllers(schema_controller)
+            # end
 
-      # @tuples.each do |tuple|
-      #    fail_todo
-      #    # tuple.materialize(into_module, controller_module)
-      # end
-   end
-   
-   
-   #
-   # Creates controller classes for your schema. Automatically called for you by materialize(), 
-   # so you generally won't call this yourself.
-
-   def materialize_controllers( into_module = Schemaform::MaterializedSchemas )
-      Materials::SchemaController.define((@name.to_s + "__Version" + @version.to_s).intern, into_module).tap do |schema_controller|
-         # @tuples.each do |tuple|
-         #    tuple.materialize_controllers(schema_controller)
-         # end
-      
-         @entities.each do |entity|
-            entity.materialize_controllers(schema_controller)
-         end
-      end
-   end
-   
-   
-   
-   
-   
-   
-   class Entity < Relation
-      def materialize_controllers( into_module )
-         operations = @operations
-         Materials::EntityController.define(@name, into_module) do
-            operations.each do |name, block|
-               define_method(name, block)
+            @entities.each do |entity|
+               entity.build_controllers(schema_controller)
             end
          end
       end
    end
+   
+   
+   
+   class Entity < Relation
+      def connect( transaction )
+         schema.build_controllers() unless @control_material
+         @control_material.new(transaction)
+      end
+      
+      def build_controllers( container )
+         operations  = @operations
+         projections = @projections
+         keys        = @keys
+         
+         @control_material = Materials::EntityController.define(@name, container) do
+            operations.each do |name, block|
+               define_method(name, block)
+            end
+            
+            keys.each do |key|
+               define_method("get_by_#{key.name}".intern) do |*args|
+                  fail
+               end
+               
+               define_method("project_by_#{key.name}".intern) do |projection, *args|
+                  fail
+               end
+               
+               projections.each do |projection|
+                  define_method("get_#{projection.name}_by_#{key.name}".intern) do |*args|
+                     fail
+                  end
+               end
+            end
+         end
+      end
+   end
+   
+   
    
 
    # class Tuple < Element

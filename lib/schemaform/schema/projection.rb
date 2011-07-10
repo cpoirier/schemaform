@@ -20,38 +20,19 @@
 
 
 #
-# Provides a transaction scope and access to the entities for associated Schemas.
+# Captures a named Projection for the Entity.
 
 module Schemaform
-module Runtime
-class Transaction
+class Schema
+class Projection < Element
 
-   def initialize( workspace, connection )
-      @workspace  = workspace
-      @connection = connection
-      @materials  = {}
-      @monitor    = Monitor.new()
+   def initialize( name, entity, attributes )
+      super(entity, name)
+      @attributes = attributes
    end
    
-   attr_reader :workspace, :connection
-         
-      
-   #
-   # Returns a runtime, connected version of the named entity for you to use. Address formats are:
-   #  * entity_name
-   #  * schema_name, entity_name
-   #  * schema_name, schema_version, entity_name
+   attr_reader :attributes
 
-   def []( *entity_address )
-      entity = @workspace[*entity_address]
-      @monitor.synchronize{@materials[entity] ||= entity.connect(self)}
-   end
-   
-   
-   def save(object)
-   end
-   
-
-end # Transaction
-end # Runtime
+end # Projection
+end # Schema
 end # Schemaform

@@ -805,19 +805,29 @@ module Baseline
       #
       # Dumps a message to $stderr, once per message.
    
-      def warn_once( message )
+      def warn_once( message, label = "WARNING", separator = ": " )
          @@quality_assurance__warnings = {} if !defined?(@@quality_assurance__warnings)
          unless @@quality_assurance__warnings.member?(message)
-            warn( message )
+            warn( message, label, separator )
          end
+      end
+
+      
+      #
+      # Similar to warn_once(), but prepends "TODO: " when displaying the mssage.
+      
+      def warn_todo( message )
+         warn_once(message, "TODO")
       end
    
    
       #
       # Dumps a message to $stderr.
    
-      def warn( message )
-         $stderr.puts( (message =~ /^[A-Z]+: / ? "" : "WARNING: ") + message )
+      def warn( message, label = "WARNING", separator = ": " )
+         label = separator = "" if label == "WARNING" && separator == ": " && message =~ /^[A-Z]+: /
+
+         $stderr.puts "#{label}#{separator}#{message}"
          @@quality_assurance__warnings = {} if !defined?(@@quality_assurance__warnings)
          @@quality_assurance__warnings[message] = true
       end

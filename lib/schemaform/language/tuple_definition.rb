@@ -111,7 +111,7 @@ class TupleDefinition
    # Defines a constraint on the tuple that will be checked on save.
    
    def constrain( description, proc = nil, &block )
-      warn_once("TODO: constraint support in Tuple")
+      warn_todo("constraint support in Tuple")
    end
    
    

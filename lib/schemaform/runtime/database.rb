@@ -57,7 +57,7 @@ class Database
       workspace = build_workspace(available_schemas)
       @adapter.transact do |connection|
          yield(Transaction.new(workspace, connection))
-         warn_once("TODO: validate transaction")
+         warn_todo("validate transaction")
       end
    end
 
@@ -161,18 +161,21 @@ private
    
    
    class VersionTable
+      include QualityAssurance
+      
       def initialize(control_schema, adapter)
          @adapter = adapter
          @table = adapter.instance_eval do
-            control_schema.define_table(make_name("versions", Schemaform::MasterIdentifier), "schema_id").tap do |table|
-               table.add_field field_class.new(table, :name   , nil, text_field_type(60))
-               table.add_field field_class.new(table, :version, nil, integer_field_type(1..1000000000))
+            control_schema.define_master_table(adapter.build_name(Schemaform::MasterIdentifier, "versions"), "schema_id").tap do |table|
+               table.define_field(:name   , adapter.type_manager.text_type(60) )
+               table.define_field(:version, adapter.type_manager.integer_type())
             end
          end
          
-         @getter   = @table.to_sql_select(:version, :name => [])
-         @updater  = @table.to_sql_update({:version => []}, {:name => []})
-         @inserter = @table.to_sql_insert(:name => [], :version => [])
+         warn_once("using hardcoded queries until query builders are done")
+         @getter   = "SELECT version FROM schemaform$versions WHERE name = ?"
+         @updater  = "UPDATE schemaform$versions set version = ? WHERE name = ?"
+         @inserter = "INSERT INTO schemaform$versions (name, version) VALUES (?, ?)"
       end
       
       def definition

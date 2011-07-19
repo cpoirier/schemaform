@@ -367,7 +367,7 @@ class Schema
       # inline in the context. However, to enable that, we disallow recursion.
 
       def capture( production = nil )
-         warn_once("TODO: must recursion be excluded from volatile attributes?")
+         warn_todo("must recursion be excluded from volatile attributes?")
          
          result = nil
          if @analyzing then
@@ -377,7 +377,7 @@ class Schema
             
             Language::ExpressionCapture.resolution_scope(schema) do
                begin
-                  warn_once("TODO: shouldn't the formula_context for a Volatile attribute link in with the context Production?")
+                  warn_todo("shouldn't the formula_context for a Volatile attribute link in with the context Production?")
                   @analyzing = true  # Set true to ensure any self-references are detected
                   result = Language::ExpressionDefinition.module_exec(formula_context(production), &@proc)                  
                   # result = @proc.call(formula_context(production))

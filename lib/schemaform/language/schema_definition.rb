@@ -26,9 +26,10 @@ class SchemaDefinition
    include QualityAssurance
    
    def self.process( schema, &block )
-      dsl = new(schema)
-      dsl.instance_eval(&block)
-      schema
+      schema.tap do 
+         dsl = new(schema)
+         dsl.instance_eval(&block)
+      end
    end
 
    def initialize(schema, &block)

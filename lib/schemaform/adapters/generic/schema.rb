@@ -18,7 +18,6 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("component.rb")
 
 
 #
@@ -27,41 +26,33 @@ require Schemaform.locate("component.rb")
 module Schemaform
 module Adapters
 module Generic
-class Schema < Component
+class Schema
+   include QualityAssurance
+   extend  QualityAssurance
 
-   def initialize( definition, adapter )
-      if definition.responds_to?(:name) then
-         super(nil, definition.name)
-         @definition = definition
-      else
-         super(nil, definition)
-         @definition = nil
-      end
-      
+   def initialize( name, adapter )
+      @name    = name
       @adapter = adapter
-      @translations = {}
-   end
-
-   attr_reader :definition, :adapter, :translations
-   alias :tables :children
-   
-   def define_table( name, id_name = nil, id_table = nil )
-      add_child @adapter.table_class.new(self, name, id_name, id_table)
+      @tables  = Registry.new()
+      @lookup  = {}
    end
    
-   def define_owner_fields( into )      
-   end
-   
-   def identifier_type()
-      @definition.identifier_type
-   end
-   
-   def to_sql_create()
-      table_sql = @children.collect do |table|
-         table.to_sql_create()
-      end
+   attr_reader :adapter, :tables, :lookup
       
-      table_sql.join("\n\n")
+   def define_master_table( name, id_name = nil, base_table = nil )
+      register @adapter.table_class.build_master_table(self, name, id_name, base_table)
+   end
+   
+   def define_child_table( parent_table, name )
+      register @adapter.table_class.build_child_table(self, parent_table, name)
+   end
+   
+   def register( table )
+      @tables.register(table)
+   end
+      
+   def to_sql_create()
+      @adapter.render_sql_create(self)
    end
    
 

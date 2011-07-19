@@ -18,30 +18,51 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("field.rb")
-
-
-#
-# An auto-generated identifier field within a table.
 
 module Schemaform
 module Adapters
 module Generic
-class ReferenceField < Field
 
-   def initialize( context, name, referenced_table, deferrable, required, field_type = "integer" )
-      modifiers = []
-      modifiers << "not null" if required
-      modifiers << "references #{referenced_table.name}(#{context.schema.quote_identifier(referenced_table.id_field.name)})"
-      modifiers << "deferrable initially deferred" if deferrable
 
-      @referenced_table = referenced_table
-      super( context, name, nil, field_type, *modifiers)
-   end
+   #
+   # Base class for things that configure a Field in some way. Override Mark::build() if you need
+   # parameters.
 
-   attr_reader :referenced_table
+   class FieldMark
+      include QualityAssurance
+      extend  QualityAssurance
    
-end # ReferencedField
+      def self.build()
+         @@instances[self] ||= new()
+      end
+   
+      @@instances = {}
+      
+   end # FieldMark
+   
+   
+   class GeneratedMark  < FieldMark ; end
+   class PrimaryKeyMark < FieldMark ; end
+   class RequiredMark   < FieldMark ; end
+   
+   class ReferenceMark  < FieldMark
+      
+      def self.build( table, deferrable = false )
+         new(table, deferrable)
+      end
+      
+      def initialize( table, deferrable = false )
+         type_check(:table, table, Table)
+         @table      = table
+         @deferrable = deferrable
+      end
+
+      def table()       ; @table      ; end
+      def deferrable?() ; @deferrable ; end
+   end
+   
+   
 end # Generic
 end # Adapters
 end # Schemaform
+

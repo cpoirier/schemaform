@@ -19,24 +19,53 @@
 # =============================================================================================
 
 
-#
-# Walks a Schema to lay out structures in tables and fields.
-
 module Schemaform
 module Adapters
-module SQLite
-class Table < Generic::Table
+module Generic
+class Name
+   
+   def self.build( *components )
+      return components.first if components.length == 1 && components.first.is_a?(Name)
+      new(components)
+   end
+   
+   def self.empty()
+      @@empty ||= new([])
+   end
 
-   def to_sql_create()
-      sql = super
-      return sql unless sql.includes?("not null autoincrement")
-      sql.sub("not null autoincrement", "primary key autoincrement").sub(/,\s*primary key \(.*?\)/, "")
+   def initialize( components )
+      @components = components.collect{|name| name.is_a?(Name) ? name.components : name.to_s.identifier_case}.flatten
+      @full_name  = @components.join("$")
+   end
+   
+   attr_reader :components
+   
+   def last()
+      @components.last
+   end
+   
+   def +( name )
+      if name.is_a?(Name) then 
+         self.class.new( @components + name.components )
+      else
+         self.class.new( @components + [name] )
+      end
+   end
+   
+   def to_s( separator = "$" )
+      separator == "$" ? @full_name : @components.join(separator)
+   end
+
+   def hash()
+      to_s.hash()
+   end
+   
+   def eql?( rhs )
+      to_s == rhs.to_s
    end
    
    
-   
-
-end # Driver
-end # SQLite
+end # Name
+end # Generic
 end # Adapters
 end # Schemaform

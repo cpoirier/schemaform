@@ -18,22 +18,46 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("field.rb")
-
 
 #
-# An auto-generated identifier field within a table.
+# Represents a SQL type within the system.
 
 module Schemaform
 module Adapters
 module Generic
-class IdentifierField < Field
-
-   def initialize( context, name, sf_type, field_type = "integer" )
-      super( context, name, sf_type, field_type, "not null", "autoincrement" )
+class TypeInfo
+      
+   def initialize( type_manager, sql, index_width, quoted = false, properties = {}, &formatter )
+      @type_manager = type_manager
+      @sql          = sql
+      @index_width  = index_width
+      @quoted       = quoted
+      @properties   = properties
+      @formatter    = formatter
+   end
+   
+   attr_reader :type_manager, :sql, :index_width, :properties
+   
+   def quoted?()    ; @quoted          ; end
+   def indexable?() ; @index_width > 0 ; end
+   
+   def quote_literal( adapter, value )
+      if value.nil? then
+         "null"
+      elsif value == [] then
+         "?"
+      elsif @quoted then
+         @type_manager.adapter.quote_string(format_literal(value))
+      else
+         format_literal(value)
+      end
    end
 
-end # IdentifierField
-end # Generic
+   def format_literal( adapter, value )
+      @formatter ? @formatter.call(value.to_s) : value.to_s
+   end
+   
+end # TypeInfo
 end # Adapters
+end # Generic
 end # Schemaform

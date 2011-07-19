@@ -18,70 +18,27 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("component.rb")
-
 
 #
-# A field within a table. Unlike attributes in the definition series, fields have only a name
-# and a type.
+# A field within a table.
 
 module Schemaform
 module Adapters
 module Generic
-class Field < Component
-
-   def initialize( context, name, sf_type, sql_info = nil, *modifiers )
-      super( context, name )
-      @sf_type   = sf_type
-      @modifiers = modifiers
-      @sql_type, @quoted = *sql_info
-   end
-   
-   attr_reader :sf_type, :sql_type, :modifiers
-   
-   def describe( indent = "", name_override = nil, suffix = nil )
-      type_descriptor = if @sql_type then
-         [@sql_type, *modifiers].join(" ")
-      else
-         @sf_type.description()
-      end
+class Field
+   include QualityAssurance
+   extend  QualityAssurance
       
-      super indent, name_override, type_descriptor
+   def initialize( table, name, type, *marks )
+      @table     = table
+      @name      = name
+      @type      = table.adapter.type_manager.scalar_type(type)
+      @marks     = marks
    end
    
-   def sql_value( value )
-      if value.nil? then
-         "null"
-      elsif value == [] then
-         "?"
-      elsif @quoted then
-         quote_string(value.to_s)
-      else
-         value.to_s
-      end
-   end
+   attr_reader :table, :name, :type, :marks
    
-   def to_sql_create()
-      [sql_name(), @sql_type, *modifiers].join(" ")
-   end
    
-   def to_sql_comparison( value, operator = "=" )
-      value_string = if value.nil? then 
-         if operator == "=" then
-            "#{sql_name()} is null"
-         else 
-            "#{sql_name()} is not null"
-         end
-      else
-         "#{sql_name()} #{operator} #{sql_value(value)}"
-      end
-   end
-   
-   def to_sql_assignment( value )
-      "#{sql_name()} = #{sql_value(value)}"
-   end
-
-
 end # Field
 end # Generic
 end # Adapters

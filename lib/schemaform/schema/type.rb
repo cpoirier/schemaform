@@ -82,6 +82,10 @@ class Type < Element
       self
    end
    
+   def validate()
+      true
+   end
+   
    
    #
    # Returns an anonymous wrapper on this type with the supplied constraints.

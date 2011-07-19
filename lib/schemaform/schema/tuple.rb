@@ -41,6 +41,12 @@ class Tuple < Element
       @expression = nil
    end
    
+   def validate()
+      return if @validated
+      @validated = true
+      @attributes.each{|attribute| attribute.validate()}
+   end
+   
    attr_reader :attributes, :tuples, :type
    
    def []( name )

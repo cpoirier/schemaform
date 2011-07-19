@@ -18,32 +18,42 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("schemaform/schema.rb")
 
+#
+# comment
 
 module Schemaform
+module Adapters
+module Generic
+class Address
 
-   class Schema
-      def lay_out( database_type = nil, prefix = nil )
-         fail_todo "what now?"
-         
-         @adapters = {} unless defined?(@adapters)
-         key = [database_type, prefix]
-         unless @adapters.member?(key)
-            @adapters[key] = case database_type
-            when :sqlite
-               Schemaform::Adapters::SQLite::Driver.lay_out_schema(self, prefix)
-            else
-               fail "lay_out not supported for database type #{database.type}"
-            end
-         end
-      
-         @adapters[key]
-      end
+   def initialize( url, coordinates = {} )
+      @url         = url
+      @coordinates = coordinates
+   end
    
-   end # Schema
+   attr_reader :url
+   
+   def []( name )
+      @coordinates[name]
+   end
+   
+   def fetch( name, default = nil )
+      warn_todo("correct Address::fetch() default handling")
+      @coordinates.fetch(name, default)
+   end
+   
+   def method_missing( symbol, *args, &block )
+      return super unless args.empty? && block.nil?
+      return super unless @coordinates.member?(symbol)
+      self[symbol]
+   end
+   
+   def respond_to?(symbol)
+      @coordinates.member?(symbol) || super
+   end
 
-
+end # Address
+end # Generic
+end # Adapters
 end # Schemaform
-
-

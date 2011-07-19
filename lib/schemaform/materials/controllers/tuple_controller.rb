@@ -94,7 +94,7 @@ class TupleController < Controller
       @dirty
    end
 
-   warn_once( "TODO: apply on_demand and defaults policies to accessors" )
+   warn_todo("apply on_demand and defaults policies to accessors")
 
 
 end # TupleController

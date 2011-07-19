@@ -136,7 +136,7 @@ class Schema
    # class ReferenceType < Type
    #    def lay_out( into )
    #       type_check(:into, into, Adapters::SQL::Group)
-   #       warn_once("TODO: reference field link")
+   #       warn_todo("reference field link")
    #       into.define_field(nil, schema.identifier_type)
    #    end
    # end

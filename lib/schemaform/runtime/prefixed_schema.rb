@@ -35,7 +35,11 @@ class PrefixedSchema
    attr_reader :schema, :prefix
    
    def name()
-      @name ||= @prefix.to_s + "$" + @schema.name      
+      @schema.name
+   end
+   
+   def path()
+      @path ||= [@prefix.to_s, @schema.name]
    end
    
    def schema_id()

@@ -36,6 +36,10 @@ class Schema
 
    attr_reader :supervisor, :types, :entities, :relations, :tuples, :dsl, :name, :version
    
+   def path()
+      [@name]
+   end
+   
    def schema()
       self
    end
@@ -110,6 +114,9 @@ class Schema
       return schema_id() == rhs.schema_id()
    end
 
+   def validate()
+      @tuples.each{|tuple| tuple.validate()}
+   end
 
 
 protected
@@ -125,7 +132,6 @@ protected
       @relations   = Registry.new("schema [#{@name}]", "a relation"           )
       @entities    = Registry.new("schema [#{@name}]", "an entity", @relations)
       @types       = TypeRegistry.new("schema [#{@name}]")
-      @supervisor  = ResolutionSupervisor.new(self)
       @monitor     = Monitor.new()
       @schema_id   = {}
          

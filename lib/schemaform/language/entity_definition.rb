@@ -85,11 +85,24 @@ class EntityDefinition
    # Defines a projection of attributes for simplified access. You can supply a flat list of
    # attribute names, or return an array of attributes from a block that takes the entity tuple.
    # Note that the block method is considerably more flexible, in that you can project data from
-   # related tuples, as well.
+   # related tuples, as well. 
+   #
+   # All projections must be named. Provide it as a pair using :name as the key. You can also
+   # specify the expected utilization for the projection, which will help the system to determine
+   # how much effort to go to make the projection fast. A good choice for the utilization number
+   # is the number of times the projection gets used by your application in one day. The system
+   # will provide these statistics for you.
 
-   def projection( projection_name, *attribute_names, &block )
+   def projection( *names_and_configuration, &block )
+      configuration   = names_and_configuration.last.is_a?(Hash) ? names_and_configuration.pop : {}
+      attribute_names = names_and_configuration
+
+      warn_todo("projection utilization statistics")
+      
       assert(attribute_names.empty? ^ block.nil?, "please supply either a block or a list of attributes")
+      assert(configuration.member?(:name)       , "you must supply a name for the projection"           )
 
+      projection_name = configuration.fetch(:name)
       @entity.instance_eval do
          check{assert(!projection?(projection_name), "projection name #{projection_name} already exists in entity #{full_name}")}
          
@@ -102,7 +115,7 @@ class EntityDefinition
                @heading[name]
             end
             
-            @projections.register Schema::Projection.new(projection_name, self, attributes.compact)
+            @projections.register Schema::Projection.new(self, projection_name, attributes.compact, configuration.fetch(:utilization, 0))
          end
       end
    end
@@ -112,7 +125,7 @@ class EntityDefinition
    # Defines a constraint on the entity that will be checked on save.
    
    def constrain( description, proc = nil, &block )
-      warn_once("TODO: constraint support in Entity")
+      warn_todo("constraint support in Entity")
    end
    
    

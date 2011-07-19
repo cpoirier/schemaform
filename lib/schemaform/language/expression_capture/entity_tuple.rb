@@ -71,7 +71,7 @@ class EntityTuple < Tuple
          fail "expected reference to #{@entity.full_name} as the result of the link expression"
       end
       
-      warn_once("TODO: if the link attribute for a related lookup is part of a key, the result should be a single (optional) record")
+      warn_todo("if the link attribute for a related lookup is part of a key, the result should be a single (optional) record")
 
       return Schema::SetType.build(related_entity.reference_type).capture(Productions::RelatedTuples.new(@entity, link_path))
    end

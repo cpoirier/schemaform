@@ -18,7 +18,6 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("component.rb")
 
 
 #
@@ -27,22 +26,63 @@ require Schemaform.locate("component.rb")
 module Schemaform
 module Adapters
 module Generic
-class Table < Component
-
-   def initialize( context, name, id_name = nil, id_table = nil )
-      super(context, name)
-      
-      if id_name && id_table then
-         @id_field = add_field(schema.adapter.reference_field_class.new(self, id_name, id_table, false, true))
-      else
-         @id_field = add_field(schema.adapter.identifier_field_class.new(self, id_name || (context.responds_to?(:id_field) ? context.id_field : "id"), nil))
+class Table
+   include QualityAssurance
+   extend  QualityAssurance
+   
+   def self.build_master_table( schema, name, id_name = nil, base_table = nil )
+      name = Name.build(name)
+      schema.adapter.table_class.new(schema, name).tap do |table|
+         modifier = base_table ? ReferenceMark.build(base_table) : GeneratedMark.build()
+         table.identifier = table.define_field(id_name || Name.build("id", name.last), schema.adapter.type_manager.identifier_type, modifier, PrimaryKeyMark.build())
       end
-      
-      context.define_owner_fields(self)
    end
    
-   attr_reader :id_field
-   alias :fields :children
+   def self.build_child_table( schema, parent_table, name, has_many = true )
+      schema.adapter.table_class.new(schema, parent_table.name + name).tap do |table|
+         table.owner = table.define_field(Name.build("owner", parent_table.identifier.name), schema.adapter.type_manager.identifier_type, ReferenceMark.build(parent_table))
+
+         if has_many then
+            table.identifier = table.define_field(Name.build("table", "id"), schema.adapter.type_manager.identifier_type, GeneratedMark.build(), PrimaryKeyMark.build())
+         else
+            table.owner.marks << PrimaryKeyMark.build()
+            table.identifier = table.owner
+         end
+      end
+   end
+   
+   attr_reader   :schema, :name, :fields
+   attr_accessor :identifier, :owner
+   
+   def adapter()
+      @schema.adapter
+   end
+
+   def define_field( name, type, *modifiers )
+      @fields.register(adapter.field_class.new(self, name, type, *modifiers))
+   end
+
+   def define_child(name)
+      @schema.define_child_table(self, name)
+   end
+   
+   def to_sql_create()
+      @schema.adapter.render_sql_create(self)
+   end
+   
+   
+
+
+protected
+
+   def initialize( schema, name )
+      type_check(:schema, schema, Generic::Schema)
+      @schema  = schema
+      @name    = name
+      @fields  = Registry.new(name.to_s, "a field")
+   end
+
+
    
    def []( *names )
       return self[names] unless names.length == 1
@@ -64,61 +104,13 @@ class Table < Component
       end
    end
    
-   def add_field( field )
-      add_child field
-   end
    
-   def define_table( name, id_name = nil, id_table = nil )
-      @context.define_table(make_name(name.to_s, @name.to_s), id_name || "id", id_table)
-   end
-
-   def define_owner_fields( into )
-      into.add_field schema.adapter.reference_field_class.new(into, :__owner, self, false, true)
-   end
-   
-   
-   def to_sql_create( if_not_exists = true )
-      keys = ["primary key (#{quote_identifier(@id_field.name)})"]
-      body = @children.collect{|c| c.to_sql_create()}.join(",\n   ") + (keys.empty? ? "" : ",") + "\n\n   " + keys.join(",\n   ")
-      
-      "CREATE TABLE #{sql_name}\n(\n   #{body}\n);"
-   end
-   
-   def to_sql_select( field_names = "*", restrictions = {} )      
-      fields = self[field_names] 
-      where  = ""
-      if restrictions === false then
-         where = " WHERE 1 = 0"
-      else !restrictions.empty?
-         pairs = self[restrictions].collect{|field| field.to_sql_comparison(restrictions[field.name])}
-         where = " WHERE #{pairs.join(" and ")}"
-      end
-
-      "SELECT #{fields.collect{|f| f.sql_name}.join(", ")} FROM #{sql_name}#{where}"
-   end
-   
-   def to_sql_existence_check()
-      "SELECT 1 FROM #{sql_name}"
-   end
-
-   def to_sql_insert( values = {} )      
-      fields = self[values]
-      quoted_values = fields.collect{|f| f.sql_value(values[f.name])}
-      "INSERT INTO #{sql_name} (#{fields.collect{|f| f.sql_name}.join(", ")}) VALUES (#{quoted_values.join(", ")})"
-   end
-
-   def to_sql_update( values = {}, restrictions = {} )
-      value_fields       = self[values]
-      restriction_fields = self[restrictions]
-      field_sets         = value_fields.collect{|f| f.to_sql_assignment(values[f.name])}
-      restriction_pairs  = restriction_fields.collect{|field| field.to_sql_comparison(restrictions[field.name])}
-      where_clause       = restriction_pairs.empty? ? "" : " WHERE #{restriction_pairs.join(" and ")}"
-      
-      "UPDATE #{sql_name} SET #{field_sets.join(", ")}#{where_clause}"
-   end
    
    
 end # Table
 end # Generic
 end # Adapters
 end # Schemaform
+
+
+Dir[Schemaform.locate("field_marks/*.rb")].each{|path| require path}

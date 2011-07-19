@@ -28,17 +28,10 @@ module Adapters
 module SQLite
 class Adapter < Generic::Adapter
    
-   def self.build( coordinates )
-      adapter = nil
+   def self.address( coordinates )
       if path = File.expand_path(coordinates.fetch(:path, nil)) then
-         @@monitor.synchronize do
-            unless @@adapters.member?(path)
-               @@adapters[path] = adapter = new(path)
-            end
-         end
+         Generic::Address.new("sqlite:#{path}", coordinates.update(:path => path))
       end
-      
-      return adapter
    end
    
    def connect()
@@ -60,20 +53,17 @@ class Adapter < Generic::Adapter
       ::SQLite3::Database.quote(string)
    end
 
-   def table_class() ; SQLite::Table ; end
-   def separator()   ; "$" ; end
-   
+   def render_sql_create_table( table )
+      super.gsub("AUTOINCREMENT PRIMARY KEY", "PRIMARY KEY AUTOINCREMENT")
+   end
+
    
 protected
-   def initialize( path, url = nil )
-      super(url || "sqlite:#{path}")
-      @path = path
+   def initialize( address, overrides = {})
+      super(address, overrides)
+      @path = address.path
    end
    
-   @@monitor  = Monitor.new()
-   @@adapters = {}
-   
-
 end # Adapter
 end # SQLite
 end # Adapters

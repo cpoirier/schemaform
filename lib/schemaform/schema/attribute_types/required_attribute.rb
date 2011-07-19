@@ -32,8 +32,8 @@ class RequiredAttribute < WritableAttribute
 protected
 
    extend QualityAssurance
-   warn_once( "TODO: build the constructor for the TupleClass" )
-   warn_once( "TODO: build a general runtime Tuple class that can wrap a hash" )
+   warn_todo("build the constructor for the TupleClass")
+   warn_todo("build a general runtime Tuple class that can wrap a hash")
    
 
 end # RequiredAttribute

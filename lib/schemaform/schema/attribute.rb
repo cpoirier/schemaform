@@ -35,6 +35,10 @@ class Attribute < Element
       @type = type
    end
 
+   def validate()
+      type.validate()
+   end
+
    def type()
       @type
    end

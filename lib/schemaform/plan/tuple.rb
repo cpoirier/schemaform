@@ -25,8 +25,8 @@ require Schemaform.locate("controller.rb")
 # A wrapper on a Schema-defined Tuple that provides services to a runtime Tuple class. 
 
 module Schemaform
-module Materials
-class TupleController < Controller
+module Plan
+class Tuple
 
    
    #
@@ -97,6 +97,6 @@ class TupleController < Controller
    warn_todo("apply on_demand and defaults policies to accessors")
 
 
-end # TupleController
-end # Materials
+end # Tuple
+end # Plan
 end # Schemaform

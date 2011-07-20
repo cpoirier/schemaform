@@ -25,8 +25,8 @@ require Schemaform.locate("controller.rb")
 # Wraps a defined Schema for use at runtime.
 
 module Schemaform
-module Materials
-class SchemaController < Controller
+module Plan
+class Schema
    
    #
    # Defines a subclass into some container.
@@ -47,6 +47,6 @@ class SchemaController < Controller
    
 
 
-end # SchemaController
-end # Materials
+end # Schema
+end # Plan
 end # Schemaform

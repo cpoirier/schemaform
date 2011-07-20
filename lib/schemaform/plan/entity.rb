@@ -25,8 +25,8 @@ require Schemaform.locate("controller.rb")
 # Wraps a Schema-defined Entity for use at runtime.
 
 module Schemaform
-module Materials
-class EntityController < Controller
+module Plan
+class Entity
    
    #
    # Defines a subclass into some container.
@@ -49,6 +49,6 @@ class EntityController < Controller
    attr_reader :transaction
 
 
-end # EntityController
-end # Materials
+end # Entity
+end # Plan
 end # Schemaform

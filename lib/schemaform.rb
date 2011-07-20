@@ -147,7 +147,7 @@ private
    
    require locate("schemaform/schema.rb")
    
-   ["utilities", "language", "productions", "adapters", "runtime", "materials", "migration"].each do |directory|
+   ["utilities", "language", "productions", "adapters", "runtime", "migration"].each do |directory|
       Dir[Schemaform.locate("schemaform/#{directory}/*.rb")].each do |path|
          require path
       end

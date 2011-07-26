@@ -18,16 +18,13 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("value.rb")
-
 
 #
 # Provides access to a Tuple and its attributes.
 
 module Schemaform
 module Language
-module ExpressionCapture
-class Attribute < Value
+class Attribute < Placeholder
 
    def initialize( definition, production = nil )
       super(definition.type, production)
@@ -58,7 +55,6 @@ class Attribute < Value
    
    
 end # Attribute
-end # ExpressionCapture
 end # Language
 end # Schemaform
 

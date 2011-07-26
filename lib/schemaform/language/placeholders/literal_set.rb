@@ -18,13 +18,10 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("value.rb")
-
 
 module Schemaform
 module Language
-module ExpressionCapture
-class LiteralSet < Value
+class LiteralSet < Placeholder
    
    def initialize( *members )
       @members = members
@@ -44,7 +41,6 @@ class LiteralSet < Value
    
    
 end # LiteralSet
-end # ExpressionCapture
 end # Language
 end # Schemaform
 

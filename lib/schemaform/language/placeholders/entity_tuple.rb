@@ -28,7 +28,6 @@ require Schemaform.locate("tuple.rb")
 
 module Schemaform
 module Language
-module ExpressionCapture
 class EntityTuple < Tuple
 
    def initialize( entity, production = nil )
@@ -82,6 +81,5 @@ class EntityTuple < Tuple
 
 
 end # EntityTuple
-end # ExpressionCapture
 end # Language
 end # Schemaform

@@ -18,8 +18,6 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("value.rb")
-
 
 #
 # Provides access to a Entity-examplar Tuple and its attributes. This is the Marker passed
@@ -27,8 +25,7 @@ require Schemaform.locate("value.rb")
 
 module Schemaform
 module Language
-module ExpressionCapture
-class Tuple < Value
+class Tuple < Placeholder
 
    def initialize( tuple, production = nil )
       super(tuple.type, production)
@@ -45,6 +42,5 @@ class Tuple < Value
    
 
 end # Tuple
-end # ExpressionCapture
 end # Language
 end # Schemaform

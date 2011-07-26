@@ -18,16 +18,13 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("value.rb")
-
 
 #
 # Provides access to a whole Entity. 
 
 module Schemaform
 module Language
-module ExpressionCapture
-class Entity < Value
+class Entity < Placeholder
 
    def initialize( entity, production = nil )
       super(entity.type, production)
@@ -40,6 +37,5 @@ class Entity < Value
    
 
 end # Entity
-end # ExpressionCapture
 end # Language
 end # Schemaform

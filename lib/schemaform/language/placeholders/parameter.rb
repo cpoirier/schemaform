@@ -18,13 +18,10 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("value.rb")
-
 
 module Schemaform
 module Language
-module ExpressionCapture
-class Parameter < Value
+class Parameter < Placeholder
 
    def initialize( number, type = nil )
       super(type || ExpressionCapture.unknown_type)
@@ -36,7 +33,6 @@ class Parameter < Value
    end
    
 end # Parameter
-end # ExpressionCapture
 end # Language
 end # Schemaform
 

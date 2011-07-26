@@ -20,12 +20,11 @@
 
 
 #
-# Base class for values.
+# Base class for values and variables and results within an expression.
 
 module Schemaform
 module Language
-module ExpressionCapture
-class Value
+class Placeholder
    include QualityAssurance
    extend  QualityAssurance
 
@@ -44,8 +43,9 @@ class Value
       @type.capture_method(self, symbol, args, block) or fail "cannot dispatch [#{symbol}] on type #{@type.description} (#{@type.class.name})"
    end
    
-end # Value
-end # ExpressionCapture
+end # Placeholder
 end # Language
 end # Schemaform
 
+
+Dir[Schemaform.locate("placeholders/*.rb")].each{|path| require path}

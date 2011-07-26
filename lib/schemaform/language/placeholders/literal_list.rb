@@ -18,13 +18,11 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("value.rb")
 
 
 module Schemaform
 module Language
-module ExpressionCapture
-class LiteralList < Value
+class LiteralList < Placeholder
    
    def initialize( *members )
       @members = members
@@ -43,7 +41,6 @@ class LiteralList < Value
    
    
 end # LiteralList
-end # ExpressionCapture
 end # Language
 end # Schemaform
 

@@ -18,13 +18,10 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("value.rb")
-
 
 module Schemaform
 module Language
-module ExpressionCapture
-class LiteralScalar < Value
+class LiteralScalar < Placeholder
 
    def initialize( value, type = nil )
       super(type || value.type)
@@ -37,7 +34,6 @@ class LiteralScalar < Value
    
    
 end # LiteralScalar
-end # ExpressionCapture
 end # Language
 end # Schemaform
 

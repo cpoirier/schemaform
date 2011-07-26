@@ -36,7 +36,7 @@ class Adapter
          
          #
          # Plan the query without tying up the environment, but make sure what we actually 
-         # store is unique, so that resources can be tied to the object.
+         # store only the first plan, so that resources can be tied to the object.
          
          query_plan = dispatch_plan(definition, QueryPlan.new())
          @monitor.synchronize do
@@ -49,10 +49,15 @@ class Adapter
       @query_plans[definition]
    end
 
+
    def dispatch_plan( definition, plan )
       send_specialized(:plan, definition, plan)
    end
 
+
+   def plan_value( definition, plan )
+      
+   end
 
 
 end # Adapter

@@ -311,16 +311,13 @@ class Exception
    def self.define( *parameters )
       Class.new(self) do
          @@parameters = parameters
-         
-         parameters.each do |name|
-            define_method(name) do
-               @data[name]
-            end
-         end
-         
+      
          define_method(:initialize) do |*values|
-            @data = {}
-            @@parameters.each{|name| @data[name] = values.shift}
+            @@parameters.each{|name| instance_variable_set("@#{name}".intern, values.shift)}
+         end
+
+         parameters.each do |name|
+            attr_reader "#{name}".intern
          end
       end         
    end

@@ -136,15 +136,6 @@ class Tuple < Element
    #                                       Type Operations
    # ==========================================================================================
 
-   def dereference( lh_expression, rh_symbol )
-      if @attributes.member?(rh_symbol) then
-         Productions::DottedExpression.new(lh_expression, rh_symbol, @attributes[rh_symbol].type) 
-      else
-         nil
-      end
-   end
-   
-   
    # 
    # Recreates our individual attributes in the new tuple. If changes are present, they may contain 
    # replacements for attributes, including (possibly) changes to whole subtuples. We proceed by 

@@ -58,7 +58,7 @@ module ExpressionCapture
    
    def self.capture( value, production = nil )
       case value
-      when Value, NilClass
+      when Placeholder, NilClass
          return value
       when Schema::Type
          return value.capture(production)
@@ -95,7 +95,7 @@ module ExpressionCapture
    def self.capture_comparison_operator( operator, lhs, rhs )
       lhs         = capture(lhs)
       rhs         = capture(rhs)
-      production  = Productions::ComparisonOperator.new(operator, lhs, rhs)
+      production  = Productions::Comparison.new(operator, lhs, rhs)
 
       resolve_type(:boolean).capture(production)
    end   
@@ -107,7 +107,7 @@ module ExpressionCapture
       assert(boolean.assignable_from?(lhs.type), "expected boolean expression on left-hand of logical and, found #{lhs.type.description}" )
       assert(boolean.assignable_from?(rhs.type), "expected boolean expression on right-hand of logical and, found #{rhs.type.description}")
 
-      boolean.capture(Productions::And.new(lhs, rhs))
+      boolean.capture(Productions::And.new([lhs, rhs]))
    end
 
    def self.capture_logical_or( lhs, rhs )
@@ -117,12 +117,12 @@ module ExpressionCapture
       assert(boolean.assignable_from?(lhs.type), "expected boolean expression on left-hand of logical or, found #{lhs.type.description}" )
       assert(boolean.assignable_from?(rhs.type), "expected boolean expression on right-hand of logical or, found #{rhs.type.description}")
 
-      boolean.capture(Productions::Or.new(lhs, rhs))
+      boolean.capture(Productions::Or.new([lhs, rhs]))
    end
 
    def self.capture_expression( formula_context, block, result_type = nil, join_compatible_only = true )
       Language::ExpressionDefinition.module_exec(formula_context, &block).tap do |captured_expression|
-         type_check(:captured_expression, captured_expression, Language::ExpressionCapture::Value)
+         type_check(:captured_expression, captured_expression, Language::Placeholder)
          if result_type then
             if join_compatible_only then
                assert(result_type.join_compatible?(captured_expression.type), "expected expression result to be join compatible with #{result_type.description}, found #{captured_expression.type.description} instead")
@@ -145,7 +145,7 @@ end # Schemaform
 
 
 # =============================================================================================
-#                                           Value Capture
+#                                           Placeholder Capture
 # =============================================================================================
 
 module Schemaform
@@ -161,7 +161,7 @@ class Schema
          when :apply
             method, type, *parameters = *args
             parameters = parameters.collect{|p| Language::ExpressionCapture.capture(p)}
-            Language::ExpressionCapture.capture_type(type, Productions::Application.new(receiver, method, parameters))
+            Language::ExpressionCapture.capture_type(type, Language::Productions::Application.new(method, receiver, parameters))
          else
             capture_accessor(receiver, method_name.to_s.tr("!", "").intern)
          end
@@ -174,7 +174,7 @@ class Schema
    
    class Type < Element
       def capture( production = nil )
-         Language::ExpressionCapture::Value.new(self, production)
+         Language::Placeholder.new(self, production)
       end      
    end
    
@@ -236,10 +236,10 @@ class Schema
             Language::ExpressionCapture.capture_binary_operator(method_name, receiver, args.shift)
          when :sum, :average
             check{ assert(!receiver.type.effective_type.member_type.collection_type?, "how do we do aggregation across nested collections?") }
-            receiver.type.effective_type.member_type.capture(Productions::Aggregation.new(method_name, receiver))
+            receiver.type.effective_type.member_type.capture(Language::Productions::Aggregation.new(receiver, method_name))
          when :count
             check{ assert(!receiver.type.effective_type.member_type.collection_type?, "how do we do aggregation across nested collections?") }
-            Language::ExpressionCapture.capture_type(:integer, Productions::Aggregation.new(method_name, receiver))
+            Language::ExpressionCapture.capture_type(:integer, Language::Productions::Aggregation.new(receiver, method_name))
          else
             super
          end
@@ -249,7 +249,7 @@ class Schema
          member_type = member_type().evaluated_type
          if member_type.responds_to?(:attribute?) then
             if captured = member_type.capture_method(receiver, attribute_name) then
-               return self.class.build(captured.type).capture(Productions::ImpliedContext.new(captured))
+               return self.class.build(captured.type).capture(Language::Productions::ImpliedContext.new(captured))
             end            
          end
          
@@ -291,7 +291,7 @@ class Schema
                   end
                end
 
-               Schema::ListType.build(member_type).capture(Productions::OrderBy.new(receiver, *order_attributes))
+               Schema::ListType.build(member_type).capture(Language::Productions::OrderBy.new(receiver, *order_attributes))
             else
                super
             end
@@ -307,9 +307,9 @@ class Schema
       def capture_method( receiver, method_name, args = [], block = nil )
          case method_name
          when :where
-            formula_context     = @tuple_type.formula_context(Productions::ImpliedContext.new(receiver))
+            formula_context     = @tuple_type.formula_context(Language::Productions::ImpliedContext.new(receiver))
             criteria_expression = Language::ExpressionCapture.capture_expression(formula_context, block, schema.boolean_type)
-            self.capture(Productions::Restriction.new(receiver, criteria_expression))
+            self.capture(Language::Productions::Restriction.new(receiver, criteria_expression))
          else
             super
          end
@@ -323,8 +323,8 @@ class Schema
          return nil unless attribute?(attribute_name)
          
          entity = referenced_entity()
-         tuple  = entity.formula_context(Productions::ImpliedContext.new(receiver))
-         Language::ExpressionCapture::Attribute.new(entity.heading[attribute_name], Productions::Accessor.new(tuple, attribute_name))
+         tuple  = entity.formula_context(Language::Productions::ImpliedContext.new(receiver))
+         Language::Attribute.new(entity.heading[attribute_name], Language::Productions::Accessor.new(tuple, attribute_name))
       end
    end
    
@@ -342,7 +342,7 @@ class Schema
    class Tuple < Element
       def capture_accessor( receiver, attribute_name )
          return nil unless attribute?(attribute_name)
-         Language::ExpressionCapture::Attribute.new(self[attribute_name], Productions::Accessor.new(receiver, attribute_name))
+         Language::Attribute.new(self[attribute_name], Language::Productions::Accessor.new(receiver, attribute_name))
       end
    end
    
@@ -353,13 +353,13 @@ class Schema
    
    class Tuple < Element
       def formula_context( production = nil )
-         @formula_context ||= (context.responds_to?(:formula_context) ? context.formula_context : Language::ExpressionCapture::Tuple.new(self, production))
+         @formula_context ||= (context.responds_to?(:formula_context) ? context.formula_context : Language::Tuple.new(self, production))
       end      
    end
    
    class Attribute < Element
       def capture( production = nil )
-         Language::ExpressionCapture::Attribute.new(self, production)
+         Language::Attribute.new(self, production)
       end
       
       def formula_context( production = nil )
@@ -437,11 +437,11 @@ class Schema
    class Entity < Relation
       def formula_context( production = nil )
          warn_once("what does it mean to supply a production to Entity.formula_context()?") if production.nil?
-         Language::ExpressionCapture::EntityTuple.new(self, production)
+         Language::EntityTuple.new(self, production)
       end
       
       def entity_context( production = nil )
-         Language::ExpressionCapture::Entity.new(self, production)
+         Language::Entity.new(self, production)
       end
    end
    

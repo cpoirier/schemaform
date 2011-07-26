@@ -112,7 +112,7 @@ protected
    def initialize( address, overrides = {} )
       @address      = address
       @schemas      = {}                # Definition => adapted Schema
-      @query_plans  = {}                # ExpressionCapture::Value => QueryPlan
+      @query_plans  = {}                # Language::Placeholder => QueryPlan
       @monitor      = Monitor.new()
 
       @type_manager = overrides.fetch(:type_manager_class, TypeManager).new(self)

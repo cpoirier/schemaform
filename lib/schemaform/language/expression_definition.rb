@@ -36,7 +36,7 @@ module ExpressionDefinition
    end
    
    def self.parameter!( number )
-      ExpressionCapture::Parameter.new(number)
+      Parameter.new(number)
    end
    
    def self.and!( *clauses )
@@ -44,12 +44,12 @@ module ExpressionDefinition
       
       check do
          clauses.each do |clause| 
-            type_check(:clause, clause, ExpressionCapture::Value)
+            type_check(:clause, clause, Placeholder)
             assert(boolean.assignable_from?(clause.type), "expected boolean expression for logical and, found #{clause.type.description}")
          end
       end
       
-      boolean.capture(Productions::And.new(*clauses))
+      boolean.capture(Productions::And.new(clauses))
    end
 
    def self.or!( *clauses )
@@ -58,7 +58,7 @@ module ExpressionDefinition
          assert(boolean.assignable_from?(clause.type), "expected boolean expression for logical and, found #{clause.type.description}")
       end
       
-      boolean.capture(Productions::Or.new(*clauses))
+      boolean.capture(Productions::Or.new(clauses))
    end
    
    def self.not!( clause )
@@ -69,7 +69,7 @@ module ExpressionDefinition
       #    assert(boolean.assignable_from?(captured.type), "expected boolean expression for logical not, found #{lhs.type.description}")
       # end
       # 
-      # boolean.capture(ExpressionCapture::Productions::Not.new(clause))
+      # boolean.capture(Productions::Not.new(clause))
    end
 
    

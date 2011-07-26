@@ -38,11 +38,13 @@ class ConnectedEntity
    def method_missing( symbol, *args, &block )
       if @mappings.member?(symbol) then
          fail_todo
+      elsif @plan.operations.member?(symbol) then
+         return @plan.operations[symbol].call(@transaction, *args, &block)
       else
          case name = symbol.to_s
          when /^get_(\w+)_by_(\w+)$/
-            projection_name = $1.intern
-            accessor_name   = $2.intern
+            projection_name = $1
+            accessor_name   = $2
 
             fail_todo
             
@@ -51,10 +53,10 @@ class ConnectedEntity
             end
          
          when /^get_by_(\w+)$/
-            accessor_name = $2
+            accessor_name = $1
             if @plan.accessors.member?(accessor_name) then
-               accessor = @plan.accessors[accessor_name]
-               @transaction.retrieve(accessor.query)
+               accessor_plan = @plan.accessors[accessor_name]
+               return @transaction.retrieve(accessor_plan.query)
             end
          end
       end

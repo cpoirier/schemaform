@@ -33,9 +33,15 @@ class Adapter
    
    def plan( definition )
       unless @query_plans.member?(definition)
+         
+         #
+         # Plan the query without tying up the environment, but make sure what we actually 
+         # store is unique, so that resources can be tied to the object.
+         
+         query_plan = dispatch_plan(definition, QueryPlan.new())
          @monitor.synchronize do
             unless @query_plans.member?(definition)
-               plan!(definition, QueryPlan.new())
+               query_plans[definition] = query_plan
             end
          end
       end

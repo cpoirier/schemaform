@@ -46,6 +46,8 @@ class Accessor
       @key         = key
       @query       = query      
    end
+   
+   attr_reader :query
 
 end # Accessor
 end # Plan

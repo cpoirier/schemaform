@@ -56,6 +56,34 @@ class Type < Element
 
 
    # ==========================================================================================
+
+
+   #
+   # Validates a value that is supposed to be of this type. Raises an exception if a problem
+   # is discovered.
+   
+   def validate( value )
+      @base_type ? @base_type.validate(internalize(value)) : true
+   end
+   
+   #
+   # Converts a value into the internal format of this type, applying any specified :storer.
+   
+   def internalize( value )
+      value
+   end
+   
+   #
+   # Converts a value from the internal format of this type, by applying any :loader routines.
+   
+   def externalize( value )
+      value
+   end
+
+   
+   
+   
+   # ==========================================================================================
    
    attr_reader :base_type, :default
    
@@ -82,11 +110,14 @@ class Type < Element
       self
    end
    
-   def validate()
+   #
+   # Verifies that the Type.
+   
+   def verify()
       true
    end
-   
-   
+
+
    #
    # Returns an anonymous wrapper on this type with the supplied constraints.
    
@@ -145,6 +176,7 @@ class Type < Element
    # Returns true if this and the other type can be joined.
    
    def join_compatible?( with )
+      return nil if unknown_type? || with.unknown_type?
       return true if assignable_from?(with)
       return with.assignable_from?(self)
    end
@@ -154,7 +186,7 @@ class Type < Element
    # type.
    
    def assignable_from?( rh_type )
-      rh_type.descendent_of?(self)
+      unknown_type? || rh_type.unknown_type? ? nil : rh_type.descendent_of?(self)
    end
    
    

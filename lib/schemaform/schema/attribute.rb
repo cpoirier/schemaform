@@ -35,10 +35,10 @@ class Attribute < Element
       @type = type
    end
 
-   def validate()
-      type.validate()
+   def verify()
+      type.verify()
    end
-
+   
    def type()
       @type
    end
@@ -58,6 +58,14 @@ class Attribute < Element
    def describe( indent = "", name_override = nil, suffix = nil )
       super(indent, name_override)
       type.describe(indent + "   ", "")
+   end
+   
+   def writable?()
+      false
+   end
+   
+   def required?()
+      writable?()
    end
    
 end # Attribute

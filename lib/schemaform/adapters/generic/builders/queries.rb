@@ -19,28 +19,37 @@
 # =============================================================================================
 
 
-
 #
-# Wraps a Schema-defined Entity for use at runtime.
+# Adds query planning code to the Adapter.
 
 module Schemaform
-module Plan
-class Entity
+module Adapters
+module Generic
+class Adapter
    
-   def initialize( definition )
-      @definition = definition
-      @accessors  = {}
-            
-      definition.keys.each do |key|
-         @accessors[key.name] = Accessor.build_key_accessor(self, key)
-         @accessors[key.name.to_s] = @accessors[key.name]  # For convenience
+   
+   #
+   # Plans a query for use with this database.
+   
+   def plan( definition )
+      unless @query_plans.member?(definition)
+         @monitor.synchronize do
+            unless @query_plans.member?(definition)
+               plan!(definition, QueryPlan.new())
+            end
+         end
       end
+      
+      @query_plans[definition]
    end
 
-   attr_reader :definition, :accessors
-   alias entity definition
-   
+   def dispatch_plan( definition, plan )
+      send_specialized(:plan, definition, plan)
+   end
 
-end # Entity
-end # Plan
+
+
+end # Adapter
+end # Generic
+end # Adapters
 end # Schemaform

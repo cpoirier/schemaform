@@ -31,20 +31,40 @@ module Schemaform
 module Runtime
 class Tuple
 
-   def initialize( attributes, descriptor = nil, data = nil )
-      @attributes = attributes
-      @descriptor = descriptor
-      @data       = data
+   def initialize( attributes, plan = nil )
+      @plan       = plan
+      @attributes = plan ? {} : attributes.dup
+      @unsaved    = true
+
+      if @plan then
+         attributes.each do |name, value|
+            self[name] = value
+         end
+      end
    end
-   
+
    def []( name )
       return @attributes[name] if @attributes.member?(name)
-      return @descriptor.fetch(name, @data) unless @descriptor.nil?
-      fail_todo "what do you do with a drunken sailor?"
+      @plan[name].default
    end
    
    def []=( name, value )
-      @attributes[name] = @descriptor ? @descriptor.validate_field(name, value) : value
+      @unsaved = true
+      
+      if value.exists? then
+         case value
+         when Hash
+            value = Tuple.new(value, @plan ? @plan[name].tuple_plan : nil)
+         when Array
+            fail_todo
+         when Set
+            fail_todo
+         end
+            
+         @attributes[name] = @plan ? @plan[name].validate(value) : value
+      else
+         @attributes.delete(name)
+      end
    end
    
    def method_missing( symbol, *args, &block )
@@ -61,6 +81,11 @@ class Tuple
          self[name.intern]
       end
    end
+   
+   def unsaved?()
+      @unsaved
+   end
+   
 
 end # Tuple
 end # Runtime

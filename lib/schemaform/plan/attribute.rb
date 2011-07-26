@@ -21,26 +21,60 @@
 
 
 #
-# Wraps a Schema-defined Entity for use at runtime.
+# A wrapper on a Schema-defined Attribute that provides services to a runtime Tuple class. 
 
 module Schemaform
 module Plan
-class Entity
+class Attribute
    
+   ReadOnlyException       = Exception.define(:attribute)
+   NotTupleValuedException = Exception.define(:attribute)
+
    def initialize( definition )
       @definition = definition
-      @accessors  = {}
-            
-      definition.keys.each do |key|
-         @accessors[key.name] = Accessor.build_key_accessor(self, key)
-         @accessors[key.name.to_s] = @accessors[key.name]  # For convenience
-      end
+   end
+   
+   #
+   # Returns the default value for this attribute.
+   
+   def default()
+      fail_todo
+   end
+   
+   #
+   # Returns true IFF the symbol names a settable attribute of the Tuple.
+
+   def settable?()
+      @definition.writeable?
    end
 
-   attr_reader :definition, :accessors
-   alias entity definition
+
+   #
+   # Validates a value for the named attribute.
+   
+   def validate( value )
+      raise ReadOnlyException.new(self) unless settable?
+      @definition.type.validate(value)
+   end
+   
+   
+   #
+   # Returns true if the attribute is tuple-valued.
+   
+   def tuple_valued?()
+      @definition.type.named_type?
+   end
+
+
+   #
+   # Returns the Plan for any tuple-valued attribute. Returns nil otherwise.
+   
+   def tuple_plan()
+      raise NotTupleValuedException.new(self) unless tuple_valued?
+      @definition.type.tuple.plan
+   end
    
 
-end # Entity
+end # Attribute
 end # Plan
 end # Schemaform

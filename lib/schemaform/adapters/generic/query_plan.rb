@@ -19,28 +19,19 @@
 # =============================================================================================
 
 
-
 #
-# Wraps a Schema-defined Entity for use at runtime.
+# Holds a complete plan for executing a Schemaform query, and provides the machinery to do so.
 
 module Schemaform
-module Plan
-class Entity
-   
-   def initialize( definition )
-      @definition = definition
-      @accessors  = {}
-            
-      definition.keys.each do |key|
-         @accessors[key.name] = Accessor.build_key_accessor(self, key)
-         @accessors[key.name.to_s] = @accessors[key.name]  # For convenience
-      end
+module Adapters
+module Generic
+class QueryPlan
+
+   def initialize()
+      
    end
 
-   attr_reader :definition, :accessors
-   alias entity definition
-   
-
-end # Entity
-end # Plan
+end # QueryPlan
+end # Generic
+end # Adapters
 end # Schemaform

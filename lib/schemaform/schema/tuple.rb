@@ -41,10 +41,10 @@ class Tuple < Element
       @expression = nil
    end
    
-   def validate()
+   def verify()
       return if @validated
       @validated = true
-      @attributes.each{|attribute| attribute.validate()}
+      @attributes.each{|attribute| attribute.verify()}
    end
    
    attr_reader :attributes, :tuples, :type

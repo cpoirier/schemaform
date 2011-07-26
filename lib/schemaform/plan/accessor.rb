@@ -19,28 +19,34 @@
 # =============================================================================================
 
 
-
 #
-# Wraps a Schema-defined Entity for use at runtime.
+# Describes an accessor on an Entity, which should translate to an entry point at runtime. 
 
 module Schemaform
 module Plan
-class Entity
+class Accessor
    
-   def initialize( definition )
-      @definition = definition
-      @accessors  = {}
-            
-      definition.keys.each do |key|
-         @accessors[key.name] = Accessor.build_key_accessor(self, key)
-         @accessors[key.name.to_s] = @accessors[key.name]  # For convenience
+   def self.build_key_accessor( entity_plan, key )
+      query = entity_plan.entity.entity_context.where do |entity|
+         Language::ExpressionCapture.resolution_scope(entity_plan.entity.schema) do 
+            comparisons = []
+            key.attributes.each_with_index do |attribute, index|
+               comparisons << (entity[attribute.name] == parameter!(index))
+            end
+
+            and!(*comparisons)
+         end
       end
+   
+      new( entity_plan, key, query )
    end
 
-   attr_reader :definition, :accessors
-   alias entity definition
-   
+   def initialize( entity_plan, key, query )
+      @entity_plan = entity_plan
+      @key         = key
+      @query       = query      
+   end
 
-end # Entity
+end # Accessor
 end # Plan
 end # Schemaform

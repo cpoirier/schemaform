@@ -37,6 +37,10 @@ class LiteralList < Value
       super(Thread[:expression_contexts].top.build_list_type(member_type))
    end
    
+   def method_missing( symbol, *args, &block )
+      super
+   end
+   
    
 end # LiteralList
 end # ExpressionCapture

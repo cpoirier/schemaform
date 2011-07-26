@@ -44,16 +44,20 @@ protected
    def self.load( engine )
       @@monitor.synchronize do
          unless @@loaded.member?(engine) 
-            path = Schemaform.locate("#{engine}")
-            assert(File.directory?(path), "cannot load Adapter for [#{engine}]")
+            if @@engines.member?(engine) && Adapters.const_defined?(@@engines[engine]) then
+               @@loaded[engine] = true
+            else            
+               path = Schemaform.locate("#{engine}")
+               assert(File.directory?(path), "cannot load Adapter for [#{engine}]")
             
-            Dir["#{path}/*.rb"].each{|path| require path}
-            @@loaded[engine] = true
+               Dir["#{path}/*.rb"].each{|path| require path}
+               @@loaded[engine] = true
             
-            unless @@engines.member?(engine)
-               module_name = engine.to_s.camel_case.intern
-               assert(Adapters.const_defined?(module_name), "cannot find Adapter module for [#{engine}]")
-               @@engines[engine] = module_name
+               unless @@engines.member?(engine)
+                  module_name = engine.to_s.camel_case.intern
+                  assert(Adapters.const_defined?(module_name), "cannot find Adapter module for [#{engine}]")
+                  @@engines[engine] = module_name
+               end
             end
          end
       end

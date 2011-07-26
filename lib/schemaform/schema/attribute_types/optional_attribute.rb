@@ -29,8 +29,8 @@ module Schemaform
 class Schema
 class OptionalAttribute < WritableAttribute
 
-   def optional?()
-      true
+   def required?()
+      false
    end
    
    

@@ -36,6 +36,10 @@ class Value
    
    attr_reader :type, :production
    
+   def ==( rhs )
+      @type.capture_method(self, :==, [rhs])
+   end
+   
    def method_missing( symbol, *args, &block )
       @type.capture_method(self, symbol, args, block) or fail "cannot dispatch [#{symbol}] on type #{@type.description} (#{@type.class.name})"
    end

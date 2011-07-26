@@ -27,7 +27,9 @@ class Key < Element
       super(entity, name)
       @attributes = attributes
    end
-
+   
+   attr_reader :attributes
+   
    # 
    # alias entity context
    # 

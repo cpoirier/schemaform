@@ -48,7 +48,7 @@ class Connection < Generic::Connection
    end
    
    
-   def query( sql, *parameters )
+   def retrieve( sql, *parameters )
       count = 0
       debug(sql)
       @api.execute(sql, *parameters) do |row|

@@ -20,8 +20,7 @@
 
 
 #
-# Base class and primary API for a database adapter. In general, there will be one Adapter
-# instance for each physically distinct database attached to the system.
+# Adds schema building code to the Adapter.
 
 module Schemaform
 module Adapters
@@ -66,7 +65,7 @@ class Adapter
                      next if attribute.name == entity.id
                      next if entity.base_entity && entity.base_entity.declared_heading.attribute?(attribute.name)
 
-                     lay_out!(attribute, master_table)
+                     dispatch_lay_out(attribute, master_table)
                   end
                end
             end
@@ -77,13 +76,13 @@ class Adapter
    end
 
 
-   def lay_out!(element, container, name = Name.empty)
+   def dispatch_lay_out(element, container, name = Name.empty)
       send_specialized(:lay_out, element, container, name)
    end
    
 
    def lay_out_attribute(attribute, table, base_name )
-      lay_out!(attribute.type, table, base_name + attribute.name)
+      dispatch_lay_out(attribute.type, table, base_name + attribute.name)
    end
    
    def lay_out_optional_attribute( attribute, table, base_name )
@@ -98,10 +97,7 @@ class Adapter
 
    def lay_out_tuple( tuple, table, base_name )
       tuple.attributes.each do |attribute|
-         p tuple.full_name
-         p base_name
-         p attribute.name
-         lay_out!(attribute, table, base_name)
+         dispatch_lay_out(attribute, table, base_name)
       end      
    end
    
@@ -128,11 +124,11 @@ class Adapter
    end
 
    def lay_out_tuple_type( type, table, field_name )
-      lay_out!(type.tuple, table, field_name)
+      dispatch_lay_out(type.tuple, table, field_name)
    end
    
    def lay_out_user_defined_type( type, table, field_name )
-      lay_out!(type.base_type, table, field_name)
+      dispatch_lay_out(type.base_type, table, field_name)
    end
 
    def lay_out_unknown_type( type, table, field_name )
@@ -145,7 +141,7 @@ class Adapter
       table.define_child(field_name).tap do |member_table|
          child_name = type.member_type.naming_type? ? Name.empty() : Name.build("record", "value")
          
-         lay_out!(type.member_type, member_table, child_name)
+         dispatch_lay_out(type.member_type, member_table, child_name)
       end
    end
    

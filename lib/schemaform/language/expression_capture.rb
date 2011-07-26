@@ -33,15 +33,21 @@ module ExpressionCapture
       end
    end
    
+   
+   
    def self.merge_types( *from )
       from.inject(resolve_type(:unknown)) do |type, object|
          type.best_common_type(object.type)
       end
    end
    
+   def self.unknown_type()
+      resolve_type(:unknown)
+   end
+   
    def self.resolve_type( name )
       return name if name.is_a?(Schema::Type)
-      schema = Thread[:expression_contexts].top
+      schema = Thread[:expression_contexts].top or fail "ExpressionCapture needs a resolution_scope in place before being able to resolve_type()"
       schema.types.member?(name) ? schema.types[name] : schema.send((name.to_s + "_type").intern)      
    end
    
@@ -86,6 +92,47 @@ module ExpressionCapture
       result_type.capture(production)
    end
    
+   def self.capture_comparison_operator( operator, lhs, rhs )
+      lhs         = capture(lhs)
+      rhs         = capture(rhs)
+      production  = Productions::ComparisonOperator.new(operator, lhs, rhs)
+
+      resolve_type(:boolean).capture(production)
+   end   
+   
+   def self.capture_logical_and( lhs, rhs )
+      boolean = resolve_type(:boolean)
+      lhs     = capture(lhs)
+      rhs     = capture(rhs)
+      assert(boolean.assignable_from?(lhs.type), "expected boolean expression on left-hand of logical and, found #{lhs.type.description}" )
+      assert(boolean.assignable_from?(rhs.type), "expected boolean expression on right-hand of logical and, found #{rhs.type.description}")
+
+      boolean.capture(Productions::And.new(lhs, rhs))
+   end
+
+   def self.capture_logical_or( lhs, rhs )
+      boolean = resolve_type(:boolean)
+      lhs     = capture(lhs)
+      rhs     = capture(rhs)
+      assert(boolean.assignable_from?(lhs.type), "expected boolean expression on left-hand of logical or, found #{lhs.type.description}" )
+      assert(boolean.assignable_from?(rhs.type), "expected boolean expression on right-hand of logical or, found #{rhs.type.description}")
+
+      boolean.capture(Productions::Or.new(lhs, rhs))
+   end
+
+   def self.capture_expression( formula_context, block, result_type = nil, join_compatible_only = true )
+      Language::ExpressionDefinition.module_exec(formula_context, &block).tap do |captured_expression|
+         type_check(:captured_expression, captured_expression, Language::ExpressionCapture::Value)
+         if result_type then
+            if join_compatible_only then
+               assert(result_type.join_compatible?(captured_expression.type), "expected expression result to be join compatible with #{result_type.description}, found #{captured_expression.type.description} instead")
+            else                                                             
+               assert(result_type.assignable_from?(captured_expression.type), "expected expression result to be assignable to #{result_type.description}, found #{captured_expression.type.description} instead")
+            end
+         end
+      end
+   end
+      
       
    
    
@@ -134,8 +181,10 @@ class Schema
    class UnknownType < Type
       def capture_method( receiver, method_name, args = [], block = nil )
          case method_name
-         when :+, :-, :*, :/, :%, :<, :>, :<=, :>=
+         when :+, :-, :*, :/, :%
             Language::ExpressionCapture.capture_binary_operator(method_name, receiver, args.shift)
+         when :==, :<, :>, :<=, :>=
+            Language::ExpressionCapture.capture_comparison_operator(method_name, receiver, args.shift)
          else
             super
          end
@@ -145,12 +194,27 @@ class Schema
    class ScalarType < Type
       def capture_method( receiver, method_name, args = [], block = nil )
          case method_name
-         when :+, :-, :*, :/, :%, :<, :>, :<=, :>=
+         when :+, :-, :*, :/, :%
             Language::ExpressionCapture.capture_binary_operator(method_name, receiver, args.shift)
+         when :==, :<, :>, :<=, :>=
+            Language::ExpressionCapture.capture_comparison_operator(method_name, receiver, args.shift)
          else
             super
          end
       end      
+   end
+   
+   class BooleanType < ScalarType
+      def capture_method( receiver, method_name, args = [], block = nil )
+         case method_name
+         when :&
+            Language::ExpressionCapture.capture_logical_and(receiver, args.shift)
+         when :|
+            Language::ExpressionCapture.capture_logical_or(receiver, args.shift)
+         else
+            super
+         end
+      end
    end
    
    class NumericType < ScalarType
@@ -238,6 +302,22 @@ class Schema
    end
    
    
+   
+   class RelationType < SetType
+      def capture_method( receiver, method_name, args = [], block = nil )
+         case method_name
+         when :where
+            formula_context     = @tuple_type.formula_context(Productions::ImpliedContext.new(receiver))
+            criteria_expression = Language::ExpressionCapture.capture_expression(formula_context, block, schema.boolean_type)
+            self.capture(Productions::Restriction.new(receiver, criteria_expression))
+         else
+            super
+         end
+      end
+   end
+   
+   
+   
    class ReferenceType < Type
       def capture_accessor( receiver, attribute_name )
          return nil unless attribute?(attribute_name)
@@ -249,6 +329,10 @@ class Schema
    end
    
    class TupleType < Type
+      def formula_context( production = nil )
+         @tuple.formula_context(production)
+      end
+      
       def capture_method( receiver, method_name, args = [], block = nil )
          @tuple.capture_method(receiver, method_name, args, block)
       end
@@ -266,47 +350,8 @@ class Schema
    
 
    
-   # class EnumeratedType < ScalarType
-   #    def capture( production = nil )
-   #       evaluated_type.marker(production)
-   #    end
-   # end
-   # 
-   # class ReferenceType < Type
-   #    def capture( production = nil )
-   #       Language::ExpressionCapture::EntityReference.new(self, production)
-   #    end
-   # end
-   # 
-   # class IdentifierType < Type
-   #    def capture( production = nil )
-   #       Language::ExpressionCapture::EntityReference.new(self, production)
-   #    end
-   # end
-   # 
-   # class UserDefinedType < Type
-   #    def capture( production = nil )
-   #       Language::ExpressionCapture::Value.new(self, production)
-   #       warn_once "how does UDT marker interact with effective type?"
-   #    end
-   # end
-   # 
-   # class TupleType < Type
-   #    def capture( production = nil )
-   #       Language::ExpressionCapture::Tuple.new(@tuple, production)
-   #    end
-   # end
-
-   
-   
    
    class Tuple < Element
-      # def capture( production = nil )
-      #    return Language::ExpressionCapture::Tuple.new(self, production) unless production.nil?
-      #    return @marker if @marker
-      #    @marker = Language::ExpressionCapture::Tuple.new(self, production)
-      # end
-      
       def formula_context( production = nil )
          @formula_context ||= (context.responds_to?(:formula_context) ? context.formula_context : Language::ExpressionCapture::Tuple.new(self, production))
       end      
@@ -335,11 +380,8 @@ class Schema
 
             Language::ExpressionCapture.resolution_scope(schema) do
                begin
-                  @analyzing = true  # Set false to ensure any self-references don't retrigger analysis
-                  
-                  result = Language::ExpressionDefinition.module_exec(formula_context(), &@proc)
-                  # result = @proc.call(formula_context())
-                  type_check(:result, result, Language::ExpressionCapture::Value)
+                  @analyzing = true  # Ensure any self-references don't retrigger analysis
+                  result = Language::ExpressionCapture.capture_expression(formula_context(), @proc)
                ensure
                   @analyzing = false
                end
@@ -379,9 +421,7 @@ class Schema
                begin
                   warn_todo("shouldn't the formula_context for a Volatile attribute link in with the context Production?")
                   @analyzing = true  # Set true to ensure any self-references are detected
-                  result = Language::ExpressionDefinition.module_exec(formula_context(production), &@proc)                  
-                  # result = @proc.call(formula_context(production))
-                  type_check(:result, result, Language::ExpressionCapture::Value)
+                  result = Language::ExpressionCapture.capture_expression(formula_context(production), @proc)
                ensure
                   @analyzing = false
                end
@@ -394,19 +434,18 @@ class Schema
 
 
 
-   # class Relation < Element
-   #    def capture( production = nil )
-   #       Language::ExpressionCapture::Relation.new(self, production)
-   #    end
-   # end
-   
    class Entity < Relation
       def formula_context( production = nil )
          warn_once("what does it mean to supply a production to Entity.formula_context()?") if production.nil?
          Language::ExpressionCapture::EntityTuple.new(self, production)
       end
+      
+      def entity_context( production = nil )
+         Language::ExpressionCapture::Entity.new(self, production)
+      end
    end
-
+   
+   
 
    
       

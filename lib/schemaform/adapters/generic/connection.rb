@@ -34,13 +34,39 @@ class Connection
       @adapter = adapter      
    end
    
+   attr_reader :adapter
+   
+   def close()
+   end
+
+   def transact()
+      fail_unless_overridden self, :transact
+   end
+   
+   def retrieve( sql, *parameters )
+      fail_unless_overridden self, :query
+   end
+
+
+   def insert( sql, *parameters )
+      fail_unless_overridden self, :insert
+   end
+
+   def update( sql, *parameters )
+      fail_unless_overridden self, :update
+   end
+   
+   def execute( sql )
+      fail_unless_overridden self, :execute
+   end
+   
    def escape_string( string )        ; @adapter.escape_string(string)        ; end
    def quote_string( string )         ; @adapter.quote_string(string)         ; end
    def quote_identifier( identifier ) ; @adapter.quote_identifier(identifier) ; end
    
-   def query_value( field, default, sql, *parameters )
+   def retrieve_value( field, default, sql, *parameters )
       value = default
-      query(sql, *parameters) do |row|
+      retrieve(sql, *parameters) do |row|
          value = row[field]
          break
       end
@@ -48,8 +74,8 @@ class Connection
       value
    end
       
-   def query_row( sql, *parameters )
-      query(sql, *parameters) do |row|
+   def retrieve_row( sql, *parameters )
+      retrieve(sql, *parameters) do |row|
          return row
       end
       nil

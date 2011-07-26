@@ -50,15 +50,15 @@ class Adapter
    # Creates an Address for the coordinates.
    
    def self.address( coordinates )
-      fail_unless_overridden self, :url_for
+      fail_unless_overridden self, :address
    end
    
    #
-   # Returns a connection to the underlying database. Individual adapters may implement
-   # connection pooling, at their option.
+   # Returns a connection to the underlying database, or calls your block with the connection. 
+   # Individual adapters may implement connection pooling, at their option.
    
    def connect()
-      fail_unless_overridden self, :connect
+      fail_unless_overridden self, :address
    end
    
    

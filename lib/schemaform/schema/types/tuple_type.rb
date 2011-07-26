@@ -55,8 +55,8 @@ class TupleType < Type
       @tuple.attribute?(attribute_name)
    end
    
-   def validate()
-      @tuple.validate()
+   def verify()
+      @tuple.verify()
    end
    
 

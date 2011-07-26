@@ -18,7 +18,6 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("controller.rb")
 
 
 #
@@ -27,74 +26,67 @@ require Schemaform.locate("controller.rb")
 module Schemaform
 module Plan
 class Tuple
+   
+   UndefinedAttributeException = Exception.define(:name)
+   
+   
+   def initialize( definition )
+      type_check(:definition, definition, Schema::Tuple)
+      @definition = definition
+   end
+   
+   #
+   # Returns the Plan for the named Attribute.
+   
+   def []( name )
+      raise UndefinedAttributeException.new(name) unless member?(name)
+      @definition[name].plan
+   end
 
    
    #
-   # Defines a subclass into some container.
+   # Returns true IFF the symbol names a gettable attribute of the Tuple.
+   
+   def member?( symbol )
+      @definition.member?(symbol)
+   end
 
-   def self.define( name, into )
-      define_subclass(name, into) do
-         @@defaults = {}
-         
-         def self.default_for( name, tuple = nil )
-            return nil unless @@defaults.member?(name)
-            default = @@defaults[name]
-            default.is_a?(Proc) ? default.call(tuple) : default
+
+   #
+   # Returns true IFF the symbol names a settable attribute of the Tuple.
+   
+   def settable?( symbol )
+      @definition.member?(symbol) && @definition[symbol].settable?
+   end
+   
+   
+   #
+   # Returns true IFF the symbol names a Tuple-valued attribute.
+   
+   def tuple_valued?( symbol )
+      @definition.member?(symbol) && @definition[symbol].tuple_valued?
+   end
+   
+   
+   #
+   # Validates a Hash or Registry of attributes against the template. Any missing
+   # optional attributes
+   
+   def validate( pairs )
+      check do
+         pairs.each do |name, value|
+            assert(@definition.attribute?(name))
          end
-         
-         def self.load( name, tuple )
-            self.default_for(name, tuple)
-         end
-         
       end
+      
+      fail_todo
+      
+      @definition.each do |attribute|
+         warn_todo("type checking of attributes during tuple validation")
+         if pairs.member?(attribute.name) then
+         end         
+      end      
    end
-
-
-   #
-   # Defines an attribute reader for the specified name.
-
-   def self.define_attribute_reader( name, &preamble )
-      define_instance_method( name, preamble ) do
-         @attributes[name] || self.class.load(name, self)
-      end
-   end
-
-
-   #
-   # Defines an attribute writer for the specified name
-
-   def self.define_attribute_writer( name, &preamble )
-      define_instance_method( "#{name.to_s}=", preamble ) do |value|
-         @dirty = true
-         @attributes[name] = value
-      end
-   end
-
-
-   #
-   # Defines a default value (or value-producing Proc) for an attribute. This is
-   # used if the value is not defined when the Tuple is instantiated.
-
-   def self.define_attribute_default( name, value )
-      class_eval( "@@defaults[name] = value" )
-   end
-
-
-
-   def initialize( attributes = {} )
-      @attributes = attributes
-      @dirty      = false
-   end
-   
-   def present?( name )
-      !@attributes.fetch(name, nil).nil?
-   end
-   
-   def dirty?()
-      @dirty
-   end
-
-   warn_todo("apply on_demand and defaults policies to accessors")
 
 
 end # Tuple

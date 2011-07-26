@@ -18,29 +18,25 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("value.rb")
 
-
-#
-# Wraps a Schema-defined Entity for use at runtime.
 
 module Schemaform
-module Plan
-class Entity
-   
-   def initialize( definition )
-      @definition = definition
-      @accessors  = {}
-            
-      definition.keys.each do |key|
-         @accessors[key.name] = Accessor.build_key_accessor(self, key)
-         @accessors[key.name.to_s] = @accessors[key.name]  # For convenience
-      end
+module Language
+module ExpressionCapture
+class Parameter < Value
+
+   def initialize( number, type = nil )
+      super(type || ExpressionCapture.unknown_type)
+      @number = number
    end
-
-   attr_reader :definition, :accessors
-   alias entity definition
    
-
-end # Entity
-end # Plan
+   def method_missing( symbol, *args, &block )
+      super
+   end
+   
+end # Parameter
+end # ExpressionCapture
+end # Language
 end # Schemaform
+

@@ -114,8 +114,8 @@ class Schema
       return schema_id() == rhs.schema_id()
    end
 
-   def validate()
-      @tuples.each{|tuple| tuple.validate()}
+   def verify()
+      @tuples.each{|tuple| tuple.verify()}
    end
 
 

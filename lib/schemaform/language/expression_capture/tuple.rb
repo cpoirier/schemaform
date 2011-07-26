@@ -35,6 +35,10 @@ class Tuple < Value
       @tuple = tuple
    end
    
+   def []( name )
+      @tuple.capture_accessor(self, name)
+   end
+   
    def method_missing( symbol, *args, &block )
       @tuple.capture_method(self, symbol, args, block) or fail "cannot dispatch [#{symbol}] on tuple #{@tuple.full_name}"
    end

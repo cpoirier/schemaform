@@ -21,26 +21,19 @@
 
 
 #
-# Wraps a Schema-defined Entity for use at runtime.
+# Captures a method call expression.
 
 module Schemaform
-module Plan
-class Entity
+module Productions
+class Restriction 
    
-   def initialize( definition )
-      @definition = definition
-      @accessors  = {}
-            
-      definition.keys.each do |key|
-         @accessors[key.name] = Accessor.build_key_accessor(self, key)
-         @accessors[key.name.to_s] = @accessors[key.name]  # For convenience
-      end
+   def initialize( against, criteria )
+      super()
+      @against  = against
+      @criteria = criteria
    end
-
-   attr_reader :definition, :accessors
-   alias entity definition
    
 
-end # Entity
-end # Plan
+end # Restriction
+end # Productions
 end # Schemaform

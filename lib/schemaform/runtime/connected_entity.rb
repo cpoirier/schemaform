@@ -18,26 +18,51 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("value.rb")
 
+#
+# Represents an Entity within a Transaction.
 
 module Schemaform
-module Language
-module ExpressionCapture
-class LiteralScalar < Value
+module Runtime
+class ConnectedEntity
+   include QualityAssurance
+   extend  QualityAssurance
 
-   def initialize( value, type = nil )
-      super(type || value.type)
-      @value = value
+   def initialize( transaction, definition )
+      @transaction = transaction
+      @definition  = definition
+      @plan        = definition.plan
+      @mappings    = {}
    end
    
    def method_missing( symbol, *args, &block )
+      if @mappings.member?(symbol) then
+         fail_todo
+      else
+         case name = symbol.to_s
+         when /^get_(\w+)_by_(\w+)$/
+            projection_name = $1.intern
+            accessor_name   = $2.intern
+
+            fail_todo
+            
+            if @plan.projections.member?(projection_name) && @plan.accessors.member?(accessor_name) then
+               accessor = @plan.accessors[accessor_name].projection(projection_name)
+            end
+         
+         when /^get_by_(\w+)$/
+            accessor_name = $2
+            if @plan.accessors.member?(accessor_name) then
+               accessor = @plan.accessors[accessor_name]
+               @transaction.retrieve(accessor.query)
+            end
+         end
+      end
+      
       super
    end
-   
-   
-end # LiteralScalar
-end # ExpressionCapture
-end # Language
+
+end # ConnectedEntity
+end # Runtime
 end # Schemaform
 

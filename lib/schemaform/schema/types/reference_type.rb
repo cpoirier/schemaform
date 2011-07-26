@@ -59,7 +59,7 @@ class ReferenceType < Type
       referenced_entity.attribute?(attribute_name)
    end
    
-   def validate()
+   def verify()
       assert(referenced_entity(), "unable to find referenced entity #{@entity_name}")
    end
 

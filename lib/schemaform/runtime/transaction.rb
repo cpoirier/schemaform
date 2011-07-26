@@ -28,9 +28,11 @@ class Transaction
 
    def initialize( workspace, connection )
       @workspace  = workspace
+      @adapter    = connection.adapter
       @connection = connection
-      @materials  = {}
       @monitor    = Monitor.new()
+      
+      @connected_entities = {}
    end
    
    attr_reader :workspace, :connection
@@ -44,13 +46,21 @@ class Transaction
 
    def []( *entity_address )
       entity = @workspace[*entity_address]
-      @monitor.synchronize{@materials[entity] ||= entity.connect(self)}
+      @connected_entities[entity] || @monitor.synchronize{@connected_entities[entity] ||= ConnectedEntity.new(self, entity)}
    end
    
    
-   def save(object)
+   #
+   # Calls your block once for each Tuple in the retrieved query results. Returns the number
+   # of rows retrieved (and processed by your block).
+   
+   def retrieve( query, parameters = [] )
+      @adapter.plan(query).execute_for_retrieval(@connection, parameters) do |row|
+         yield(Tuple.new(row))
+      end
    end
    
+
 
 end # Transaction
 end # Runtime

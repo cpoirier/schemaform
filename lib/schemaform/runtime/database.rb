@@ -184,7 +184,7 @@ private
       
       def []( name, connection = nil, default = 0 )      
          return @adapter.connect{|connection| value = self[name, connection]} if connection.nil?
-         connection.query_value(0, default, @getter, name).to_i
+         connection.retrieve_value(0, default, @getter, name).to_i
       end
 
       def []=( name, connection = nil, value = nil )

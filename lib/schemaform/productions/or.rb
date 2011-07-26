@@ -20,27 +20,15 @@
 
 
 
-#
-# Wraps a Schema-defined Entity for use at runtime.
-
 module Schemaform
-module Plan
-class Entity
-   
-   def initialize( definition )
-      @definition = definition
-      @accessors  = {}
-            
-      definition.keys.each do |key|
-         @accessors[key.name] = Accessor.build_key_accessor(self, key)
-         @accessors[key.name.to_s] = @accessors[key.name]  # For convenience
-      end
+module Productions
+class Or
+
+   def initialize( *clauses )
+      super()      
+      @clauses = clauses
    end
 
-   attr_reader :definition, :accessors
-   alias entity definition
-   
-
-end # Entity
-end # Plan
+end # Or
+end # Productions
 end # Schemaform

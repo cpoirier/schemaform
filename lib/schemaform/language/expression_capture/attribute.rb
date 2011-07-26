@@ -39,6 +39,10 @@ class Attribute < Value
       @effective.send(symbol, *args, &block)
    end
    
+   def ==( rhs )
+      @effective.send(:==, rhs)
+   end
+   
    #
    # Builds an expression that branches based on whether or not a value has been stored in the
    # attribute (default values will be present otherwise).

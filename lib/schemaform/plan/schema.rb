@@ -18,7 +18,6 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("controller.rb")
 
 
 #
@@ -27,24 +26,21 @@ require Schemaform.locate("controller.rb")
 module Schemaform
 module Plan
 class Schema
-   
-   #
-   # Defines a subclass into some container.
 
-   def self.define( name, into )
-      define_subclass(name, into) do
-         @@constraints = []
-      end
+   def initialize( definition )
+      @definition = definition
    end
    
-   
+   def plan()
+      self
+   end
+
    #
    # Runs any Schema-level validations.
    
    def validate()
       fail_todo
    end
-   
 
 
 end # Schema

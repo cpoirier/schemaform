@@ -879,8 +879,14 @@ module Baseline
       # Raises an AssertionFailure indicating a method should have been overrided.
 
       def fail_unless_overridden( object, method )
-         method = object.instance_class.instance_method(method) unless method.is_a?(Method)
-         fail( "You must override: #{method.owner.name}.#{method.name} in #{object.class.name}" )
+         if object.is_a?(Class) then
+            method = object.instance_class.instance_method(method) unless method.is_a?(Method)
+            warn_todo("fix class name get in fail_unless_overridden()")
+            fail("You must override: #{method.owner.inspect}.#{method.name} in #{object.name}")
+         else
+            method = object.instance_class.instance_method(method) unless method.is_a?(Method)
+            fail("You must override: #{method.owner.name}.#{method.name} in #{object.class.name}")
+         end
       end
       
       

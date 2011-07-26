@@ -35,6 +35,43 @@ module ExpressionDefinition
       ExpressionCapture.merge_types(true_branch, false_branch).capture(production)
    end
    
+   def self.parameter!( number )
+      ExpressionCapture::Parameter.new(number)
+   end
+   
+   def self.and!( *clauses )
+      boolean = ExpressionCapture.resolve_type(:boolean)
+      
+      check do
+         clauses.each do |clause| 
+            type_check(:clause, clause, ExpressionCapture::Value)
+            assert(boolean.assignable_from?(clause.type), "expected boolean expression for logical and, found #{clause.type.description}")
+         end
+      end
+      
+      boolean.capture(Productions::And.new(*clauses))
+   end
+
+   def self.or!( *clauses )
+      boolean = ExpressionCapture.resolve_type(:boolean)
+      clauses = clauses.collect do |clause| 
+         assert(boolean.assignable_from?(clause.type), "expected boolean expression for logical and, found #{clause.type.description}")
+      end
+      
+      boolean.capture(Productions::Or.new(*clauses))
+   end
+   
+   def self.not!( clause )
+      fail_todo
+      # 
+      # boolean = ExpressionCapture.resolve_type(:boolean)
+      # clause  = ExpressionCapture.capture(clause).tap do |captured|
+      #    assert(boolean.assignable_from?(captured.type), "expected boolean expression for logical not, found #{lhs.type.description}")
+      # end
+      # 
+      # boolean.capture(ExpressionCapture::Productions::Not.new(clause))
+   end
+
    
 end # ExpressionDefinition
 end # Language

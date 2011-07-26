@@ -37,6 +37,9 @@ class LiteralSet < Value
       super(Thread[:expression_contexts].top.build_set_type(member_type))
    end
    
+   def method_missing( symbol, *args, &block )
+      super
+   end
    
    
    

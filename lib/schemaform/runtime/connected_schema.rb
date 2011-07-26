@@ -19,28 +19,20 @@
 # =============================================================================================
 
 
-
 #
-# Wraps a Schema-defined Entity for use at runtime.
+# Represents a Schema within a Transaction.
 
 module Schemaform
-module Plan
-class Entity
-   
-   def initialize( definition )
-      @definition = definition
-      @accessors  = {}
-            
-      definition.keys.each do |key|
-         @accessors[key.name] = Accessor.build_key_accessor(self, key)
-         @accessors[key.name.to_s] = @accessors[key.name]  # For convenience
-      end
+module Runtime
+class ConnectedSchema
+   include QualityAssurance
+   extend  QualityAssurance
+
+   def initialize( transaction, definition )
+      @transaction = transaction
+      @definition  = definition
    end
 
-   attr_reader :definition, :accessors
-   alias entity definition
-   
-
-end # Entity
-end # Plan
+end # ConnectedSchema
+end # Runtime
 end # Schemaform

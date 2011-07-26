@@ -29,6 +29,7 @@ module Schemaform
 class Schema
 class RequiredAttribute < WritableAttribute
 
+   
 protected
 
    extend QualityAssurance

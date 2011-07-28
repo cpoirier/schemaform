@@ -50,33 +50,46 @@ class Connection < Generic::Connection
    
    def retrieve( sql, *parameters )
       count = 0
-      debug(sql)
-      @api.execute(sql, *parameters) do |row|
-         count += 1
-         yield(row) if block_given?
-      end      
-      
+      isolate(sql) do
+         @api.execute(sql, *parameters) do |row|
+            count += 1
+            yield(row) if block_given?
+         end      
+      end
       return count
    end
 
 
    def insert( sql, *parameters )
-      debug(sql)
-      @api.execute(sql, *parameters)
-      return @api.last_insert_row_id()
+      isolate(sql) do
+         @api.execute(sql, *parameters)
+         return @api.last_insert_row_id()
+      end
    end
 
    def update( sql, *parameters )
-      debug(sql)
-      @api.execute(sql, *parameters)
-      return @api.changes()
+      isolate(sql) do
+         @api.execute(sql, *parameters)
+         return @api.changes()
+      end
    end
    
    def execute( sql )
-      debug(sql)
-      @api.execute(sql)
+      isolate(sql) do
+         @api.execute(sql)
+      end
    end
    
+   
+   
+   def isolate(sql)
+      begin
+         debug(sql)
+         yield
+      rescue ::SQLite3::SQLException => e
+         raise Error.new(nil, e)
+      end
+   end
 
 
 end # Connection

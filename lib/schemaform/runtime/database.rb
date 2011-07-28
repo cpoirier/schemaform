@@ -92,7 +92,7 @@ protected
             installed_version = self.versions_table[schema_name, connection]
             if installed_version == 0 then
                @adapter.lay_out(schema).tables.each do |table|
-                  connection.execute(table.to_sql_create())
+                  table.install(connection)
                end
                @versions[schema.name] = self.versions_table[schema_name, connection] = 1
             elsif installed_version < schema.version then
@@ -106,11 +106,7 @@ protected
    def upgrade_system()
       @adapter.connect do |connection|         
          @control_tables.each do |name, table|
-            begin
-               connection.query(table.definition.to_sql_select("*", false))
-            rescue 
-               connection.execute(table.definition.to_sql_create)
-            end
+            table.definition.install(connection)
          end
          
          version = self.versions_table[Schemaform::MasterIdentifier, connection]
@@ -178,7 +174,7 @@ private
          @inserter = "INSERT INTO schemaform$versions (name, version) VALUES (?, ?)"
       end
       
-      def definition
+      def definition()
          @table
       end
       
@@ -197,6 +193,7 @@ private
 
          value
       end
+      
    end
    
 end # Database

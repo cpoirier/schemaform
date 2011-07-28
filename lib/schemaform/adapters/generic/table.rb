@@ -66,10 +66,12 @@ class Table
       @schema.define_child_table(self, name)
    end
    
-   def to_sql_create()
-      @schema.adapter.render_sql_create(self)
+
+   def install( connection )
+      unless present?(connection)
+         connection.execute(@schema.adapter.render_sql_create(self))
+      end
    end
-   
    
 
 
@@ -83,7 +85,17 @@ protected
    end
 
 
-   
+   def present?( connection )
+      begin
+         connection.retrieve("SELECT * FROM #{@name} WHERE 1 = 0")
+         return true
+      rescue Error => e
+         return false
+      end
+   end
+
+
+
    def []( *names )
       return self[names] unless names.length == 1
       

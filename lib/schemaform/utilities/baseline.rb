@@ -313,6 +313,7 @@ class Exception
          @@parameters = parameters
       
          define_method(:initialize) do |*values|
+            super()
             @@parameters.each{|name| instance_variable_set("@#{name}".intern, values.shift)}
          end
 

@@ -309,6 +309,7 @@ class Schema
          when :where
             formula_context     = @tuple_type.formula_context(Language::Productions::ImpliedContext.new(receiver))
             criteria_expression = Language::ExpressionCapture.capture_expression(formula_context, block, schema.boolean_type)
+            type_check(:criteria_expression, criteria_expression, Language::Placeholder)
             self.capture(Language::Productions::Restriction.new(receiver, criteria_expression))
          else
             super

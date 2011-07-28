@@ -30,6 +30,7 @@ class Adapter
    include QualityAssurance
    extend  QualityAssurance
    
+   
    #
    # Builds or retrieves an Adapter for the specified coordinates and returns it.
    

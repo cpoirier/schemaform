@@ -33,10 +33,10 @@ module Language
    
       def self.define( *parameters )
          Class.new(self) do
-            @@parameters = parameters
-         
+            @@defined_subclass_field_lists[self] = parameters
+            
             define_method(:initialize) do |*values|
-               @@parameters.each{|name| instance_variable_set("@#{name}".intern, values.shift)}
+               @@defined_subclass_field_lists[self.class].each{|name| instance_variable_set("@#{name}".intern, values.shift)}
             end
 
             parameters.each do |name|
@@ -44,6 +44,8 @@ module Language
             end
          end         
       end
+      
+      @@defined_subclass_field_lists = {}
 
    end # Production
    

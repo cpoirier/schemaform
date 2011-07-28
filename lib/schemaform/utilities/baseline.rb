@@ -307,14 +307,14 @@ class Exception
    #
    # Defines a simple Exception class that takes a standard parameter list and provides
    # retrievers to access them.
-   
+      
    def self.define( *parameters )
       Class.new(self) do
-         @@parameters = parameters
+         @@defined_subclass_field_lists[self] = parameters
       
          define_method(:initialize) do |*values|
             super()
-            @@parameters.each{|name| instance_variable_set("@#{name}".intern, values.shift)}
+            @@defined_subclass_field_lists[self.class].each{|name| instance_variable_set("@#{name}".intern, values.shift)}
          end
 
          parameters.each do |name|
@@ -322,6 +322,9 @@ class Exception
          end
       end         
    end
+
+   @@defined_subclass_field_lists = {}
+   
 
    #===========================================================================================
    if !method_defined?(:failsafe_message) then

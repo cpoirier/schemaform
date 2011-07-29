@@ -43,6 +43,20 @@ class Placeholder
       @type.capture_method(self, symbol, args, block) or fail "cannot dispatch [#{symbol}] on type #{@type.description} (#{@type.class.name})"
    end
    
+   def print( printer )
+      printer.print("#{self.description} #{type.description}")
+      if @production then
+         printer.puts( " resulting from #{@production.description}:" )
+         printer.indent{ @production.print(printer) }
+      else
+         printer.end_line()
+      end
+   end
+   
+   def description()
+      self.class.name.split("::").last
+   end
+   
 end # Placeholder
 end # Language
 end # Schemaform

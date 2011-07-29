@@ -26,6 +26,14 @@ module Language
    # Base class for productions -- things that describe who a Placeholder was calculated.
 
    class Production
+      
+      def print( printer )
+         width = fields.collect{|n| n.to_s.length}.max()
+         each do |name, value|
+            printer.label(name.to_s.ljust(width)){ printer.puts(value) }
+         end
+      end
+      
 
       #
       # Defines a Production class that takes a standard parameter list and provides
@@ -36,7 +44,7 @@ module Language
             @@defined_subclass_field_lists[self] = parameters
             
             define_method(:initialize) do |*values|
-               @@defined_subclass_field_lists[self.class].each{|name| instance_variable_set("@#{name}".intern, values.shift)}
+               fields.each{|name| instance_variable_set("@#{name}".intern, values.shift)}
             end
 
             parameters.each do |name|
@@ -45,8 +53,22 @@ module Language
          end         
       end
       
+      def fields()
+         @@defined_subclass_field_lists[self.class]
+      end
+      
+      def each()
+         fields.each do |name|
+            yield(name, instance_variable_get("@#{name}".intern))
+         end
+      end
+      
+      def description()
+         self.class.name.split("::").last
+      end
+      
       @@defined_subclass_field_lists = {}
-
+      
    end # Production
    
 

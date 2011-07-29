@@ -34,7 +34,10 @@ class Entity < Placeholder
    def method_missing( symbol, *args, &block )
       super
    end
-   
+
+   def description()
+      "#{super} #{@entity.name}"      
+   end
 
 end # Entity
 end # Language

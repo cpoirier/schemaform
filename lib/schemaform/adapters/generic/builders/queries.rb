@@ -41,7 +41,7 @@ class Adapter
          query_plan = dispatch_plan(definition, QueryPlan.new())
          @monitor.synchronize do
             unless @query_plans.member?(definition)
-               query_plans[definition] = query_plan
+               @query_plans[definition] = query_plan
             end
          end
       end
@@ -50,14 +50,27 @@ class Adapter
    end
 
 
-   def dispatch_plan( definition, plan )
-      send_specialized(:plan, definition, plan)
+   def dispatch_plan( definition, query_plan )
+      send_specialized(:plan, definition, query_plan)
    end
 
 
-   def plan_value( definition, plan )
-      
+   def plan_placeholder( placeholder, query_plan )
+      placeholder.production ? dispatch_plan(placeholder.production, query_plan) : nil
    end
+   
+   
+   def plan_restriction( restriction, query_plan )
+      # relation, criteria
+
+      Printer.run do |printer|
+         restriction.print(printer)
+      end
+      fail_todo
+
+   end
+   
+   
 
 
 end # Adapter

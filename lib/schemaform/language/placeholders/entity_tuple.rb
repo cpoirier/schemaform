@@ -79,6 +79,10 @@ class EntityTuple < Tuple
       super
    end
 
+   def description()
+      "#{super} #{@entity.declared_heading.name}"
+   end
+
 
 end # EntityTuple
 end # Language

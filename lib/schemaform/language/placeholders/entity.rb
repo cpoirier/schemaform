@@ -36,7 +36,7 @@ class Entity < Placeholder
    end
 
    def description()
-      "#{super} #{@entity.name}"      
+      "#{@entity.name} #{@type.description}"      
    end
 
 end # Entity

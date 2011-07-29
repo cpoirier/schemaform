@@ -44,7 +44,7 @@ class Placeholder
    end
    
    def print( printer )
-      printer.print("#{self.description} #{type.description}")
+      printer.print(description)
       if @production then
          printer.puts( " resulting from #{@production.description}:" )
          printer.indent{ @production.print(printer) }
@@ -54,7 +54,7 @@ class Placeholder
    end
    
    def description()
-      self.class.name.split("::").last
+      "#{type.description} #{self.class.name.split("::").last}"
    end
    
 end # Placeholder

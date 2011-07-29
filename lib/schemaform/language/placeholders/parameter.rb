@@ -32,6 +32,11 @@ class Parameter < Placeholder
       super
    end
    
+   def description()
+      "Parameter #{@number}"
+   end
+   
+   
 end # Parameter
 end # Language
 end # Schemaform

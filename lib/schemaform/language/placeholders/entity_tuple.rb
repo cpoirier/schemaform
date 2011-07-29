@@ -80,7 +80,7 @@ class EntityTuple < Tuple
    end
 
    def description()
-      "#{super} #{@entity.declared_heading.name}"
+      "#{@entity.declared_heading.name} #{@type.description}"
    end
 
 

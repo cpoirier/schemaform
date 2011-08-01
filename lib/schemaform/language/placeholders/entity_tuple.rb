@@ -80,7 +80,7 @@ class EntityTuple < Tuple
    end
 
    def description()
-      "#{@entity.declared_heading.name} #{@type.description}"
+      "0x#{self.object_id.to_s(16)} #{@entity.declared_heading.name} #{@type.description}"
    end
 
 

@@ -31,13 +31,14 @@ class Schema
    extend  QualityAssurance
 
    def initialize( name, adapter )
-      @name    = name
-      @adapter = adapter
-      @tables  = Registry.new()
-      @lookup  = {}
+      @name               = name
+      @adapter            = adapter
+      @tables             = Registry.new()
+      @entity_tables      = {}              # Schema::Entity    => Table
+      @attribute_mappings = {}              # Schema::Attribute => Mapping 
    end
    
-   attr_reader :adapter, :tables, :lookup
+   attr_reader :adapter, :tables, :entity_tables, :attribute_mappings
       
    def define_master_table( name, id_name = nil, base_table = nil )
       register @adapter.table_class.build_master_table(self, name, id_name, base_table)
@@ -51,6 +52,10 @@ class Schema
       @tables.register(table)
    end
       
+   def map_attribute( attribute, mapping )
+      @attribute_mappings[attribute] = mapping
+   end
+   
    def to_sql_create()
       @adapter.render_sql_create(self)
    end

@@ -18,43 +18,34 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("scalar_attribute_mapping.rb")
+
 
 #
-# Provides access to a Tuple and its attributes.
+# Captures a mapping from a reference attribute to a field in a table.
 
 module Schemaform
-module Language
-class Attribute < Placeholder
+module Adapters
+module Generic
+class ReferenceAttributeMapping < ScalarAttributeMapping
 
-   def initialize( definition, production = nil )
-      super(definition.type, production)
-      @definition = definition
-      @effective  = definition.type.capture(Productions::ValueAccessor.new(self))
-   end
-   
-   def method_missing( symbol, *args, &block )
-      @effective.send(symbol, *args, &block)
-   end
-   
-   def ==( rhs )
-      @effective.send(:==, rhs)
-   end
-   
-   #
-   # Builds an expression that branches based on whether or not a value has been stored in the
-   # attribute (default values will be present otherwise).
-
-   def present?( true_value = nil, false_value = nil )
-      true_value  = ExpressionCapture.capture(true_value )
-      false_value = ExpressionCapture.capture(false_value)      
-      result_type = true_value ? ExpressionCapture.merge_types(true_value, false_value) : ExpressionCapture.resolve_type(:boolean)
-
-      result_type.capture(Productions::PresentCheck.new(self, true_value, false_value))
+   def initialize( attribute, field )
+      super(attribute, field)
    end
 
-   
-   
-end # Attribute
-end # Language
+end # ReferenceAttributeMapping
+
+
+
+#
+# Add a helper routine to Table.
+
+class Table
+   def map_reference_attribute( attribute, field )
+      @schema.map_attribute attribute, ReferenceAttributeMapping.new(attribute, field)
+   end
+end
+
+end # Generic
+end # Adapters
 end # Schemaform
-

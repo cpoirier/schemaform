@@ -27,9 +27,17 @@ module Adapters
 module Generic
 class QueryPlan
 
-   def initialize()
-      
-   end
+   # def initialize()
+   #    @entity_aliases  = {}
+   #    @used_attributes
+   # end
+   # 
+   # 
+   # def entity_alias( placeholder )
+   #    @entity_aliases[placeholder.object_id] ||= "e#{@entity_aliases.length + 1}"
+   # end
+   # 
+   # def use_field
 
 end # QueryPlan
 end # Generic

@@ -249,7 +249,7 @@ class Schema
          member_type = member_type().evaluated_type
          if member_type.responds_to?(:attribute?) then
             if captured = member_type.capture_method(receiver, attribute_name) then
-               return self.class.build(captured.type).capture(Language::Productions::ImpliedContext.new(captured))
+               return self.class.build(captured.type).capture(Language::Productions::Each.new(captured))
             end            
          end
          
@@ -307,10 +307,10 @@ class Schema
       def capture_method( receiver, method_name, args = [], block = nil )
          case method_name
          when :where
-            formula_context     = @tuple_type.formula_context(Language::Productions::ImpliedContext.new(receiver))
+            formula_context     = @tuple_type.formula_context(Language::Productions::EachTuple.new(receiver))
             criteria_expression = Language::ExpressionCapture.capture_expression(formula_context, block, schema.boolean_type)
             type_check(:criteria_expression, criteria_expression, Language::Placeholder)
-            self.capture(Language::Productions::Restriction.new(receiver, criteria_expression))
+            self.capture(Language::Productions::Restriction.new(receiver, formula_context, criteria_expression))
          else
             super
          end
@@ -324,7 +324,7 @@ class Schema
          return nil unless attribute?(attribute_name)
          
          entity = referenced_entity()
-         tuple  = entity.formula_context(Language::Productions::ImpliedContext.new(receiver))
+         tuple  = entity.formula_context(Language::Productions::FollowReference.new(receiver))
          Language::Attribute.new(entity.heading[attribute_name], Language::Productions::Accessor.new(tuple, attribute_name))
       end
    end
@@ -354,7 +354,7 @@ class Schema
    
    class Tuple < Element
       def formula_context( production = nil )
-         @formula_context ||= (context.responds_to?(:formula_context) ? context.formula_context : Language::Tuple.new(self, production))
+         context.responds_to?(:formula_context) ? context.formula_context(production) : Language::Tuple.new(self, production)
       end      
    end
    
@@ -377,7 +377,7 @@ class Schema
          result = nil
          
          unless @analyzing
-            debug("processing in #{full_name}")
+            # debug("processing in #{full_name}")
 
             Language::ExpressionCapture.resolution_scope(schema) do
                begin
@@ -390,10 +390,10 @@ class Schema
          end
          
          if result && !result.type.unknown_type? then
-            debug("#{full_name} resolved to #{result.type.description}")
+            # debug("#{full_name} resolved to #{result.type.description}")
             result.type
          else
-            debug("#{full_name} could not be resolved at this time")
+            # debug("#{full_name} could not be resolved at this time")
             nil
          end
       end
@@ -416,7 +416,7 @@ class Schema
          if @analyzing then
             fail "#{full_name} is a self-referencing volatile attribute, which is not presently supported"
          else
-            debug("processing in #{full_name}")
+            # debug("processing in #{full_name}")
             
             Language::ExpressionCapture.resolution_scope(schema) do
                begin

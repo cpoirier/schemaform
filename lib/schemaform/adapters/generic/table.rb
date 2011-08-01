@@ -66,6 +66,10 @@ class Table
       @schema.define_child_table(self, name)
    end
    
+   def attribute_mappings()
+      @schema.attribute_mappings
+   end
+   
 
    def install( connection )
       unless present?(connection)
@@ -73,6 +77,10 @@ class Table
       end
    end
    
+   
+   def to_sql_create()
+      @schema.adapter.render_sql_create(self)
+   end
 
 
 protected

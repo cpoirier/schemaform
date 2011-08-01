@@ -20,41 +20,34 @@
 
 
 #
-# Provides access to a Tuple and its attributes.
+# Captures informtion about how a Schema::Attribute is mapped into Fields.
 
 module Schemaform
-module Language
-class Attribute < Placeholder
+module Adapters
+module Generic
+class AttributeMapping
 
-   def initialize( definition, production = nil )
-      super(definition.type, production)
-      @definition = definition
-      @effective  = definition.type.capture(Productions::ValueAccessor.new(self))
+   def initialize( attribute )
+      @attribute = attribute
    end
    
-   def method_missing( symbol, *args, &block )
-      @effective.send(symbol, *args, &block)
-   end
-   
-   def ==( rhs )
-      @effective.send(:==, rhs)
-   end
-   
-   #
-   # Builds an expression that branches based on whether or not a value has been stored in the
-   # attribute (default values will be present otherwise).
+   attr_accessor :optional_marker 
 
-   def present?( true_value = nil, false_value = nil )
-      true_value  = ExpressionCapture.capture(true_value )
-      false_value = ExpressionCapture.capture(false_value)      
-      result_type = true_value ? ExpressionCapture.merge_types(true_value, false_value) : ExpressionCapture.resolve_type(:boolean)
+end # AttributeMapping
 
-      result_type.capture(Productions::PresentCheck.new(self, true_value, false_value))
+
+#
+# Add helper routines to Table.
+
+class Table
+   def map_optional_marker( attribute, field )
+      attribute_mappings[attribute].optional_marker = field
    end
+end
+   
 
-   
-   
-end # Attribute
-end # Language
+end # Generic
+end # Adapters
 end # Schemaform
 
+Dir[Schemaform.locate("attribute_mappings/*.rb")].each{|path| require path}

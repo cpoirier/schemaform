@@ -34,7 +34,7 @@ class Name
    end
 
    def initialize( components )
-      @components = components.collect{|name| name.is_a?(Name) ? name.components : name.to_s.identifier_case}.flatten
+      @components = components.compact.collect{|name| name.is_a?(Name) ? name.components : name.to_s.identifier_case}.flatten
       @full_name  = @components.join("$")
    end
    

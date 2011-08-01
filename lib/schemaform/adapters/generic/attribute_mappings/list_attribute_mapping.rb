@@ -20,65 +20,35 @@
 
 
 #
-# Adds a prefix to a Schema name, for situations in which you need multiple copies of a 
-# Schema in the same physical database.
+# Captures a mapping from a list attribute.
 
 module Schemaform
-module Runtime
-class PrefixedSchema
+module Adapters
+module Generic
+class ListAttributeMapping < AttributeMapping
 
-   def initialize( schema, prefix )
-      @schema    = schema
-      @prefix    = prefix
-   end
-   
-   attr_reader :schema, :prefix
-   
-   def name()
-      @schema.name
-   end
-   
-   def path()
-      @path ||= [@prefix.to_s, @schema.name]
-   end
-   
-   def schema_id()
-      @schema_id ||= @prefix.to_s + "$" + @schema.schema_id
-   end
-   
-   def hash()
-      schema_id.hash()
-   end
-   
-   def eql?( rhs )
-      return super unless rhs.responds_to?(:schema_id)
-      return schema_id() == rhs.schema_id()
-   end
-   
-   def method_missing( symbol, *args, &block )
-      @schema.send(symbol, *args, &block)
+   def initialize( attribute, member_mapping, member_previous, member_next, list_first, list_last )
+      super(attribute)
+      @member_mapping  = member_mapping
+      @member_previous = member_previous
+      @member_next     = member_next
+      @list_first      = list_first
+      @list_last       = list_last
    end
 
-
-end # PrefixedSchema
-end # Runtime
-end # Schemaform
-
+end # ListAttributeMapping
 
 
 
 #
-# Adds a convenience method to Schema to produce a PrefixedSchema.
+# Add a helper routine to Table.
 
-module Schemaform
-class Schema
-
-   #
-   # A convenience method to produce a PrefixedSchema from the Schema.
-   
-   def prefix( prefix )
-      Runtime::PrefixedSchema.new(self, prefix)
+class Table
+   def map_list_attribute( attribute, member_mapping, member_previous, member_next, list_first, list_last )
+      @schema.map_attribute attribute, ListAttributeMapping.new(attribute, member_mapping, member_previous, member_next, list_first, list_last)
    end
+end
    
-end # Schema
+end # Generic
+end # Adapters
 end # Schemaform

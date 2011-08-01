@@ -51,7 +51,7 @@ class Database
    
    #
    # Provides a context in which your block can do work in the database. You must specify the
-   # Schemas (or PrefixedSchemas) you will be working with, in the order of name precedence. 
+   # Schemas you will be working with, in the order of name precedence. 
 
    def transact( available_schemas )
       workspace = build_workspace(available_schemas)

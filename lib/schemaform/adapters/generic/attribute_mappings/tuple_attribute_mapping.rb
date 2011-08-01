@@ -20,41 +20,33 @@
 
 
 #
-# Provides access to a Tuple and its attributes.
+# Base class for capturing a mapping from a tuple attribute.
 
 module Schemaform
-module Language
-class Attribute < Placeholder
+module Adapters
+module Generic
+class TupleAttributeMapping < AttributeMapping
 
-   def initialize( definition, production = nil )
-      super(definition.type, production)
-      @definition = definition
-      @effective  = definition.type.capture(Productions::ValueAccessor.new(self))
+   def initialize( attribute, attribute_mappings = {} )
+      super(attribute)
+      @attribute_mappings = attribute_mappings
    end
    
-   def method_missing( symbol, *args, &block )
-      @effective.send(symbol, *args, &block)
-   end
-   
-   def ==( rhs )
-      @effective.send(:==, rhs)
-   end
-   
-   #
-   # Builds an expression that branches based on whether or not a value has been stored in the
-   # attribute (default values will be present otherwise).
+   attr_reader :attribute_mappings
 
-   def present?( true_value = nil, false_value = nil )
-      true_value  = ExpressionCapture.capture(true_value )
-      false_value = ExpressionCapture.capture(false_value)      
-      result_type = true_value ? ExpressionCapture.merge_types(true_value, false_value) : ExpressionCapture.resolve_type(:boolean)
+end # TupleAttributeMapping
 
-      result_type.capture(Productions::PresentCheck.new(self, true_value, false_value))
+
+#
+# Add a helper routine to Table.
+
+class Table
+   def map_tuple_attribute( attribute, attribute_mappings )
+      @schema.map_attribute attribute, TupleAttributeMapping.new(attribute, attribute_mappings)
    end
+end
+   
 
-   
-   
-end # Attribute
-end # Language
+end # Generic
+end # Adapters
 end # Schemaform
-

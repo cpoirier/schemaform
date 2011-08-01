@@ -30,6 +30,12 @@ class Printer
       yield(new(stream, indent))
    end
    
+   def self.dump( object )
+      Printer.run do |printer|
+         printer.puts(object)
+      end
+   end
+   
    
    def initialize( stream = $stdout, indent = "" )
       @stream     = stream

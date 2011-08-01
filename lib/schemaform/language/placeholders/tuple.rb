@@ -40,6 +40,10 @@ class Tuple < Placeholder
       @tuple.capture_method(self, symbol, args, block) or fail "cannot dispatch [#{symbol}] on tuple #{@tuple.full_name}"
    end
    
+   def description()
+      "0x#{self.object_id.to_s(16)} #{@type.description}"
+   end
+   
 
 end # Tuple
 end # Language

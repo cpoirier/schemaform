@@ -27,6 +27,8 @@ module Language
 
    class Production
       
+      include QualityAssurance
+      
       def print( printer )
          width = fields.collect{|n| n.to_s.length}.max()
          each do |name, value|
@@ -77,30 +79,43 @@ module Language
       # ==========================================================================================
       # Basic
    
-      ImpliedContext = Production.define( :context                                )
-      BinaryOperator = Production.define( :operator, :lhs, :rhs                   )
-      Accessor       = Production.define( :receiver, :symbol                      )
-      MethodCall     = Production.define( :receiver, :symbol, :parameters, :block )
-      Application    = Production.define( :method, :subject, :parameters          )
+      ValueAccessor   = Production.define( :attribute                              )
+      FollowReference = Production.define( :reference                              )
+      BinaryOperator  = Production.define( :operator, :lhs, :rhs                   )
+      Accessor        = Production.define( :receiver, :symbol                      )
+      MethodCall      = Production.define( :receiver, :symbol, :parameters, :block )
+      Application     = Production.define( :method, :subject, :parameters          )
+      Each            = Production.define( :operation                              )
+      EachTuple       = Production.define( :relation                               )
 
       # ==========================================================================================
       # Logic
           
-      IfThenElse     = Production.define( :condition, :true_branch, :false_branch )
-      PresentCheck   = Production.define( :attribute, :true_branch, :false_branch )
-      Comparison     = Production.define( :operator, :lhs, :rhs                   )
-      And            = Production.define( :clauses )
-      Or             = Production.define( :clauses )
-      Not            = Production.define( :subject )
+      IfThenElse      = Production.define( :condition, :true_branch, :false_branch )
+      PresentCheck    = Production.define( :attribute, :true_branch, :false_branch )
+      Comparison      = Production.define( :operator, :lhs, :rhs                   )
+      And             = Production.define( :clauses )
+      Or              = Production.define( :clauses )
+      Not             = Production.define( :subject )
 
       # ==========================================================================================
       # Relational
 
-      Restriction    = Production.define( :relation, :criteria   )
-      Projection     = Production.define( :relation, :attributes )
-      Aggregation    = Production.define( :relation, :operator   )
-      OrderBy        = Production.define( :relation, :ordering   )
-      RelatedTuples  = Production.define( :relation, :link_path  )
+      Restriction     = Production.define( :relation, :tuple, :criteria )
+      Projection      = Production.define( :relation, :attributes       )
+      Aggregation     = Production.define( :relation, :operator         )
+      OrderBy         = Production.define( :relation, :ordering         )
+      RelatedTuples   = Production.define( :relation, :link_path        )
+      
+      # class ImpliedScope < Production
+      #    def initialize( scope )
+      #       if scope.is_a?(Language::Attribute) && scope.production.is_a?(Accessor) && scope.production.symbol == :email
+      #          Printer.dump(scope)
+      #          fail 
+      #       end
+      #       @scope = scope
+      #    end
+      # end
 
    end
 

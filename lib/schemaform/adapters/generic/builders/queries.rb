@@ -63,6 +63,8 @@ class Adapter
    def plan_restriction( restriction, query_plan )
       # relation, criteria
 
+
+
       Printer.run do |printer|
          restriction.print(printer)
       end

@@ -36,7 +36,7 @@ class Adapter
    end
 
    def render_sql_create_schema( schema )
-      @tables.members.collect{|table| render_sql_create(table)}.join("\n\n")
+      schema.tables.members.collect{|table| render_sql_create(table)}.join("\n\n")
    end
 
    def render_sql_create_table( table )

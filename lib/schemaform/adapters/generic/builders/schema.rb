@@ -28,44 +28,41 @@ module Generic
 class Adapter
    
    
-   #
-   # Creates an Adapter::Schema for internal use.
-   
-   def define_schema( name )
-      schema_class().new(name, self)
-   end
-   
    
    #
    # Lays out a Schema for use with the database. 
    
    def lay_out( definition )
       @monitor.synchronize do
-         unless @schemas.member?(definition)
+         unless @schema_maps.member?(definition)
             schema_name = Name.build(*definition.path)
-            @schemas[definition] = schema_class().new(schema_name, self).tap do |schema|
+            @schema_maps[definition] = SchemaMap.new(definition).tap do |schema_map|
 
                #
-               # Create master tables for each entity first. We need them in place for reference resolution.
+               # Create anchor tables and entity maps for each entity first. We need them in place for reference resolution.
 
                definition.entities.each do |entity|
-                  schema.define_master_table(schema_name + entity.name, entity.id, schema.entity_tables[entity.base_entity]).tap do |table|
-                     schema.entity_tables[entity] = table
+                  schema_map.map(entity, define_table(schema_name + entity.name)) do |entity_map, table|
+                     if entity.has_base_entity? then
+                        table.identifier = table.define_field(entity.id, type_manager.identifier_type, reference_mark(entity_map.base_map.anchor_table), primary_key_mark())
+                        entity_map.link_child_to_parent(table.identifier)
+                     else
+                        table.identifier = table.define_field(entity.id, type_manager.identifier_type, generated_mark(), primary_key_mark())
+                     end
                   end
                end
 
                #
-               # Now, fill them in with the basic data structure. We do no optimization, yet, as we 
-               # want the basic structure to be as stable as possible (ie. adding projections and such
-               # shouldn't require rewriting the entire data set).
+               # Now, fill them in with the basic data structure.
 
                definition.entities.each do |entity|
-                  master_table = schema.entity_tables[entity]
+                  builder = @overrides.fetch(:lay_out_builder_class, LayOutBuilder).new(self, schema_map.entity_maps[entity])
+
                   entity.heading.attributes.each do |attribute|
                      next if attribute.name == entity.id
                      next if entity.base_entity && entity.base_entity.declared_heading.attribute?(attribute.name)
 
-                     dispatch_lay_out(attribute, master_table)
+                     dispatch_lay_out(attribute, builder)
                   end
                end
             end
@@ -76,97 +73,162 @@ class Adapter
    end
 
 
-   def dispatch_lay_out(element, container, name = Name.empty, mappee = nil)
-      send_specialized(:lay_out, element, container, name, mappee)
+   def dispatch_lay_out( element, builder )
+      send_specialized(:lay_out, element, builder)
    end
    
-
-   def lay_out_attribute(attribute, table, base_name, mappee = nil )
-      dispatch_lay_out(attribute.type, table, base_name + attribute.name, attribute)
-   end
-   
-   def lay_out_optional_attribute( attribute, table, base_name, mappee = nil )
-      lay_out_attribute(attribute, table, base_name, attribute)
-      table.map_optional_marker(attribute, table.define_field(base_name + attribute.name + "present", type_manager.boolean_type, RequiredMark.build()))
-   end
-
-   def lay_out_volatile_attribute( attribute, table, base_name, context = nil )
-      warn_todo("what do we do about mapping volatile attributes?")
-      # volatile attributes are not stored
-   end
-
-
-   def lay_out_tuple( tuple, table, base_name, mappee )
-      attribute_mappings = {}
-      tuple.attributes.each do |attribute|
-         dispatch_lay_out(attribute, table, base_name)
-         attribute_mappings[attribute.name] = table.attribute_mappings[attribute]
+   def lay_out_attribute( attribute, builder )
+      builder.with_attribute(attribute) do
+         send_specialize(:lay_out, element, builder))
+         yield if block_given?
       end
-
-      table.map_tuple_attribute(mappee, attribute_mappings)
+   end
+   
+   def lay_out_optional_attribute( attribute, builder )
+      lay_out_attribute(attribute, builder) do
+         builder.define_meta(:present, type_manager.boolean_type, required_mark())
+      end
+   end
+   
+   def lay_out_volatile_attribute( attribute, builder )
+      warn_todo("what do we do about mapping volatile attributes?")
    end
    
    
-
-   def lay_out_type( type, table, field_name, mappee )
+   
+   def lay_out_tuple( tuple, builder )
+      tuple.attributes.each do |attribute|
+         dispatch_lay_out(attribute, builder)
+      end
+   end
+   
+   
+   def lay_out_type( type, builder )
       fail "no lay_out support for #{type.class.name}"
    end
-   
-   def lay_out_reference_type( type, table, field_name, mappee )
+
+   def lay_out_reference_type( type, builder )
       warn_todo("reference field null/default handling")
-
-      assert(table.schema.entity_tables.member?(type.referenced_entity), "couldn't find a master table for entity [#{type.entity_name}]")
-      table.map_reference_attribute(mappee, table.define_field(field_name, type_manager.identifier_type, ReferenceMark.build(table.schema.entity_tables[type.referenced_entity])))
+      
+      referenced_entity_map = builder[type.referenced_entity] or fail "couldn't resolve a reference to entity [#{type.entity_name}]"
+      builder.define_scalar(type_manager.identifier_type, reference_mark(referenced_entity_map.anchor_table, true))
    end
 
-   def lay_out_identifier_type( type, table, field_name, mappee )
-      warn_once("USED: Adapter.lay_out_identifier_type()")
-      lay_out_reference_type(type, table, field_name, mappee)
+   def lay_out_identifier_type( type, builder )
+      lay_out_reference_type(type, builder)
    end
 
-   def lay_out_scalar_type( type, table, field_name, mappee )
-      table.map_scalar_attribute(mappee, table.define_field(field_name, type_manager.scalar_type(type)))
+   def lay_out_scalar_type( type, builder )
+      builder.define_scalar(type_manager.scalar_type(type))
    end
 
-   def lay_out_tuple_type( type, table, field_name, mappee )
-      dispatch_lay_out(type.tuple, table, field_name, mappee)
+   def lay_out_tuple_type( type, builder )
+      dispatch_lay_out(type.tuple, builder)
    end
    
-   def lay_out_user_defined_type( type, table, field_name, mappee )
-      dispatch_lay_out(type.base_type, table, field_name, mappee)
+   def lay_out_user_defined_type( type, builder )
+      dispatch_lay_out(type.base_type, builder)
    end
 
-   def lay_out_unknown_type( type, table, field_name, mappee )
+   def lay_out_unknown_type( type, builder )
       fail
    end
+   
 
-
-
-   def lay_out_collection_type( type, table, field_name, mappee )
-      table.define_child(field_name).tap do |member_table|
-         child_name = type.member_type.naming_type? ? Name.empty() : Name.build("record", "value")
-         dispatch_lay_out(type.member_type, member_table, child_name, mappee)
+   def lay_out_collection_type( type, builder )
+      builder.define_child_table("record") do
+         yield if block_given?
       end
    end
    
-   def lay_out_set_type( type, table, field_name, mappee )
-      lay_out_collection_type(type, table, field_name, mappee)           # Let the member type be mapped to our mappee
-      table.map_set_attribute(mappee, table.attribute_mappings[mappee])  # Then replace the member-wise mapping with the set-wise one
-   end
-   
-   def lay_out_list_type( type, table, field_name, mappee )
-      lay_out_collection_type(type, table, field_name, mappee).tap do |member_table|  # Let the member type be mapped to our mappee
-         field_type       = type_manager.identifier_type
-         member_reference = ReferenceMark.build(member_table)
-         
-         table.map_list_attribute mappee, table.attribute_mappings[mappee],           # Then replace member-wise mapping with the list-wise one
-            member_table.define_field(Name.build("record", "next"    ), field_type, member_reference),
-            member_table.define_field(Name.build("record", "previous"), field_type, member_reference),
-                   table.define_field(field_name + "first"   , field_type, member_reference),
-                   table.define_field(field_name + "last"    , field_type, member_reference)
+   def lay_out_collection_type__member_type( member_type, builder )
+      if member_type.naming_type? then
+         dispatch_lay_out(member_type, builder)
+      else
+         builder.with_meta("value") do
+            dispatch_lay_out(member_type, builder)
+         end
       end
    end
+   
+   def lay_out_set_type( type, builder )
+      lay_out_collection_type(type, builder) do
+         lay_out_collection_type__member_type(type.member_type, builder)
+      end
+   end
+   
+   def lay_out_list_type( type, builder )      
+      field_type       = type_manager.identifier_type
+      member_reference = nil
 
+      lay_out_collection_type(type, builder) do
+         member_reference = reference_mark(builder.current_table)
+         lay_out_collection_type__member_type(type.member_type, builder)
+
+         builder.define_meta("next"    , field_type, member_reference)
+         builder.define_meta("previous", field_type, member_reference)
+      end
+
+      builder.define_meta("first", field_type, member_reference)
+      builder.define_meta("last" , field_type, member_reference)
+   end
+
+
+
+
+
+   #
+   # Lay out builder used by the lay_out*() routines to ensure both Tables and EntityMaps are built in 
+   # step. If you need to change this, be sure to pass the class as :lay_out_builder_class in the Adapter 
+   # overrides.
+   
+   class LayOutBuilder
+      def initialize( adapter, entity_map )
+         @adapter    = adapter
+         @entity_map = entity_map
+      end
+      
+      
+      
+   end
+
+
+
+   # 
+   # def self.build_master_table( schema, name, id_name = nil, base_table = nil )
+   #    name = Name.build(name)
+   #    schema.adapter.table_class.new(schema, name).tap do |table|
+   #       modifier = base_table ? ReferenceMark.build(base_table) : GeneratedMark.build()
+   #       table.identifier = table.define_field(id_name || Name.build("id", name.last), schema.adapter.type_manager.identifier_type, modifier, PrimaryKeyMark.build())
+   #    end
+   # end
+   # 
+   # def self.build_child_table( schema, parent_table, name, has_many = true )
+   #    schema.adapter.table_class.new(schema, parent_table.name + name).tap do |table|
+   #       table.owner = table.define_field(Name.build("owner", parent_table.identifier.name), schema.adapter.type_manager.identifier_type, ReferenceMark.build(parent_table))
+   # 
+   #       if has_many then
+   #          table.identifier = table.define_field(Name.build("table", "id"), schema.adapter.type_manager.identifier_type, GeneratedMark.build(), PrimaryKeyMark.build())
+   #       else
+   #          table.owner.marks << PrimaryKeyMark.build()
+   #          table.identifier = table.owner
+   #       end
+   #    end
+   # end
+   # def define_master_table( name, id_name = nil, base_table = nil )
+   #    register @adapter.table_class.build_master_table(self, name, id_name, base_table)
+   # end
+   # 
+   # def define_child_table( parent_table, name )
+   #    register @adapter.table_class.build_child_table(self, parent_table, name)
+   # end
+   # 
+   # def build_entity_map( entity )
+   #    
+   # end
+   # 
+   
+   
 
 end # Adapter
 end # Generic

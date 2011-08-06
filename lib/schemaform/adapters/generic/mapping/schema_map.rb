@@ -20,26 +20,31 @@
 
 
 #
-# Holds a complete plan for executing a Schemaform query, and provides the machinery to do so.
+# Captures information about how a Schema is mapped into Tables and Fields.
 
 module Schemaform
 module Adapters
 module Generic
-class QueryPlan
+class SchemaMap
 
-   def initialize()
-      @entity_aliases  = {}
-      @used_attributes
+   def initialize( definition )
+      @definition  = definition
+      @entity_maps = {}
    end
    
+   attr_reader :definition, :entity_maps
    
-   def entity_alias( placeholder )
-      @entity_aliases[placeholder.object_id] ||= "e#{@entity_aliases.length + 1}"
+   def []( entity_definition )
+      @entity_maps[entity_definition]
    end
    
-   def use_field
-
-end # QueryPlan
+   def map( definition, anchor_table )
+      @entity_maps[definition] = EntityMap.new(self, definition, anchor_table)
+      yield(@entity_maps[definition], anchor_table) if block_given?
+   end
+ 
+end # SchemaMap
 end # Generic
 end # Adapters
 end # Schemaform
+

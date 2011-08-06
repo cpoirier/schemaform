@@ -108,16 +108,26 @@ class Adapter
    def build_name( *components )
       Name.build(*components)
    end
+   
+   
+   def define_table( name )
+      table_class.new(self, name).tap do |table|
+         @tables.register(table)
+         yield(table) if block_given?
+      end
+   end
+   
 
 protected
    def initialize( address, overrides = {} )
       @address      = address
-      @schemas      = {}                # Definition => adapted Schema
+      @tables       = Registry.new()    # name => Table
+      @schema_maps  = {}                # Schemaform::Schema => SchemaMap
       @query_plans  = {}                # Language::Placeholder => QueryPlan
       @monitor      = Monitor.new()
+      @overrides    = overrides
 
       @type_manager = overrides.fetch(:type_manager_class, TypeManager).new(self)
-      @schema_class = overrides.fetch(:schema_class      , Schema     )
       @table_class  = overrides.fetch(:table_class       , Table      )
       @field_class  = overrides.fetch(:field_class       , Field      )
       @separator    = overrides.fetch(:separator         , "$"        )

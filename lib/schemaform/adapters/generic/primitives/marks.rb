@@ -60,7 +60,21 @@ module Generic
       def table()       ; @table      ; end
       def deferrable?() ; @deferrable ; end
    end
-   
+  
+   class StructuralLink < ReferenceMark 
+      def self.build( table, is_direct_parent = false )
+         new(table, is_direct_parent)
+      end
+      
+      def initialize( table, is_direct_parent = false )
+         super( table )
+         @is_direct_parent = is_direct_parent
+      end
+      
+      def direct_parent?()
+         @is_direct_parent
+      end
+   end 
    
 end # Generic
 end # Adapters

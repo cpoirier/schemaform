@@ -34,9 +34,14 @@ class Field
       @name      = name
       @type      = table.adapter.type_manager.scalar_type(type)
       @marks     = marks
+      @reference = @marks.select_first{|m| m.is_a?(ReferenceMark))
    end
    
-   attr_reader :table, :name, :type, :marks
+   attr_reader :table, :name, :type, :marks, :reference
+   
+   def reference?()
+      !!@reference
+   end
    
    
 end # Field

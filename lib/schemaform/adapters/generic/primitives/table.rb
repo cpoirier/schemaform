@@ -30,29 +30,8 @@ class Table
    include QualityAssurance
    extend  QualityAssurance
    
-   def self.build_master_table( schema, name, id_name = nil, base_table = nil )
-      name = Name.build(name)
-      schema.adapter.table_class.new(schema, name).tap do |table|
-         modifier = base_table ? ReferenceMark.build(base_table) : GeneratedMark.build()
-         table.identifier = table.define_field(id_name || Name.build("id", name.last), schema.adapter.type_manager.identifier_type, modifier, PrimaryKeyMark.build())
-      end
-   end
-   
-   def self.build_child_table( schema, parent_table, name, has_many = true )
-      schema.adapter.table_class.new(schema, parent_table.name + name).tap do |table|
-         table.owner = table.define_field(Name.build("owner", parent_table.identifier.name), schema.adapter.type_manager.identifier_type, ReferenceMark.build(parent_table))
-
-         if has_many then
-            table.identifier = table.define_field(Name.build("table", "id"), schema.adapter.type_manager.identifier_type, GeneratedMark.build(), PrimaryKeyMark.build())
-         else
-            table.owner.marks << PrimaryKeyMark.build()
-            table.identifier = table.owner
-         end
-      end
-   end
-   
    attr_reader   :schema, :name, :fields
-   attr_accessor :identifier, :owner
+   attr_accessor :identifier
    
    def adapter()
       @schema.adapter
@@ -62,8 +41,8 @@ class Table
       @fields.register(adapter.field_class.new(self, name, type, *modifiers))
    end
 
-   def define_child(name)
-      @schema.define_child_table(self, name)
+   def define_child(name, &block)
+      @children[name] = @schema.define_table(name, self, &block)
    end
    
    def attribute_mappings()
@@ -81,17 +60,15 @@ class Table
    def to_sql_create()
       @schema.adapter.render_sql_create(self)
    end
-
-
+   
 protected
 
    def initialize( schema, name )
       type_check(:schema, schema, Generic::Schema)
-      @schema  = schema
-      @name    = name
-      @fields  = Registry.new(name.to_s, "a field")
+      @schema   = schema
+      @name     = name
+      @fields   = Registry.new(name.to_s, "a field")
    end
-
 
    def present?( connection )
       begin

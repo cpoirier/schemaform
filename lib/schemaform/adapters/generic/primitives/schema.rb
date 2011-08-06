@@ -31,29 +31,27 @@ class Schema
    extend  QualityAssurance
 
    def initialize( name, adapter )
-      @name               = name
-      @adapter            = adapter
-      @tables             = Registry.new()
-      @entity_tables      = {}              # Schema::Entity    => Table
-      @attribute_mappings = {}              # Schema::Attribute => Mapping 
+      @name        = name
+      @adapter     = adapter
+      @tables      = Registry.new()
+      @entity_maps = {}       # Schema::Entity    => EntityMap
    end
    
-   attr_reader :adapter, :tables, :entity_tables, :attribute_mappings
+   attr_reader :adapter, :tables, :entity_maps, :attribute_mappings
       
-   def define_master_table( name, id_name = nil, base_table = nil )
-      register @adapter.table_class.build_master_table(self, name, id_name, base_table)
-   end
-   
-   def define_child_table( parent_table, name )
-      register @adapter.table_class.build_child_table(self, parent_table, name)
+   def define_table( name )
+      @adapter.table_class.new(self, name).tap do |table|
+         register(table)
+         yield(table) if block_given?
+      end   
    end
    
    def register( table )
       @tables.register(table)
    end
-      
-   def map_attribute( attribute, mapping )
-      @attribute_mappings[attribute] = mapping
+
+   def map_entity( entity, anchor_table )
+      @entity_maps[entity] = EntityMap.new(entity, anchor_table, @entity_maps[entity.base_entity])
    end
    
    def to_sql_create()

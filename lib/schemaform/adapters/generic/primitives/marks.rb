@@ -22,8 +22,7 @@
 module Schemaform
 module Adapters
 module Generic
-
-
+   
    #
    # Base class for things that configure a Field in some way. Override Mark::build() if you need
    # parameters.
@@ -60,22 +59,23 @@ module Generic
       def table()       ; @table      ; end
       def deferrable?() ; @deferrable ; end
    end
+
+
+
+
+   class Adapter
+      def generated_mark()   ; GeneratedMark.build()  ; end
+      def primary_key_mark() ; PrimaryKeyMark.build() ; end
+      def required_mark()    ; RequiredMark.build()   ; end
+      
+      def reference_mark( table, deferrable = false )
+         ReferenceMark.build(table, deferrable)
+      end
+   end
+
+
   
-   class StructuralLink < ReferenceMark 
-      def self.build( table, is_direct_parent = false )
-         new(table, is_direct_parent)
-      end
-      
-      def initialize( table, is_direct_parent = false )
-         super( table )
-         @is_direct_parent = is_direct_parent
-      end
-      
-      def direct_parent?()
-         @is_direct_parent
-      end
-   end 
-   
+
 end # Generic
 end # Adapters
 end # Schemaform

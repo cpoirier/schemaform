@@ -79,7 +79,7 @@ class Adapter
    
    def lay_out_attribute( attribute, builder )
       builder.with_attribute(attribute) do
-         send_specialize(:lay_out, element, builder))
+         send_specialize(:lay_out, element, builder)
          yield if block_given?
       end
    end

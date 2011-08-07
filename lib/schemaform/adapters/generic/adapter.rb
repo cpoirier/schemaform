@@ -110,8 +110,8 @@ class Adapter
    end
    
    
-   def define_table( name )
-      table_class.new(self, name).tap do |table|
+   def define_table( *name )
+      table_class.new(self, build_name(*name)).tap do |table|
          @tables.register(table)
          yield(table) if block_given?
       end
@@ -143,5 +143,7 @@ end # Generic
 end # Adapters
 end # Schemaform
 
-Dir[Schemaform.locate("builders/*.rb")].each{|path| require path}
+["primitives", "builders", "mapping"].each do |subdir|
+   Dir[Schemaform.locate("#{subdir}/*.rb")].each{|path| require path}
+end
 

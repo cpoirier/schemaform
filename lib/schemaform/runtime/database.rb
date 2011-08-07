@@ -131,8 +131,7 @@ private
       # Define the control tables.
       
       @control_tables = {}
-      @control_schema = @adapter.define_schema(Schemaform::MasterIdentifier)
-      @control_tables[:versions] = VersionTable.new(@control_schema, @adapter)
+      @control_tables[:versions] = VersionTable.new(@adapter, Schemaform::MasterIdentifier)
       
       # @adapter.instance_eval do
       #    .tap do |control_schema|
@@ -159,13 +158,14 @@ private
    class VersionTable
       include QualityAssurance
       
-      def initialize(control_schema, adapter)
+      def initialize(adapter, table_prefix = nil)
          @adapter = adapter
-         @table = adapter.instance_eval do
-            control_schema.define_master_table(adapter.build_name(Schemaform::MasterIdentifier, "versions"), "schema_id").tap do |table|
-               table.define_field(:name   , adapter.type_manager.text_type(60) )
-               table.define_field(:version, adapter.type_manager.integer_type())
-            end
+         @table = adapter.define_table(table_prefix, "versions") do |table|
+            table.define_field(:name   , adapter.type_manager.text_type(60) )
+            table.define_field(:version, adapter.type_manager.integer_type())
+            
+            warn_once("not setting primary key on VersionTable")
+            # table.define_key(:name)
          end
          
          warn_once("using hardcoded queries until query builders are done")

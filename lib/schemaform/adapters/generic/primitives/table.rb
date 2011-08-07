@@ -30,47 +30,34 @@ class Table
    include QualityAssurance
    extend  QualityAssurance
    
-   attr_reader   :schema, :name, :fields
+   attr_reader   :adapter, :name, :fields
    attr_accessor :identifier
-   
-   def adapter()
-      @schema.adapter
-   end
 
    def define_field( name, type, *modifiers )
-      @fields.register(adapter.field_class.new(self, name, type, *modifiers))
+      @fields.register(@adapter.field_class.new(self, name, type, *modifiers))
    end
-
-   def define_child(name, &block)
-      @children[name] = @schema.define_table(name, self, &block)
-   end
-   
-   def attribute_mappings()
-      @schema.attribute_mappings
-   end
-   
 
    def install( connection )
       unless present?(connection)
-         connection.execute(@schema.adapter.render_sql_create(self))
+         connection.execute(@adapter.render_sql_create(self))
       end
    end
    
    
    def to_sql_create()
-      @schema.adapter.render_sql_create(self)
+      @adapter.render_sql_create(self)
    end
    
 protected
 
-   def initialize( schema, name )
-      type_check(:schema, schema, Generic::Schema)
-      @schema   = schema
-      @name     = name
-      @fields   = Registry.new(name.to_s, "a field")
+   def initialize( adapter, name )
+      @adapter = adapter
+      @name    = name
+      @fields  = Registry.new(name.to_s, "a field")
    end
 
    def present?( connection )
+      warn_once("present query text should be moved to Adapter")
       begin
          connection.retrieve("SELECT * FROM #{@name} WHERE 1 = 0")
          return true

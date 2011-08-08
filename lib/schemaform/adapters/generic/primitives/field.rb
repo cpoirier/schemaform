@@ -30,14 +30,14 @@ class Field
    extend  QualityAssurance
       
    def initialize( table, name, type, *marks )
-      @table     = table
-      @name      = name
-      @type      = table.adapter.type_manager.scalar_type(type)
-      @marks     = marks
-      @reference = @marks.select_first{|m| m.is_a?(ReferenceMark)}
+      @table          = table
+      @name           = name
+      @type           = table.adapter.type_manager.scalar_type(type)
+      @marks          = marks
+      @reference_mark = @marks.select_first{|m| m.is_a?(ReferenceMark)}
    end
    
-   attr_reader :table, :name, :type, :marks, :reference
+   attr_reader :table, :name, :type, :marks, :reference_mark
    
    def reference?()
       !!@reference

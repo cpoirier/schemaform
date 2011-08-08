@@ -30,9 +30,10 @@ class SchemaMap
    def initialize( definition )
       @definition  = definition
       @entity_maps = {}
+      @tables      = []
    end
    
-   attr_reader :definition, :entity_maps
+   attr_reader :definition, :entity_maps, :tables
    
    def []( entity_definition )
       @entity_maps[entity_definition]
@@ -41,6 +42,10 @@ class SchemaMap
    def map( definition, anchor_table )
       @entity_maps[definition] = EntityMap.new(self, definition, anchor_table)
       yield(@entity_maps[definition], anchor_table) if block_given?
+   end
+   
+   def register_table( table )
+      @tables << table
    end
  
 end # SchemaMap

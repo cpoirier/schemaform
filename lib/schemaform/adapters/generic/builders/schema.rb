@@ -44,10 +44,10 @@ class Adapter
                definition.entities.each do |entity|
                   schema_map.map(entity, define_table(schema_name + entity.name)) do |entity_map, table|
                      if entity.has_base_entity? then
-                        table.identifier = table.define_field(entity.id, type_manager.identifier_type, reference_mark(entity_map.base_map.anchor_table), primary_key_mark())
+                        table.identifier = table.define_reference_field(entity.id, entity_map.base_map.anchor_table, build_primary_key_mark())
                         entity_map.link_child_to_parent(table.identifier)
                      else
-                        table.identifier = table.define_field(entity.id, type_manager.identifier_type, generated_mark(), primary_key_mark())
+                        table.identifier = table.define_identifier_field(entity.id, build_primary_key_mark())
                      end
                   end
                end
@@ -69,7 +69,7 @@ class Adapter
          end
       end
       
-      @schemas[definition]
+      @schema_maps[definition]
    end
 
 
@@ -79,14 +79,14 @@ class Adapter
    
    def lay_out_attribute( attribute, builder )
       builder.with_attribute(attribute) do
-         send_specialize(:lay_out, element, builder)
+         send_specialized(:lay_out, attribute.type, builder)
          yield if block_given?
       end
    end
    
    def lay_out_optional_attribute( attribute, builder )
       lay_out_attribute(attribute, builder) do
-         builder.define_meta(:present, type_manager.boolean_type, required_mark())
+         builder.define_meta(:present, type_manager.boolean_type, build_required_mark())
       end
    end
    
@@ -111,7 +111,7 @@ class Adapter
       warn_todo("reference field null/default handling")
       
       referenced_entity_map = builder[type.referenced_entity] or fail "couldn't resolve a reference to entity [#{type.entity_name}]"
-      builder.define_scalar(type_manager.identifier_type, reference_mark(referenced_entity_map.anchor_table, true))
+      builder.define_scalar(type_manager.identifier_type, build_reference_mark(referenced_entity_map.anchor_table, true))
    end
 
    def lay_out_identifier_type( type, builder )
@@ -136,7 +136,7 @@ class Adapter
    
 
    def lay_out_collection_type( type, builder )
-      builder.define_child_table("record") do
+      builder.define_child_table(true, "record") do
          yield if block_given?
       end
    end
@@ -162,7 +162,7 @@ class Adapter
       member_reference = nil
 
       lay_out_collection_type(type, builder) do
-         member_reference = reference_mark(builder.current_table)
+         member_reference = build_reference_mark(builder.current_table)
          lay_out_collection_type__member_type(type.member_type, builder)
 
          builder.define_meta("next"    , field_type, member_reference)
@@ -183,52 +183,76 @@ class Adapter
    # overrides.
    
    class LayOutBuilder
+      include QualityAssurance
+      TableFrame = Struct.new(:table, :default_name, :name_stack)
+      
+      
       def initialize( adapter, entity_map )
-         @adapter    = adapter
-         @entity_map = entity_map
+         @adapter     = adapter
+         @entity_map  = entity_map
+         @schema_map  = entity_map.schema_map
+         @table_stack = [TableFrame.new(entity_map.anchor_table, @adapter.build_name(), [])]
       end
       
+      def []( entity )
+         @schema_map[entity]
+      end
       
+      def current_table()
+         @table_stack.top.table
+      end
+      
+      def with_attribute( attribute )
+         name_stack.push_and_pop((name_stack.top || @adapter.build_name()) + attribute.name) do
+            yield
+         end
+      end
+      
+      def with_meta( name )
+         name_stack.push_and_pop((name_stack.top || @table_stack.top.default_name) + name) do
+            yield
+         end
+      end
+
+      def define_scalar( type_info, *field_marks )
+         @table_stack.top.table.define_field(name_stack.top, type_info, *field_marks)
+      end
+      
+      def define_meta( name, type_info, *field_marks )
+         with_meta(name) do
+            define_scalar(type_info, *field_marks)
+         end
+      end
+      
+      def define_child_table( has_many, default_name = "record" )
+         parent_table = @table_stack.top.table
+         default_name = @adapter.build_name(default_name)
+         
+         @adapter.define_table(parent_table.name + name_stack.top) do |table|
+            owner_field = table.define_reference_field(default_name + "owner", parent_table)
+            
+            if has_many then
+               table.identifier = table.define_identifier_field(default_name + "id", @adapter.build_primary_key_mark())
+            else
+               table.identifier = owner_field
+               owner_field.marks << @adapter.build_primary_key_mark()
+            end
+            
+            @table_stack.push_and_pop(TableFrame.new(table, default_name, [])) do
+               @entity_map.link_child_to_parent(owner_field)
+               yield
+            end
+         end
+      end
+      
+   protected
+      def name_stack()
+         @table_stack.top.name_stack
+      end
       
    end
 
 
-
-   # 
-   # def self.build_master_table( schema, name, id_name = nil, base_table = nil )
-   #    name = Name.build(name)
-   #    schema.adapter.table_class.new(schema, name).tap do |table|
-   #       modifier = base_table ? ReferenceMark.build(base_table) : GeneratedMark.build()
-   #       table.identifier = table.define_field(id_name || Name.build("id", name.last), schema.adapter.type_manager.identifier_type, modifier, PrimaryKeyMark.build())
-   #    end
-   # end
-   # 
-   # def self.build_child_table( schema, parent_table, name, has_many = true )
-   #    schema.adapter.table_class.new(schema, parent_table.name + name).tap do |table|
-   #       table.owner = table.define_field(Name.build("owner", parent_table.identifier.name), schema.adapter.type_manager.identifier_type, ReferenceMark.build(parent_table))
-   # 
-   #       if has_many then
-   #          table.identifier = table.define_field(Name.build("table", "id"), schema.adapter.type_manager.identifier_type, GeneratedMark.build(), PrimaryKeyMark.build())
-   #       else
-   #          table.owner.marks << PrimaryKeyMark.build()
-   #          table.identifier = table.owner
-   #       end
-   #    end
-   # end
-   # def define_master_table( name, id_name = nil, base_table = nil )
-   #    register @adapter.table_class.build_master_table(self, name, id_name, base_table)
-   # end
-   # 
-   # def define_child_table( parent_table, name )
-   #    register @adapter.table_class.build_child_table(self, parent_table, name)
-   # end
-   # 
-   # def build_entity_map( entity )
-   #    
-   # end
-   # 
-   
-   
 
 end # Adapter
 end # Generic

@@ -36,6 +36,14 @@ class Table
    def define_field( name, type, *modifiers )
       @fields.register(@adapter.field_class.new(self, name, type, *modifiers))
    end
+   
+   def define_reference_field( name, target_table, *marks )
+      define_field(name, @adapter.type_manager.identifier_type, @adapter.build_reference_mark(target_table), *marks)
+   end
+   
+   def define_identifier_field( name, *marks )
+      define_field(name, @adapter.type_manager.identifier_type, @adapter.build_generated_mark(), *marks)
+   end
 
    def install( connection )
       unless present?(connection)

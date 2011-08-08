@@ -64,11 +64,11 @@ module Generic
 
 
    class Adapter
-      def generated_mark()   ; GeneratedMark.build()  ; end
-      def primary_key_mark() ; PrimaryKeyMark.build() ; end
-      def required_mark()    ; RequiredMark.build()   ; end
+      def build_generated_mark()   ; GeneratedMark.build()  ; end
+      def build_primary_key_mark() ; PrimaryKeyMark.build() ; end
+      def build_required_mark()    ; RequiredMark.build()   ; end
       
-      def reference_mark( table, deferrable = false )
+      def build_reference_mark( table, deferrable = false )
          ReferenceMark.build(table, deferrable)
       end
    end

@@ -67,7 +67,6 @@ class Adapter
    end
    
    def render_sql_create_reference_mark( mark )
-      p mark.table.name
       clauses = []
       clauses << "REFERENCES #{mark.table.name}(#{quote_identifier(mark.table.identifier.name)})"
       clauses << "DEFERRABLE INITIALLY DEFERRED" if mark.deferrable?

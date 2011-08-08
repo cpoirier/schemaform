@@ -32,6 +32,13 @@ class EntityMap
       @entity       = entity
       @anchor_table = anchor_table
       @base_map     = base_map || @schema_map[entity.base_entity]
+      @links        = {}  
+      
+      @schema_map.register_table(anchor_table)
+      
+      
+      
+      
       # @ancestors    = base_map ? @base_map.ancestors + [@base_map] : []
 
       # @links = {}  parent_table => [child_tables]
@@ -48,6 +55,14 @@ class EntityMap
    end
 
    attr_reader :schema_map, :entity, :anchor_table, :base_map
+
+   def link_child_to_parent( reference_field )
+      child_table  = reference_field.table
+      parent_table = reference_field.reference_mark.table
+      
+      @links[child_table] = [parent_table, reference_field]
+      @schema_map.register_table(child_table)
+   end
 
 
 

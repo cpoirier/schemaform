@@ -188,10 +188,11 @@ class Adapter
       
       
       def initialize( adapter, entity_map )
-         @adapter     = adapter
-         @entity_map  = entity_map
-         @schema_map  = entity_map.schema_map
-         @table_stack = [TableFrame.new(entity_map.anchor_table, @adapter.build_name(), [])]
+         @adapter         = adapter
+         @entity_map      = entity_map
+         @schema_map      = entity_map.schema_map
+         @table_stack     = [TableFrame.new(entity_map.anchor_table, @adapter.build_name(), [])]
+         @attribute_stack = []
       end
       
       def []( entity )
@@ -203,8 +204,10 @@ class Adapter
       end
       
       def with_attribute( attribute )
-         name_stack.push_and_pop((name_stack.top || @adapter.build_name()) + attribute.name) do
-            yield
+         @attribute_stack.push_and_pop(attribute) do
+            name_stack.push_and_pop((name_stack.top || @adapter.build_name()) + attribute.name) do
+               yield
+            end
          end
       end
       
@@ -215,7 +218,11 @@ class Adapter
       end
 
       def define_scalar( type_info, *field_marks )
-         @table_stack.top.table.define_field(name_stack.top, type_info, *field_marks)
+         @table_stack.top.table.define_field(name_stack.top, type_info, *field_marks).tap do |field|
+            @attribute_stack.each do |attribute|
+               @entity_map.link_field_to_attribute(field, attribute)
+            end
+         end
       end
       
       def define_meta( name, type_info, *field_marks )

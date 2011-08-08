@@ -33,7 +33,7 @@ class EntityMap
       @anchor_table = anchor_table
       @base_map     = base_map || @schema_map[entity.base_entity]
       @links        = {}  
-      
+      @attribute_mappings = {}
       @schema_map.register_table(anchor_table)
       
       
@@ -70,6 +70,11 @@ class EntityMap
       
       warn_todo("count distance from child to context")
       @links[child_table] = [context_table, reference_field]
+   end
+   
+   def link_field_to_attribute( field, attribute )
+      @attribute_mappings[attribute] = [] unless @attribute_mappings.member?(attribute)
+      @attribute_mappings[attribute] << field
    end
 
 

@@ -230,6 +230,12 @@ class Adapter
          
          @adapter.define_table(parent_table.name + name_stack.top) do |table|
             owner_field = table.define_reference_field(default_name + "owner", parent_table)
+            @entity_map.link_child_to_parent(owner_field)
+
+            if parent_table != @entity_map.anchor_table then
+               context_field = table.define_reference_field(default_name + "context", @entity_map.anchor_table)
+               @entity_map.link_child_to_context(context_field)
+            end
             
             if has_many then
                table.identifier = table.define_identifier_field(default_name + "id", @adapter.build_primary_key_mark())
@@ -239,7 +245,6 @@ class Adapter
             end
             
             @table_stack.push_and_pop(TableFrame.new(table, default_name, [])) do
-               @entity_map.link_child_to_parent(owner_field)
                yield
             end
          end

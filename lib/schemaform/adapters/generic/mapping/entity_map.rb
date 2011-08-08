@@ -63,6 +63,14 @@ class EntityMap
       @links[child_table] = [parent_table, reference_field]
       @schema_map.register_table(child_table)
    end
+   
+   def link_child_to_context( reference_field )
+      child_table   = reference_field.table
+      context_table = referenced_field.reference_mark.table
+      
+      warn_todo("count distance from child to context")
+      @links[child_table] = [context_table, reference_field]
+   end
 
 
 

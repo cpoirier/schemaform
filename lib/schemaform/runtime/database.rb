@@ -45,7 +45,7 @@ class Database
          end
       end
       
-      @@databases[adapter.url]
+      block_given? ? yield(@@databases[adapter.url]) : @@databases[adapter.url]
    end
    
    

@@ -53,7 +53,7 @@ class Database
    # Provides a context in which your block can do work in the database. You must specify the
    # Schemas you will be working with, in the order of name precedence. 
 
-   def transact( available_schemas )
+   def transact_with( available_schemas )
       workspace = build_workspace(available_schemas)
       @adapter.transact do |connection|
          yield(Transaction.new(workspace, connection))

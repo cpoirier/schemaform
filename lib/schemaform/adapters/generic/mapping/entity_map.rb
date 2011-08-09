@@ -26,14 +26,18 @@ module Schemaform
 module Adapters
 module Generic
 class EntityMap
+   
+   Link    = Struct.new(:from_table, :to_table, :via, :distance)
+   Mapping = Struct.new(:attribute, :property, :field)
 
    def initialize( schema_map, entity, anchor_table, base_map = nil )
       @schema_map   = schema_map
       @entity       = entity
       @anchor_table = anchor_table
       @base_map     = base_map || @schema_map[entity.base_entity]
-      @links        = {}  
-      @attribute_mappings = {}
+      @parent_links = {}                                             # child Table => Link
+      @all_links    = Hash.new(){|hash, key| hash[key] = {}}         # descendent Table => { ancestor Table => Link }
+      @mappings     = Hash.new(){|hash, key| hash[key] = {}}         # Schema::Attribute => { aspect => Field }
       @schema_map.register_table(anchor_table)
    end
 
@@ -42,22 +46,40 @@ class EntityMap
    def link_child_to_parent( reference_field )
       child_table  = reference_field.table
       parent_table = reference_field.reference_mark.table
+      link         = Link.new(child_table, parent_table, reference_field, 1)
       
-      @links[child_table] = [parent_table, reference_field]
+      @parent_links[child_table] = link
+      @all_links[child_table][parent_table] = link
+      
       @schema_map.register_table(child_table)
    end
    
    def link_child_to_context( reference_field )
       child_table   = reference_field.table
       context_table = referenced_field.reference_mark.table
+
+      distance = 1
+      current_table = child_table
+      while hit = @parent_links[current_table]
+         break if hit.to_table == context_table
+         distance += 1
+      end
       
-      warn_todo("count distance from child to context")
-      @links[child_table] = [context_table, reference_field]
+      if hit then
+         @all_links[child_table][context_table] = Link.new(child_table, context_table, reference_field, distance)
+      else
+         fail "couldn't find context path from [#{child_table.name}] to [#{context_table.name}]"
+      end
    end
    
-   def link_field_to_attribute( field, attribute )
-      @attribute_mappings[attribute] = [] unless @attribute_mappings.member?(attribute)
-      @attribute_mappings[attribute] << field
+   def link_field_to_attribute( field, attribute, aspect )
+      @mappings[attribute][aspect] = field
+   end
+   
+   def project( expressions )
+      fields = expressions.collect{|e| @mappings[e.attribute][e.class]}.flatten.uniq.compact
+      tables = fields.collect{|f| f.table}.flatten.uniq
+      
    end
 
 end # EntityMap

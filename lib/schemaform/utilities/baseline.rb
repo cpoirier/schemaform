@@ -445,25 +445,6 @@ class Array
    
    
    #===========================================================================================
-   if !method_defined?(:accumulate) then
-      
-      #
-      # Appends your value to a list at the specified index, creating an array at that index
-      # if not present.
-   
-      def accumulate( key, value )
-         if self[key].nil? then
-            self[key] = []
-         elsif !self[key].is_an?(Array) then
-            self[key] = [self[key]]
-         end
-
-         self[key] << value
-      end
-   end
-   
-   
-   #===========================================================================================
    if !method_defined?(:to_hash) then
       
       #
@@ -547,6 +528,25 @@ module Enumerable
       end
    end
 
+   #===========================================================================================
+   if !method_defined?(:accumulate) then
+      
+      #
+      # Appends your value to a list at the specified index, creating an array at that index
+      # if not present.
+   
+      def accumulate( key, value )
+         if self[key].nil? then
+            self[key] = []
+         elsif !self[key].is_an?(Array) then
+            self[key] = [self[key]]
+         end
+
+         self[key] << value
+      end
+   end
+   
+   
 end
 
 

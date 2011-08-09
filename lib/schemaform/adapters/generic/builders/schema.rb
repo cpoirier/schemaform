@@ -27,6 +27,14 @@ module Adapters
 module Generic
 class Adapter
    
+   module AttributeAspects
+      Value                    = Language::Productions::ValueAccessor
+      Present                  = Language::Productions::PresentCheck
+      # ListFirstMember          = Language::Productions::
+      # ListLastMember           = Language::Productions::
+      # ListMemberNextMember     = Language::Productions::
+      # ListMemberPreviousMember = Language::Productions::
+   end
    
    
    #
@@ -86,7 +94,7 @@ class Adapter
    
    def lay_out_optional_attribute( attribute, builder )
       lay_out_attribute(attribute, builder) do
-         builder.define_meta(:present, type_manager.boolean_type, build_required_mark())
+         builder.define_meta(AttributeAspects::Present, "present", type_manager.boolean_type, build_required_mark())
       end
    end
    
@@ -145,7 +153,7 @@ class Adapter
       if member_type.naming_type? then
          dispatch_lay_out(member_type, builder)
       else
-         builder.with_meta("value") do
+         builder.with_name("value") do
             dispatch_lay_out(member_type, builder)
          end
       end
@@ -165,12 +173,14 @@ class Adapter
          member_reference = build_reference_mark(builder.current_table)
          lay_out_collection_type__member_type(type.member_type, builder)
 
-         builder.define_meta("next"    , field_type, member_reference)
-         builder.define_meta("previous", field_type, member_reference)
+         warn_once("list meta fields cannot be completed until Productions exist for accessing them")
+         # builder.define_meta(AttributeAspects::ListMemberNextMember, "next"    , field_type, member_reference)
+         # builder.define_meta(AttributeAspects::ListMemberPreviousMember, "previous", field_type, member_reference)
       end
 
-      builder.define_meta("first", field_type, member_reference)
-      builder.define_meta("last" , field_type, member_reference)
+      warn_once("list meta fields cannot be completed until Productions exist for accessing them")
+      # builder.define_meta(AttributeAspects::ListFirstMember, "first", field_type, member_reference)
+      # builder.define_meta(AttributeAspects::ListLastMember , "last" , field_type, member_reference)
    end
 
 
@@ -184,7 +194,8 @@ class Adapter
    
    class LayOutBuilder
       include QualityAssurance
-      TableFrame = Struct.new(:table, :default_name, :name_stack)
+      TableFrame     = Struct.new(:table, :default_name, :name_stack)
+      AttributeFrame = Struct.new(:attribute, :aspect)
       
       
       def initialize( adapter, entity_map )
@@ -204,14 +215,22 @@ class Adapter
       end
       
       def with_attribute( attribute )
-         @attribute_stack.push_and_pop(attribute) do
+         @attribute_stack.push_and_pop(AttributeFrame.new(attribute, AttributeAspects::Value)) do
             name_stack.push_and_pop((name_stack.top || @adapter.build_name()) + attribute.name) do
                yield
             end
          end
       end
       
-      def with_meta( name )
+      def with_meta( aspect, name )
+         @attribute_stack.push_and_pop(AttributeFrame.new(@attribute_stack.top.attribute, :purpose)) do
+            name_stack.push_and_pop((name_stack.top || @table_stack.top.default_name) + name) do
+               yield
+            end
+         end
+      end
+      
+      def with_name( name )
          name_stack.push_and_pop((name_stack.top || @table_stack.top.default_name) + name) do
             yield
          end
@@ -219,14 +238,13 @@ class Adapter
 
       def define_scalar( type_info, *field_marks )
          @table_stack.top.table.define_field(name_stack.top, type_info, *field_marks).tap do |field|
-            @attribute_stack.each do |attribute|
-               @entity_map.link_field_to_attribute(field, attribute)
-            end
+            frame = @attribute_stack.top
+            @entity_map.link_field_to_attribute(field, frame.attribute, frame.aspect)
          end
       end
       
-      def define_meta( name, type_info, *field_marks )
-         with_meta(name) do
+      def define_meta( purpose, name, type_info, *field_marks )
+         with_meta(purpose, name) do
             define_scalar(type_info, *field_marks)
          end
       end

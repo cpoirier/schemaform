@@ -92,7 +92,7 @@ class TypeManager
       when :integer
          integer_type()
       else
-         fail type.class.name
+         fail_todo type.class.name
       end
    end
    

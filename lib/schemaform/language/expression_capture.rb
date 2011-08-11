@@ -307,10 +307,14 @@ class Schema
       def capture_method( receiver, method_name, args = [], block = nil )
          case method_name
          when :where
-            formula_context     = @tuple_type.formula_context(Language::Productions::EachTuple.new(receiver))
+            formula_context     = @tuple_type.expression(Language::Productions::EachTuple.new(receiver))
             criteria_expression = Language::ExpressionCapture.capture_expression(formula_context, block, schema.boolean_type)
             type_check(:criteria_expression, criteria_expression, Language::Placeholder)
             self.capture(Language::Productions::Restriction.new(receiver, formula_context, criteria_expression))
+         when :project
+            warn_todo("validation on projection results")
+            placeholders = block ? block.call(@tuple_type.expression()) : args.collect{|name| @tuple_type.tuple[name].capture()}
+            self.capture(Language::Productions::Projection.new(receiver, placeholders))
          else
             super
          end
@@ -324,14 +328,14 @@ class Schema
          return nil unless attribute?(attribute_name)
          
          entity = referenced_entity()
-         tuple  = entity.formula_context(Language::Productions::FollowReference.new(receiver))
+         tuple  = entity.expression(Language::Productions::FollowReference.new(receiver))
          Language::Attribute.new(entity.heading[attribute_name], Language::Productions::Accessor.new(tuple, attribute_name))
       end
    end
    
    class TupleType < Type
-      def formula_context( production = nil )
-         @tuple.formula_context(production)
+      def expression( production = nil )
+         @tuple.expression(production)
       end
       
       def capture_method( receiver, method_name, args = [], block = nil )
@@ -353,8 +357,8 @@ class Schema
    
    
    class Tuple < Element
-      def formula_context( production = nil )
-         context.responds_to?(:formula_context) ? context.formula_context(production) : Language::Tuple.new(self, production)
+      def expression( production = nil )
+         context.responds_to?(:expression) ? context.expression(production) : Language::Tuple.new(self, production)
       end      
    end
    
@@ -363,8 +367,8 @@ class Schema
          Language::Attribute.new(self, production)
       end
       
-      def formula_context( production = nil )
-         context.formula_context(production)
+      def expression( production = nil )
+         context.expression(production)
       end
    end
    
@@ -382,7 +386,7 @@ class Schema
             Language::ExpressionCapture.resolution_scope(schema) do
                begin
                   @analyzing = true  # Ensure any self-references don't retrigger analysis
-                  result = Language::ExpressionCapture.capture_expression(formula_context(), @proc)
+                  result = Language::ExpressionCapture.capture_expression(expression(), @proc)
                ensure
                   @analyzing = false
                end
@@ -420,9 +424,9 @@ class Schema
             
             Language::ExpressionCapture.resolution_scope(schema) do
                begin
-                  warn_todo("shouldn't the formula_context for a Volatile attribute link in with the context Production?")
+                  warn_todo("shouldn't the expression for a Volatile attribute link in with the context Production?")
                   @analyzing = true  # Set true to ensure any self-references are detected
-                  result = Language::ExpressionCapture.capture_expression(formula_context(production), @proc)
+                  result = Language::ExpressionCapture.capture_expression(expression(production), @proc)
                ensure
                   @analyzing = false
                end
@@ -436,13 +440,17 @@ class Schema
 
 
    class Entity < Relation
-      def formula_context( production = nil )
-         warn_once("what does it mean to supply a production to Entity.formula_context()?") if production.nil?
-         Language::EntityTuple.new(self, production)
+      def expression( production = nil, whole_entity = false )
+         if whole_entity then
+            Language::Entity.new(self, production)
+         else
+            warn_once("what does it mean to supply a production to Entity.formula_context()?") if production.nil?
+            Language::EntityTuple.new(self, production)
+         end
       end
       
-      def entity_context( production = nil )
-         Language::Entity.new(self, production)
+      def entity_expression( production = nil )
+         expression(production, true)
       end
    end
    
@@ -474,7 +482,7 @@ class Schema
 
       def search( path = nil, &block )
          unless @heading.attributes.empty?
-            path = formula_context() if path.nil?
+            path = expression() if path.nil?
             @heading.attributes.each do |attribute|
                attribute_path = attribute.capture(path)
                if result = yield(attribute, attribute_path) || attribute.search(attribute_path, &block) then
@@ -492,7 +500,7 @@ class Schema
    class Tuple < Element
       def search( path = nil, &block )
          unless @attributes.empty?
-            path = formula_context() if path.nil?
+            path = expression() if path.nil?
             @attributes.each do |attribute|
                attribute_path = attribute.capture(path)
                result = yield(attribute, attribute_path) || attribute.search(attribute_path, &block)

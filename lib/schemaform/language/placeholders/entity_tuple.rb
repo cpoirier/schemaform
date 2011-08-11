@@ -47,7 +47,7 @@ class EntityTuple < Tuple
       end
       
       if link_expression then
-         link_path = link_expression.call(related_entity.formula_context)
+         link_path = link_expression.call(related_entity.expression)
       else
          link_path = related_entity.search do |attribute, path|
             type = attribute.evaluated_type

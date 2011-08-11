@@ -27,7 +27,7 @@ module Plan
 class Accessor
    
    def self.build_key_accessor( entity_plan, key )
-      query = entity_plan.entity.entity_context.where do |entity|
+      query = entity_plan.entity.entity_expression.where do |entity|
          Language::ExpressionCapture.resolution_scope(entity_plan.entity.schema) do 
             comparisons = []
             key.attributes.each_with_index do |attribute, index|

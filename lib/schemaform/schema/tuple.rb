@@ -38,7 +38,6 @@ class Tuple < Element
 
       @attributes = Registry.new(self, "an attribute" , registry_chain)
       @tuples     = Registry.new(self, "a child tuple")
-      @expression = nil
    end
    
    def verify()

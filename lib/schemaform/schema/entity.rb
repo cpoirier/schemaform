@@ -60,7 +60,7 @@ class Entity < Relation
    def id()
       (@declared_heading.name.to_s.identifier_case + "_id").intern
    end
-   
+
    def identifier_type( context = nil )
       @identifier.type
    end

@@ -32,7 +32,7 @@ module ExpressionDefinition
       # assert(condition.type.boolean_type, "the if_then_else condition must have a boolean type")
 
       production = Productions::IfThenElse.new(condition, true_branch, false_branch)
-      ExpressionCapture.merge_types(true_branch, false_branch).capture(production)
+      ExpressionCapture.merge_types(true_branch, false_branch).expression(production)
    end
    
    def self.parameter!( number )

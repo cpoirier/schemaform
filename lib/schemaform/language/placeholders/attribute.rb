@@ -29,7 +29,7 @@ class Attribute < Placeholder
    def initialize( definition, production = nil )
       super(definition.type, production)
       @definition = definition
-      @effective  = definition.type.capture(Productions::ValueAccessor.new(self))
+      @effective  = definition.type.expression(Productions::ValueAccessor.new(self))
    end
    
    def method_missing( symbol, *args, &block )
@@ -49,8 +49,22 @@ class Attribute < Placeholder
       false_value = ExpressionCapture.capture(false_value)      
       result_type = true_value ? ExpressionCapture.merge_types(true_value, false_value) : ExpressionCapture.resolve_type(:boolean)
 
-      result_type.capture(Productions::PresentCheck.new(self, true_value, false_value))
+      result_type.expression(Productions::PresentCheck.new(self, true_value, false_value))
    end
+   
+   
+   #
+   # Builds an expression that returns the value of the attribute. The system infers
+   # when this should be applied, so you probably won't ever need to call it directly.
+   #
+   # Note: this method should naturally be called "value", but that word is too likely
+   # to be used as an attribute name in a tuple, causing an odd, hard-to-find bug, so
+   # evaluate() it is.
+   
+   def evaluate()
+      @effective
+   end
+   
 
    
    

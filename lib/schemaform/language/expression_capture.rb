@@ -52,7 +52,7 @@ module ExpressionCapture
    end
    
    def self.capture_type( type, production = nil )
-      resolve_type(type).capture(production)
+      resolve_type(type).expression(production)
    end
       
    
@@ -61,7 +61,7 @@ module ExpressionCapture
       when Placeholder, NilClass
          return value
       when Schema::Type
-         return value.capture(production)
+         return value.expression(production)
       when Array
          return LiteralList.new(*value.collect{|e| capture(e)})
       when Set
@@ -89,7 +89,7 @@ module ExpressionCapture
       result_type = merge_types(lhs.type, rhs.type)
       production  = Productions::BinaryOperator.new(operator, lhs, rhs)
       
-      result_type.capture(production)
+      result_type.expression(production)
    end
    
    def self.capture_comparison_operator( operator, lhs, rhs )
@@ -97,7 +97,7 @@ module ExpressionCapture
       rhs         = capture(rhs)
       production  = Productions::Comparison.new(operator, lhs, rhs)
 
-      resolve_type(:boolean).capture(production)
+      resolve_type(:boolean).expression(production)
    end   
    
    def self.capture_logical_and( lhs, rhs )
@@ -107,7 +107,7 @@ module ExpressionCapture
       assert(boolean.assignable_from?(lhs.type), "expected boolean expression on left-hand of logical and, found #{lhs.type.description}" )
       assert(boolean.assignable_from?(rhs.type), "expected boolean expression on right-hand of logical and, found #{rhs.type.description}")
 
-      boolean.capture(Productions::And.new([lhs, rhs]))
+      boolean.expression(Productions::And.new([lhs, rhs]))
    end
 
    def self.capture_logical_or( lhs, rhs )
@@ -117,7 +117,7 @@ module ExpressionCapture
       assert(boolean.assignable_from?(lhs.type), "expected boolean expression on left-hand of logical or, found #{lhs.type.description}" )
       assert(boolean.assignable_from?(rhs.type), "expected boolean expression on right-hand of logical or, found #{rhs.type.description}")
 
-      boolean.capture(Productions::Or.new([lhs, rhs]))
+      boolean.expression(Productions::Or.new([lhs, rhs]))
    end
 
    def self.capture_expression( formula_context, block, result_type = nil, join_compatible_only = true )
@@ -152,7 +152,7 @@ module Schemaform
 class Schema
    
    class Element
-      def capture( production = nil )
+      def expression( production = nil )
          fail_unless_overridden self, :capture
       end
       
@@ -173,7 +173,7 @@ class Schema
    end   
    
    class Type < Element
-      def capture( production = nil )
+      def expression( production = nil )
          Language::Placeholder.new(self, production)
       end      
    end
@@ -236,7 +236,7 @@ class Schema
             Language::ExpressionCapture.capture_binary_operator(method_name, receiver, args.shift)
          when :sum, :average
             check{ assert(!receiver.type.effective_type.member_type.collection_type?, "how do we do aggregation across nested collections?") }
-            receiver.type.effective_type.member_type.capture(Language::Productions::Aggregation.new(receiver, method_name))
+            receiver.type.effective_type.member_type.expression(Language::Productions::Aggregation.new(receiver, method_name))
          when :count
             check{ assert(!receiver.type.effective_type.member_type.collection_type?, "how do we do aggregation across nested collections?") }
             Language::ExpressionCapture.capture_type(:integer, Language::Productions::Aggregation.new(receiver, method_name))
@@ -249,7 +249,7 @@ class Schema
          member_type = member_type().evaluated_type
          if member_type.responds_to?(:attribute?) then
             if captured = member_type.capture_method(receiver, attribute_name) then
-               return self.class.build(captured.type).capture(Language::Productions::Each.new(captured))
+               return self.class.build(captured.type).expression(Language::Productions::Each.new(captured))
             end            
          end
          
@@ -291,7 +291,7 @@ class Schema
                   end
                end
 
-               Schema::ListType.build(member_type).capture(Language::Productions::OrderBy.new(receiver, *order_attributes))
+               Schema::ListType.build(member_type).expression(Language::Productions::OrderBy.new(receiver, *order_attributes))
             else
                super
             end
@@ -310,11 +310,11 @@ class Schema
             formula_context     = @tuple_type.expression(Language::Productions::EachTuple.new(receiver))
             criteria_expression = Language::ExpressionCapture.capture_expression(formula_context, block, schema.boolean_type)
             type_check(:criteria_expression, criteria_expression, Language::Placeholder)
-            self.capture(Language::Productions::Restriction.new(receiver, formula_context, criteria_expression))
+            self.expression(Language::Productions::Restriction.new(receiver, formula_context, criteria_expression))
          when :project
             warn_todo("validation on projection results")
-            placeholders = block ? block.call(@tuple_type.expression()) : args.collect{|name| @tuple_type.tuple[name].capture()}
-            self.capture(Language::Productions::Projection.new(receiver, placeholders))
+            placeholders = block ? block.call(@tuple_type.expression()) : args.collect{|name| @tuple_type.tuple[name].expression()}
+            self.expression(Language::Productions::Projection.new(receiver, placeholders))
          else
             super
          end
@@ -349,26 +349,31 @@ class Schema
          return nil unless attribute?(attribute_name)
          Language::Attribute.new(self[attribute_name], Language::Productions::Accessor.new(receiver, attribute_name))
       end
-   end
-   
-   
-   
-
-   
-   
-   class Tuple < Element
+      
       def expression( production = nil )
-         context.responds_to?(:expression) ? context.expression(production) : Language::Tuple.new(self, production)
-      end      
+         context.is_an?(Entity) ? Language::EntityTuple.new(context, production) : Language::Tuple.new(self, production)
+      end
+      
+      def root_tuple()
+         case context
+         when Entity, Schema
+            self
+         else
+            context.root_tuple
+         end
+      end
    end
+   
+   
+   
    
    class Attribute < Element
-      def capture( production = nil )
+      def expression( production = nil )
          Language::Attribute.new(self, production)
       end
       
-      def expression( production = nil )
-         context.expression(production)
+      def root_tuple()
+         context.root_tuple
       end
    end
    
@@ -386,7 +391,7 @@ class Schema
             Language::ExpressionCapture.resolution_scope(schema) do
                begin
                   @analyzing = true  # Ensure any self-references don't retrigger analysis
-                  result = Language::ExpressionCapture.capture_expression(expression(), @proc)
+                  result = Language::ExpressionCapture.capture_expression(root_tuple.expression(), @proc)
                ensure
                   @analyzing = false
                end
@@ -413,7 +418,7 @@ class Schema
       # Volatile attributes are essentially macros. We treat the formula as if it were used
       # inline in the context. However, to enable that, we disallow recursion.
 
-      def capture( production = nil )
+      def expression( production = nil )
          warn_todo("must recursion be excluded from volatile attributes?")
          
          result = nil
@@ -426,7 +431,7 @@ class Schema
                begin
                   warn_todo("shouldn't the expression for a Volatile attribute link in with the context Production?")
                   @analyzing = true  # Set true to ensure any self-references are detected
-                  result = Language::ExpressionCapture.capture_expression(expression(production), @proc)
+                  result = Language::ExpressionCapture.capture_expression(root_tuple.expression(production), @proc)
                ensure
                   @analyzing = false
                end
@@ -440,17 +445,12 @@ class Schema
 
 
    class Entity < Relation
-      def expression( production = nil, whole_entity = false )
-         if whole_entity then
-            Language::Entity.new(self, production)
-         else
-            warn_once("what does it mean to supply a production to Entity.formula_context()?") if production.nil?
-            Language::EntityTuple.new(self, production)
-         end
+      def expression( production = nil )
+         Language::Entity.new(self, production)
       end
       
-      def entity_expression( production = nil )
-         expression(production, true)
+      def root_tuple()
+         heading
       end
    end
    
@@ -482,9 +482,9 @@ class Schema
 
       def search( path = nil, &block )
          unless @heading.attributes.empty?
-            path = expression() if path.nil?
+            path = root_tuple.expression() if path.nil?
             @heading.attributes.each do |attribute|
-               attribute_path = attribute.capture(path)
+               attribute_path = attribute.expression(path)
                if result = yield(attribute, attribute_path) || attribute.search(attribute_path, &block) then
                   return result
                end
@@ -500,11 +500,12 @@ class Schema
    class Tuple < Element
       def search( path = nil, &block )
          unless @attributes.empty?
-            path = expression() if path.nil?
+            path = root_tuple.expression() if path.nil?
             @attributes.each do |attribute|
-               attribute_path = attribute.capture(path)
-               result = yield(attribute, attribute_path) || attribute.search(attribute_path, &block)
-               return result if result
+               attribute_path = attribute.expression(path)
+               if result = yield(attribute, attribute_path) || attribute.search(attribute_path, &block) then
+                  return result
+               end
             end
          end
          

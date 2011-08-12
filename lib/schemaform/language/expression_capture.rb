@@ -328,7 +328,7 @@ class Schema
          return nil unless attribute?(attribute_name)
          
          entity = referenced_entity()
-         tuple  = entity.expression(Language::Productions::FollowReference.new(receiver))
+         tuple  = entity.root_tuple.expression(Language::Productions::FollowReference.new(receiver))
          Language::Attribute.new(entity.heading[attribute_name], Language::Productions::Accessor.new(tuple, attribute_name))
       end
    end

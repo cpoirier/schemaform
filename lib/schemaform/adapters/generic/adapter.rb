@@ -143,7 +143,7 @@ end # Generic
 end # Adapters
 end # Schemaform
 
-["primitives", "builders", "mapping"].each do |subdir|
+["primitives", "builders", "mapping", "query_language"].each do |subdir|
    Dir[Schemaform.locate("#{subdir}/*.rb")].each{|path| require path}
 end
 

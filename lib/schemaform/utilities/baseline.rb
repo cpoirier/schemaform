@@ -122,6 +122,15 @@ if !Object.method_defined?(:each) then
 end
    
 
+class ArrayHash < Hash
+   def self.new()
+      super do |hash, key|
+         hash[key] = []
+      end
+   end
+end
+
+
 
 
 # =============================================================================================
@@ -543,6 +552,17 @@ module Enumerable
          end
 
          self[key] << value
+      end
+   end
+   
+   #===========================================================================================
+   if !method_defined?(:not_empty?) then
+      
+      #
+      # Prettier version of !enumerable.empty?
+   
+      def not_empty?()
+         !empty?
       end
    end
    

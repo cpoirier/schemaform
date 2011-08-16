@@ -32,6 +32,9 @@ class Attribute < Placeholder
       @effective  = definition.type.expression(Productions::ValueAccessor.new(self))
    end
    
+   def get_definition() ; @definition ; end
+   def get_effective()  ; @effective  ; end
+   
    def method_missing( symbol, *args, &block )
       @effective.send(symbol, *args, &block)
    end

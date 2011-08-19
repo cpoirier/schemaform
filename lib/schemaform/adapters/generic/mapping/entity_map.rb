@@ -35,12 +35,13 @@ class EntityMap
       @schema_map     = schema_map
       @entity         = entity
       @anchor_table   = anchor_table
+      @tables         = [anchor_table]
       @base_map       = base_map || @schema_map[entity.base_entity]
-      @parent_links   = {}                                           # child Table => Link
-      @all_links      = Hash.new(){|hash, key| hash[key] = {}}       # descendent Table => { ancestor Table => Link }
-      @leaf_tables    = [anchor_table]
-      @paths          = nil
-      @mappings       = Hash.new(){|hash, key| hash[key] = {}}       # Schema::Attribute => { aspect => Field }
+      @parent_links   = {}                                  # child Table => Link
+      @all_links      = Hash.new(){|h, k| h[k] = {}}        # descendent Table => { ancestor Table => Link }
+      @mappings       = Hash.new(){|h, k| h[k] = {}}        # Schema::Attribute => { aspect => Field }
+      @sources        = {}                                  # Field => source Field
+      @copies         = Hash.new(){|h, k| h[k] = []}        # source Field => [all copies]
       @schema_map.register_table(anchor_table)
    end
 
@@ -51,13 +52,10 @@ class EntityMap
       parent_table = reference_field.reference_mark.table
       link         = Link.new(child_table, parent_table, reference_field, [])
       
-      @leaf_tables.delete(parent_table)
-      @leaf_tables << child_table unless @parent_links.member?(child_table)
-
       @parent_links[child_table]            = link
       @all_links[child_table][parent_table] = link
-      @paths = nil
-      
+
+      @tables << child_table
       @schema_map.register_table(child_table)
    end
    
@@ -74,7 +72,6 @@ class EntityMap
       
       if hit then
          @all_links[child_table][context_table] = Link.new(child_table, context_table, reference_field, skipped)
-         @paths = nil
       else
          fail "couldn't find context path from [#{child_table.name}] to [#{context_table.name}]"
       end
@@ -84,11 +81,34 @@ class EntityMap
       @mappings[attribute][aspect] = field
    end
    
+   def link_field_to_source( field, source_field )
+      @sources[field] = source_field
+      while source_field
+         @copies[source_field] << field
+         source_field = @sources[source_field]
+      end
+   end
+   
    def project( expressions )
       productions = expressions.collect{|e| e.production}
-      fields      = productions.collect{|p| @mappings[p.attribute.get_definition][p.class]}.flatten.uniq.compact
-      tables      = fields.collect{|f| f.table}.flatten.uniq
+      all_fields  = productions.collect{|p| @mappings[p.attribute.get_definition][p.class]}.flatten.uniq.compact
 
+      #
+      # First up, see what we can do with just the data fields. We can just as easily use an identifier
+      # via a reference to it as we can by including the table where the identifier lives. If we can avoid
+      # adding extra tables to the join, we should.
+      
+      data_fields = all_fields - @tables.collect{|table| table.identifier}
+      id_fields   = all_fields - data_fields
+      data_tables = data_fields.collect{|f| f.table}.flatten.uniq
+      join_plan   = plan_join(data_tables)
+      
+      
+      
+      
+      
+      data_tables
+      
       fail_todo
    end
    
@@ -96,12 +116,18 @@ class EntityMap
 
 protected
    
+   def plan_join( tables )
+      JoinPlanner.new(tables, @all_links)
+   end
+   
    #
    # Used by the EntityMap to figure out the minimal set of tables needed for a particular projection,
    # and how to join them together.
    
-   class PathFinder
-      def initialize( required_tables, all_paths )
+   class JoinPlanner
+      include QualityAssurance
+      
+      def initialize( required_tables, all_links )
          @required_tables = required_tables
          @tree = ArrayHash.new()
 
@@ -111,7 +137,7 @@ protected
          queue = [] + required_tables
          while from_table = queue.shift
             unless @tree.member?(from_table)
-               all_paths[from_table].each do |to_table, link|
+               all_links[from_table].each do |to_table, link|
                   if (link.skipped & @required_tables).empty? then  # We can immediately ignore any links that would skip required tables.
                      @tree[from_table] << link
                      queue << to_table
@@ -126,7 +152,6 @@ protected
          @tree.each do |table, links|
             links.sort!{|a, b| b.skipped.length <=> a.skipped.length}
          end
-
 
          #
          # Simplify paths where there are multiple choices. 
@@ -152,6 +177,8 @@ protected
                current_table = other_tables.shift
             elsif links = @tree[current_table] then
                current_table = links.first.to_table
+            else
+               fail "can this happen?"
             end
          end
       end

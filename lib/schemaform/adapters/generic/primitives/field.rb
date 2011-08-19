@@ -40,7 +40,11 @@ class Field
    attr_reader :table, :name, :type, :marks, :reference_mark
    
    def reference?()
-      !!@reference
+      !!@reference_mark
+   end
+   
+   def referenced_field()
+      @reference_mark.table.identifier
    end
    
    

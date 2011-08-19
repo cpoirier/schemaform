@@ -240,6 +240,7 @@ class Adapter
          @table_stack.top.table.define_field(name_stack.top, type_info, *field_marks).tap do |field|
             frame = @attribute_stack.top
             @entity_map.link_field_to_attribute(field, frame.attribute, frame.aspect)
+            @entity_map.link_field_to_source(field, field.referenced_field) if field.reference?
          end
       end
       
@@ -256,10 +257,12 @@ class Adapter
          @adapter.define_table(parent_table.name + name_stack.top) do |table|
             owner_field = table.define_reference_field(default_name + "owner", parent_table)
             @entity_map.link_child_to_parent(owner_field)
+            @entity_map.link_field_to_source(owner_field, owner_field.referenced_field)
 
             if parent_table != @entity_map.anchor_table then
                context_field = table.define_reference_field(default_name + "context", @entity_map.anchor_table)
                @entity_map.link_child_to_context(context_field)
+               @entity_map.link_field_to_source(context_field, context_field.referenced_field)
             end
             
             if has_many then

@@ -127,6 +127,15 @@ class Tuple < Element
       end
    end
    
+   def root_tuple()
+      case context
+      when Entity, Schema
+         self
+      else
+         context.root_tuple
+      end
+   end
+   
       
    
    

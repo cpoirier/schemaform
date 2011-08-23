@@ -54,7 +54,15 @@ class Attribute < Element
    def recreate_in( new_context, changes = nil )
       self.class.new(@name, new_context, @type)
    end
+         
+   def root_tuple()
+      context.root_tuple
+   end
    
+   def attribute_path()
+      path.slice(root_tuple.path.length..-1) 
+   end
+
    def describe( indent = "", name_override = nil, suffix = nil )
       super(indent, name_override)
       type.describe(indent + "   ", "")

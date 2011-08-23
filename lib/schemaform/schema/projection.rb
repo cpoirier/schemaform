@@ -26,7 +26,7 @@ module Schemaform
 class Schema
 class Projection < Element
 
-   def initialize( entity, name, attributes, utilization )
+   def initialize( entity, name, attributes, utilization = 0 )
       super(entity, name)
       @attributes  = attributes
       @utilization = utilization

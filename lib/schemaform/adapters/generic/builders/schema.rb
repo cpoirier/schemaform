@@ -72,6 +72,10 @@ class Adapter
 
                      dispatch_lay_out(attribute, builder)
                   end
+                  
+                  entity.keys.each do |key|
+                     builder.build_key(key)
+                  end
                end
             end
          end
@@ -223,7 +227,7 @@ class Adapter
       end
       
       def with_meta( aspect, name )
-         @attribute_stack.push_and_pop(AttributeFrame.new(@attribute_stack.top.attribute, :purpose)) do
+         @attribute_stack.push_and_pop(AttributeFrame.new(@attribute_stack.top.attribute, aspect)) do
             name_stack.push_and_pop((name_stack.top || @table_stack.top.default_name) + name) do
                yield
             end
@@ -277,6 +281,49 @@ class Adapter
             end
          end
       end
+      
+      def build_key( definition )
+         key_name = "ck_" + definition.name.to_s
+         fields   = definition.attributes.collect{|attribute| @entity_map.get_field_for_attribute(attribute, Language::Productions::ValueAccessor)}
+         
+         if fields.all?{|field| field.type.indexable?} then
+            tables = fields.collect{|field| field.table}.uniq
+            if tables.length == 1 then
+               tables.first.define_index(key_name, true) do |index|
+                  fields.each do |field|
+                     index.add_field(field)
+                  end
+               end
+            else
+               assert(@table_stack.length == 1, "keys should not be defined within an attribute context")
+               with_name(name) do 
+                  parent_table = @table_stack.top.table
+                  @adapter.define_table(parent_table.name + name_stack.top) do |table|
+                     table.define_index("owner") do |owner_index| 
+                        table.define_reference_field(default_name + "owner", parent_table).tap do |owner_field|
+                           owner_index.add_field(owner_field)
+                           @entity_map.link_child_to_parent(owner_field)
+                           @entity_map.link_field_to_source(owner_field, owner_field.referenced_field)
+                        end
+                     end
+
+                     table.define_index("pk", true) do |primary_key|
+                        fields.each do |field|
+                           table.define_field(field.table.name + field.name, field.type, field.marks.collect{|mark| mark.dup}).tap do |copy|
+                              primary_key.add_field(copy)
+                              @entity_map.link_field_to_source(copy, field)
+                           end
+                        end
+                     end
+                  end
+               end
+            end
+         else
+            warn( "skipping non-indexable key (#{definition.full_name})", "TODO" )
+         end
+      end
+      
+      
       
    protected
       def name_stack()

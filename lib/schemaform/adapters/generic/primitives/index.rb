@@ -18,17 +18,41 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("projection.rb")
+
+
+#
+# An index on a table, possibly unique.
 
 module Schemaform
-class Schema
-class Key < Projection
-      
-   def initialize(entity, name, attributes)
-      super(entity, name, attributes)
-   end   
+module Adapters
+module Generic
+class Index
+   include QualityAssurance
+   extend  QualityAssurance
+
+   def initialize( table, name, unique = false )
+      @table  = table
+      @name   = name
+      @unique = unique
+      @fields   = Registry.new(name.to_s, "a field")
+      @reversed = {}
+   end
    
-end # Key
-end # Schema
+   attr_reader   :adapter, :name, :unique, :fields
+   attr_accessor :identifier
+   
+   def to_sql_create()
+      @adapter.render_sql_create(self)
+   end
+   
+   def add_field( field, reverse_order = false )
+      @fields.register(field)
+      @reversed[field.name] = reverse_order
+   end
+   
+end # Index
+end # Generic
+end # Adapters
 end # Schemaform
+
 

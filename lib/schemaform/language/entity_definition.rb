@@ -62,22 +62,20 @@ class EntityDefinition
    # a record within the set. Configation parameters are passed as a hash after the attribute
    # names. In particular, you can supply a value for :name. If you don't supply one, a name
    # will be generated from the attribute names.
+   #
+   #
 
-   def key( *names_and_configuration )
-      configuration = names_and_configuration.last.is_a?(Hash) ? names_and_configuration.pop : {}
-      names         = names_and_configuration
+   def key( *names_and_configuration, &block )
+      configuration   = names_and_configuration.last.is_a?(Hash) ? names_and_configuration.pop : {}
+      attribute_names = names_and_configuration
+
+      assert(attribute_names.empty? ^ block.nil?, "please supply either a block or a list of attributes"            )
+      assert(configuration.member?(:name) || attribute_names.not_empty?, "you must supply a name for the projection")
       
-      @entity.instance_eval do
-         key_name = configuration[:name] || names.collect{|name| name.to_s.identifier_case}.join("_and_").intern
-         check do
-            assert(!key?(key_name), "key name #{key_name} already exists in entity #{full_name}")
-            names.each do |name|
-               assert(attribute?(name), "key attribute #{name} is not a member of entity #{full_name}")
-            end
-         end
-         
-         @keys.register Schema::Key.new(key_name, self, names.collect{|name| @heading[name]}.compact)
-      end
+      key_name = configuration[:name] || attribute_names.collect{|name| name.to_s.identifier_case}.join("_and_").intern
+      
+      warn_once("does using the expression system to create keys cause problems with type resolution?")
+      @entity.keys.register Schema::Key.new(@entity, key_name, @entity.project_attributes(*attribute_names, &block))
    end
    
    
@@ -103,21 +101,9 @@ class EntityDefinition
       assert(configuration.member?(:name)       , "you must supply a name for the projection"           )
 
       projection_name = configuration.fetch(:name)
-      @entity.instance_eval do
-         check{assert(!projection?(projection_name), "projection name #{projection_name} already exists in entity #{full_name}")}
-         
-         attributes = if block then
-            fail_todo "projection :name, lambda {|et| [et.attribute, member.attribute.sub_attribute, member.reference.referred_field] }"
-            @projections.register Schema::CalculatedProjection.new(projection_name, block)
-         else
-            attributes = attribute_names.collect do |name|
-               check{assert(attribute?(name), "projection attribute #{name} is not a member of entity #{full_name}")}
-               @heading[name]
-            end
-            
-            @projections.register Schema::Projection.new(self, projection_name, attributes.compact, configuration.fetch(:utilization, 0))
-         end
-      end
+
+      warn_once("does using the expression system to create projections cause problems with type resolution?")
+      @entity.projections.register Schema::Projection.new(@entity, projection_name, @entity.project_attributes(*attribute_names, &block), configuration.fetch(:utilization, 0))
    end
    
    

@@ -30,11 +30,17 @@ class Table
    include QualityAssurance
    extend  QualityAssurance
    
-   attr_reader   :adapter, :name, :fields
+   attr_reader   :adapter, :name, :fields, :indices
    attr_accessor :identifier
 
    def define_field( name, type, *modifiers )
       @fields.register(@adapter.field_class.new(self, name, type, *modifiers))
+   end
+   
+   def define_index( name, unique = false )
+      @indices.register(@adapter.index_class.new(self, name, unique)).tap do |index|
+         yield(index) if block_given?
+      end
    end
    
    def define_reference_field( name, target_table, *marks )
@@ -61,7 +67,8 @@ protected
    def initialize( adapter, name )
       @adapter = adapter
       @name    = name
-      @fields  = Registry.new(name.to_s, "a field")
+      @fields  = Registry.new(name.to_s, "a field" )
+      @indices = Registry.new(name.to_s, "an index")
    end
 
    def present?( connection )

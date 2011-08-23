@@ -72,6 +72,8 @@ module ExpressionCapture
          return LiteralScalar.new(value, resolve_type(:integer))
       when Float
          return LiteralScalar.new(value, resolve_type(:real))
+      when String
+         return LiteralScalar.new(value, resolve_type(:text).make_specific(:length => value.length))
       else
          fail "ExpressionCapture.capture() does not currently handle objects of type #{value.class.name}"
       end
@@ -133,9 +135,6 @@ module ExpressionCapture
       end
    end
       
-      
-   
-   
 end # ExpressionCapture
 end # Language
 end # Schemaform
@@ -353,15 +352,6 @@ class Schema
       def expression( production = nil )
          context.is_an?(Entity) ? Language::EntityTuple.new(context, production) : Language::Tuple.new(self, production)
       end
-      
-      def root_tuple()
-         case context
-         when Entity, Schema
-            self
-         else
-            context.root_tuple
-         end
-      end
    end
    
    
@@ -370,10 +360,6 @@ class Schema
    class Attribute < Element
       def expression( production = nil )
          Language::Attribute.new(self, production)
-      end
-      
-      def root_tuple()
-         context.root_tuple
       end
    end
    
@@ -443,14 +429,17 @@ class Schema
    end
 
 
-
    class Entity < Relation
       def expression( production = nil )
          Language::Entity.new(self, production)
       end
       
-      def root_tuple()
-         heading
+      def project_attributes( *names, &block )
+         expression.project(*names, &block).production.attribute_definitions
+      end
+
+      def project_attribute_expressions( *names, &block )
+         expression.project(*names, &block).production.attributes.collect{|attribute| attribute.evaluate}
       end
    end
    

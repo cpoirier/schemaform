@@ -54,11 +54,31 @@ class Entity < Relation
       @projections = Registry.new("entity #{full_name}", "a projection")
    end
    
-   attr_reader :keys, :operations, :projection
+   attr_reader :keys, :operations, :projections
    attr_reader :identifier, :declared_heading, :pedigree, :base_entity
    
    def id()
       (@declared_heading.name.to_s.identifier_case + "_id").intern
+   end
+
+   def root_tuple()
+      heading
+   end
+   
+   def find( local_path )
+      tuple      = heading
+      attribute  = nil
+      
+      while attribute.nil? && (name = local_path.shift)
+         if attribute = tuple.attributes[name] then
+            if attribute.type.is_a?(TupleType) then
+               tuple = attribute.type.tuple
+               attribute = nil
+            end
+         end
+      end
+      
+      attribute
    end
 
    def identifier_type( context = nil )

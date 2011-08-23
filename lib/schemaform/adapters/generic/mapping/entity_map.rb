@@ -89,28 +89,54 @@ class EntityMap
       end
    end
    
-   def project( expressions )
-      productions = expressions.collect{|e| e.production}
-      all_fields  = productions.collect{|p| @mappings[p.attribute.get_definition][p.class]}.flatten.uniq.compact
+   def get_field_for_attribute( attribute, aspect = Language::Productions::ValueAccessor )
+      attribute = @entity.find(attribute.attribute_path) if attribute.root_tuple.context != @entity
+      
+      return @mappings[attribute][aspect] if @mappings.member?(attribute)
+      return @base_map.get_field_for_attribute(attribute, aspect) if @base_map
+      return nil
+   end
 
-      #
-      # First up, see what we can do with just the data fields. We can just as easily use an identifier
-      # via a reference to it as we can by including the table where the identifier lives. If we can avoid
-      # adding extra tables to the join, we should.
-      
-      data_fields = all_fields - @tables.collect{|table| table.identifier}
-      id_fields   = all_fields - data_fields
-      data_tables = data_fields.collect{|f| f.table}.flatten.uniq
-      join_plan   = plan_join(data_tables)
-      
-      
-      
-      
-      
-      data_tables
+   def build_query( predicate, projection )
+      Printer.dump(predicate)
       
       fail_todo
+      
    end
+   # 
+   # def project( expressions )
+   #    productions = expressions.collect{|e| e.production}
+   #    all_fields  = productions.collect{|p| @mappings[p.attribute.get_definition][p.class]}.flatten.uniq.compact
+   #    
+   #    #
+   #    # First up, find the way to pull the data from as few tables as possible, via the use of field equivalencies.
+   #    # For the most part, this will be about substituting references for identifiers, but could also involve 
+   #    # cache tables that collect pieces of data from the Entity in one place.
+   #    
+   #    
+   #    
+   #    
+   #    
+   #    
+   # 
+   #    #
+   #    # First up, see what we can do with just the data fields. We can just as easily use an identifier
+   #    # via a reference to it as we can by including the table where the identifier lives. If we can avoid
+   #    # adding extra tables to the join, we should.
+   #    
+   #    data_fields = all_fields - @tables.collect{|table| table.identifier}
+   #    id_fields   = all_fields - data_fields
+   #    data_tables = data_fields.collect{|f| f.table}.flatten.uniq
+   #    join_plan   = plan_join(data_tables)
+   #    
+   #    
+   #    
+   #    
+   #    
+   #    data_tables
+   #    
+   #    fail_todo
+   # end
    
 
 
@@ -119,6 +145,27 @@ protected
    def plan_join( tables )
       JoinPlanner.new(tables, @all_links)
    end
+   
+   #
+   # Captures a mapping of a Field from internal to external space.
+   
+   class FieldMapping
+      def initialize( internal, external )
+         @internal = internal
+         @external = external
+      end
+      
+      attr_reader :internal, :external
+      
+      def eql?( rhs )
+         if rhs.is_a?(Field) then
+            @internal == rhs || @external == rhs
+         else
+            @internal == rhs.internal && @external == rhs.external
+         end
+      end
+   end
+   
    
    #
    # Used by the EntityMap to figure out the minimal set of tables needed for a particular projection,
@@ -162,7 +209,7 @@ protected
          end
 
          #
-         # Finally, pick the minimum table set from the tree.
+         # Pick the minimum table set from the tree.
 
          @minimum_set = [] + @required_tables
          @apex = nil

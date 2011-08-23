@@ -57,6 +57,10 @@ class TypeInfo
       @formatter ? @formatter.call(value.to_s) : value.to_s
    end
    
+   def description()
+      @sql
+   end
+   
 end # TypeInfo
 end # Adapters
 end # Generic

@@ -99,7 +99,7 @@ class Adapter
    end
    
 
-   attr_reader :address, :type_manager, :schema_class, :table_class, :field_class, :separator
+   attr_reader :address, :type_manager, :schema_class, :table_class, :field_class, :index_class, :separator
    
    def url()
       @address.url
@@ -130,6 +130,7 @@ protected
       @type_manager = overrides.fetch(:type_manager_class, TypeManager).new(self)
       @table_class  = overrides.fetch(:table_class       , Table      )
       @field_class  = overrides.fetch(:field_class       , Field      )
+      @index_class  = overrides.fetch(:index_class       , Index      )
       @separator    = overrides.fetch(:separator         , "$"        )
    end
 

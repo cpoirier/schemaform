@@ -30,8 +30,8 @@ class Printer
       yield(new(stream, indent))
    end
    
-   def self.dump( object )
-      Printer.run do |printer|
+   def self.dump( object, indent = "DUMP: ", stream = $stdout )
+      Printer.run(stream, indent) do |printer|
          printer.puts(object)
       end
    end

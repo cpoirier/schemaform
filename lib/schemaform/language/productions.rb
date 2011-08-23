@@ -117,6 +117,12 @@ module Language
       #    end
       # end
 
+
+      class Projection
+         def attribute_definitions()
+            @attributes.collect{|attribute| attribute.get_definition}
+         end
+      end
    end
 
    

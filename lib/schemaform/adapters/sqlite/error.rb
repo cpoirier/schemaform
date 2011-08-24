@@ -25,7 +25,7 @@
 module Schemaform
 module Adapters
 module SQLite
-class Error < Generic::Error
+class Error < GenericSQL::Error
 
 
 end # Error

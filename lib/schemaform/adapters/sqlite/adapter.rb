@@ -26,11 +26,11 @@ require 'sqlite3'
 module Schemaform
 module Adapters
 module SQLite
-class Adapter < Generic::Adapter
+class Adapter < GenericSQL::Adapter
    
    def self.address( coordinates )
       if path = File.expand_path(coordinates.fetch(:path, nil)) then
-         Generic::Address.new("sqlite:#{path}", coordinates.update(:path => path))
+         GenericSQL::Address.new("sqlite:#{path}", coordinates.update(:path => path))
       end
    end
    

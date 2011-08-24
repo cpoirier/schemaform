@@ -76,4 +76,4 @@ end # Adapters
 end # Schemaform
 
 
-Dir[Schemaform.locate("generic/*.rb")].each{|path| require path}
+Dir[Schemaform.locate("generic_sql/*.rb")].each{|path| require path}

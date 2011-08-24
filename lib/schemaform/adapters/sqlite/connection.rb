@@ -24,7 +24,7 @@ require 'sqlite3'
 module Schemaform
 module Adapters
 module SQLite
-class Connection < Generic::Connection
+class Connection < GenericSQL::Connection
    
    def initialize( adapter )
       @adapter = adapter
@@ -93,6 +93,6 @@ class Connection < Generic::Connection
 
 
 end # Connection
-end # Generic
+end # GenericSQL
 end # Adapters
 end # Schemaform

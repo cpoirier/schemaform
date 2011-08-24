@@ -103,20 +103,13 @@ class EntityMap
       fail_todo
       
    end
+      
+   
+   
    # 
    # def project( expressions )
    #    productions = expressions.collect{|e| e.production}
    #    all_fields  = productions.collect{|p| @mappings[p.attribute.get_definition][p.class]}.flatten.uniq.compact
-   #    
-   #    #
-   #    # First up, find the way to pull the data from as few tables as possible, via the use of field equivalencies.
-   #    # For the most part, this will be about substituting references for identifiers, but could also involve 
-   #    # cache tables that collect pieces of data from the Entity in one place.
-   #    
-   #    
-   #    
-   #    
-   #    
    #    
    # 
    #    #
@@ -129,18 +122,19 @@ class EntityMap
    #    data_tables = data_fields.collect{|f| f.table}.flatten.uniq
    #    join_plan   = plan_join(data_tables)
    #    
-   #    
-   #    
-   #    
-   #    
-   #    data_tables
-   #    
    #    fail_todo
    # end
    
 
 
 protected
+
+   def plan_predicate( predicate )
+      
+   end
+   
+   
+
    
    def plan_join( tables )
       JoinPlanner.new(tables, @all_links)

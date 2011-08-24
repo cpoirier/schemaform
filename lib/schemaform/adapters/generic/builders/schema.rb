@@ -319,7 +319,7 @@ class Adapter
                end
             end
          else
-            warn( "skipping non-indexable key (#{definition.full_name})", "TODO" )
+            warn("skipping non-indexable key (#{definition.full_name})", "TODO")
          end
       end
       

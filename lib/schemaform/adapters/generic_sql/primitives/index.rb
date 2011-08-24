@@ -25,7 +25,7 @@
 
 module Schemaform
 module Adapters
-module Generic
+module GenericSQL
 class Index
    include QualityAssurance
    extend  QualityAssurance
@@ -51,7 +51,7 @@ class Index
    end
    
 end # Index
-end # Generic
+end # GenericSQL
 end # Adapters
 end # Schemaform
 

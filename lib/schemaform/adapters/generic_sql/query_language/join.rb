@@ -25,7 +25,7 @@ require Schemaform.locate("query.rb")
 
 module Schemaform
 module Adapters
-module Generic
+module GenericSQL
 class Join < Query
 
    def initialize( mapping, lhs, rhs, predicate, preference = :none )
@@ -38,6 +38,6 @@ class Join < Query
    end
 
 end # Join
-end # Generic
+end # GenericSQL
 end # Adapters
 end # Schemaform

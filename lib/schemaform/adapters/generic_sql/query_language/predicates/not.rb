@@ -24,7 +24,7 @@
 
 module Schemaform
 module Adapters
-module Generic
+module GenericSQL
 class Not < Predicate
 
    def initialize( predicate )
@@ -32,6 +32,6 @@ class Not < Predicate
    end
 
 end # Not
-end # Generic
+end # GenericSQL
 end # Adapters
 end # Schemaform

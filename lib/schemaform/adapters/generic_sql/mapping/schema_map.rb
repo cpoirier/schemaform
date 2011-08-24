@@ -24,7 +24,7 @@
 
 module Schemaform
 module Adapters
-module Generic
+module GenericSQL
 class SchemaMap
 
    def initialize( definition )
@@ -49,7 +49,7 @@ class SchemaMap
    end
  
 end # SchemaMap
-end # Generic
+end # GenericSQL
 end # Adapters
 end # Schemaform
 

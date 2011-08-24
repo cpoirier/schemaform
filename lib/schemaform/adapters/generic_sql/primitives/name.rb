@@ -21,7 +21,7 @@
 
 module Schemaform
 module Adapters
-module Generic
+module GenericSQL
 class Name
    
    def self.build( *components )
@@ -66,6 +66,6 @@ class Name
    
    
 end # Name
-end # Generic
+end # GenericSQL
 end # Adapters
 end # Schemaform

@@ -24,7 +24,7 @@
 
 module Schemaform
 module Adapters
-module Generic
+module GenericSQL
 class EntityMap
    include QualityAssurance
    
@@ -283,7 +283,7 @@ protected
    
 
 end # EntityMap
-end # Generic
+end # GenericSQL
 end # Adapters
 end # Schemaform
 

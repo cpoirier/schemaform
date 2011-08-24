@@ -24,7 +24,7 @@
 
 module Schemaform
 module Adapters
-module Generic
+module GenericSQL
 class Query
 
    def initialize( mapping )
@@ -32,6 +32,6 @@ class Query
    end
 
 end # Query
-end # Generic
+end # GenericSQL
 end # Adapters
 end # Schemaform

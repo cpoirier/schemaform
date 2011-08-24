@@ -24,7 +24,7 @@
 
 module Schemaform
 module Adapters
-module Generic
+module GenericSQL
 class TypeManager
    include QualityAssurance
    extend  QualityAssurance
@@ -98,5 +98,5 @@ class TypeManager
    
 end # TypeManager
 end # Adapters
-end # Generic
+end # GenericSQL
 end # Schemaform

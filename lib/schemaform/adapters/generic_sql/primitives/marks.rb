@@ -21,7 +21,7 @@
 
 module Schemaform
 module Adapters
-module Generic
+module GenericSQL
    
    #
    # Base class for things that configure a Field in some way. Override Mark::build() if you need
@@ -76,7 +76,7 @@ module Generic
 
   
 
-end # Generic
+end # GenericSQL
 end # Adapters
 end # Schemaform
 

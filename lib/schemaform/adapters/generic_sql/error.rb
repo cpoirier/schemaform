@@ -26,7 +26,7 @@
 
 module Schemaform
 module Adapters
-module Generic
+module GenericSQL
 class Error < ::Exception
 
    def initialize( message, underlying_exception )
@@ -38,6 +38,6 @@ class Error < ::Exception
    
 
 end # AdapterError
-end # Generic
+end # GenericSQL
 end # Adapters
 end # Schemaform

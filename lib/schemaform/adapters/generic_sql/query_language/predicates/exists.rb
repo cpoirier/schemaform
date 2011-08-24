@@ -24,7 +24,7 @@
 
 module Schemaform
 module Adapters
-module Generic
+module GenericSQL
 class Exists < Predicate
 
    def initialize( subquery )
@@ -32,6 +32,6 @@ class Exists < Predicate
    end
 
 end # Exists
-end # Generic
+end # GenericSQL
 end # Adapters
 end # Schemaform

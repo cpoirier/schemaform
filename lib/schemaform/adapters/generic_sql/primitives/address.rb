@@ -24,7 +24,7 @@
 
 module Schemaform
 module Adapters
-module Generic
+module GenericSQL
 class Address
 
    def initialize( url, coordinates = {} )
@@ -54,6 +54,6 @@ class Address
    end
 
 end # Address
-end # Generic
+end # GenericSQL
 end # Adapters
 end # Schemaform

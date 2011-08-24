@@ -24,7 +24,7 @@
 
 module Schemaform
 module Adapters
-module Generic
+module GenericSQL
 class TypeInfo
       
    def initialize( type_manager, sql, index_width, quoted = false, properties = {}, &formatter )
@@ -63,5 +63,5 @@ class TypeInfo
    
 end # TypeInfo
 end # Adapters
-end # Generic
+end # GenericSQL
 end # Schemaform

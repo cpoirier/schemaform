@@ -24,13 +24,13 @@
 
 module Schemaform
 module Adapters
-module Generic
+module GenericSQL
 class IsEqual < Predicate
 
    def initialize()
    end
 
 end # IsEqual
-end # Generic
+end # GenericSQL
 end # Adapters
 end # Schemaform

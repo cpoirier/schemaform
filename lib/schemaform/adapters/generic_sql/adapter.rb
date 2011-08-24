@@ -25,7 +25,7 @@
 
 module Schemaform
 module Adapters
-module Generic
+module GenericSQL
 class Adapter
    include QualityAssurance
    extend  QualityAssurance
@@ -140,7 +140,7 @@ protected
 
 
 end # Adapter
-end # Generic
+end # GenericSQL
 end # Adapters
 end # Schemaform
 

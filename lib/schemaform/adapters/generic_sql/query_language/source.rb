@@ -26,7 +26,7 @@ require Schemaform.locate("query.rb")
 
 module Schemaform
 module Adapters
-module Generic
+module GenericSQL
 class Source < Query
 
    def initialize( mapping, table )
@@ -35,6 +35,6 @@ class Source < Query
    end
 
 end # Source
-end # Generic
+end # GenericSQL
 end # Adapters
 end # Schemaform

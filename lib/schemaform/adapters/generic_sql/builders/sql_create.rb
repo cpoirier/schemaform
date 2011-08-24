@@ -24,7 +24,7 @@
 
 module Schemaform
 module Adapters
-module Generic
+module GenericSQL
 class Adapter
    
    
@@ -76,6 +76,6 @@ class Adapter
 
 
 end # Adapter
-end # Generic
+end # GenericSQL
 end # Adapters
 end # Schemaform

@@ -24,7 +24,7 @@
 
 module Schemaform
 module Adapters
-module Generic
+module GenericSQL
 class And < Predicate
 
    def initialize( lhs, rhs )
@@ -33,6 +33,6 @@ class And < Predicate
    end
 
 end # And
-end # Generic
+end # GenericSQL
 end # Adapters
 end # Schemaform

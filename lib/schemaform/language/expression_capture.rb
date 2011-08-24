@@ -36,8 +36,8 @@ module ExpressionCapture
    
    
    def self.merge_types( *from )
-      from.inject(resolve_type(:unknown)) do |type, object|
-         type.best_common_type(object.type)
+      from.inject(resolve_type(:unknown)) do |merged, current|
+         merged.best_common_type(current)
       end
    end
    
@@ -88,7 +88,7 @@ module ExpressionCapture
    def self.capture_binary_operator( operator, lhs, rhs )
       lhs         = capture(lhs)
       rhs         = capture(rhs)
-      result_type = merge_types(lhs.type, rhs.type)
+      result_type = merge_types(lhs.get_type, rhs.get_type)
       production  = Productions::BinaryOperator.new(operator, lhs, rhs)
       
       result_type.expression(production)
@@ -106,8 +106,8 @@ module ExpressionCapture
       boolean = resolve_type(:boolean)
       lhs     = capture(lhs)
       rhs     = capture(rhs)
-      assert(boolean.assignable_from?(lhs.type), "expected boolean expression on left-hand of logical and, found #{lhs.type.description}" )
-      assert(boolean.assignable_from?(rhs.type), "expected boolean expression on right-hand of logical and, found #{rhs.type.description}")
+      assert(boolean.assignable_from?(lhs.get_type), "expected boolean expression on left-hand of logical and, found #{lhs.get_type.description}" )
+      assert(boolean.assignable_from?(rhs.get_type), "expected boolean expression on right-hand of logical and, found #{rhs.get_type.description}")
 
       boolean.expression(Productions::And.new([lhs, rhs]))
    end
@@ -116,20 +116,22 @@ module ExpressionCapture
       boolean = resolve_type(:boolean)
       lhs     = capture(lhs)
       rhs     = capture(rhs)
-      assert(boolean.assignable_from?(lhs.type), "expected boolean expression on left-hand of logical or, found #{lhs.type.description}" )
-      assert(boolean.assignable_from?(rhs.type), "expected boolean expression on right-hand of logical or, found #{rhs.type.description}")
+      assert(boolean.assignable_from?(lhs.get_type), "expected boolean expression on left-hand of logical or, found #{lhs.get_type.description}" )
+      assert(boolean.assignable_from?(rhs.get_type), "expected boolean expression on right-hand of logical or, found #{rhs.get_type.description}")
 
       boolean.expression(Productions::Or.new([lhs, rhs]))
    end
 
    def self.capture_expression( formula_context, block, result_type = nil, join_compatible_only = true )
-      Language::ExpressionDefinition.module_exec(formula_context, &block).tap do |captured_expression|
-         type_check(:captured_expression, captured_expression, Language::Placeholder)
-         if result_type then
-            if join_compatible_only then
-               assert(result_type.join_compatible?(captured_expression.type), "expected expression result to be join compatible with #{result_type.description}, found #{captured_expression.type.description} instead")
-            else                                                             
-               assert(result_type.assignable_from?(captured_expression.type), "expected expression result to be assignable to #{result_type.description}, found #{captured_expression.type.description} instead")
+      Language::ExpressionCapture.resolution_scope(formula_context.get_type.schema) do
+         Language::ExpressionDefinition.module_exec(formula_context, &block).tap do |captured_expression|
+            type_check(:captured_expression, captured_expression, Language::Placeholder)
+            if result_type then
+               if join_compatible_only then
+                  assert(result_type.join_compatible?(captured_expression.get_type), "expected expression result to be join compatible with #{result_type.description}, found #{captured_expression.get_type.description} instead")
+               else                                                             
+                  assert(result_type.assignable_from?(captured_expression.get_type), "expected expression result to be assignable to #{result_type.description}, found #{captured_expression.get_type.description} instead")
+               end
             end
          end
       end
@@ -234,10 +236,10 @@ class Schema
          when :+, :-
             Language::ExpressionCapture.capture_binary_operator(method_name, receiver, args.shift)
          when :sum, :average
-            check{ assert(!receiver.type.effective_type.member_type.collection_type?, "how do we do aggregation across nested collections?") }
-            receiver.type.effective_type.member_type.expression(Language::Productions::Aggregation.new(receiver, method_name))
+            check{ assert(!receiver.get_type.effective_type.member_type.collection_type?, "how do we do aggregation across nested collections?") }
+            receiver.get_type.effective_type.member_type.expression(Language::Productions::Aggregation.new(receiver, method_name))
          when :count
-            check{ assert(!receiver.type.effective_type.member_type.collection_type?, "how do we do aggregation across nested collections?") }
+            check{ assert(!receiver.get_type.effective_type.member_type.collection_type?, "how do we do aggregation across nested collections?") }
             Language::ExpressionCapture.capture_type(:integer, Language::Productions::Aggregation.new(receiver, method_name))
          else
             super
@@ -248,7 +250,7 @@ class Schema
          member_type = member_type().evaluated_type
          if member_type.responds_to?(:attribute?) then
             if captured = member_type.capture_method(receiver, attribute_name) then
-               return self.class.build(captured.type).expression(Language::Productions::Each.new(captured))
+               return self.class.build(captured.get_type).expression(Language::Productions::Each.new(captured))
             end            
          end
          
@@ -384,9 +386,9 @@ class Schema
             end
          end
          
-         if result && !result.type.unknown_type? then
-            # debug("#{full_name} resolved to #{result.type.description}")
-            result.type
+         if result && !result.get_type.unknown_type? then
+            # debug("#{full_name} resolved to #{result.get_type.description}")
+            result.get_type
          else
             # debug("#{full_name} could not be resolved at this time")
             nil
@@ -397,7 +399,7 @@ class Schema
    class VolatileAttribute < DerivedAttribute
       
       def type()
-         @type ||= capture.type
+         @type ||= capture.get_type
       end
       
       #
@@ -435,11 +437,11 @@ class Schema
       end
       
       def project_attributes( *names, &block )
-         expression.project(*names, &block).production.attribute_definitions
+         expression.project(*names, &block).get_production.attribute_definitions
       end
 
       def project_attribute_expressions( *names, &block )
-         expression.project(*names, &block).production.attributes.collect{|attribute| attribute.evaluate}
+         expression.project(*names, &block).get_production.attributes.collect{|attribute| attribute.evaluate}
       end
    end
    

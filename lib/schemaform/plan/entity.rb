@@ -38,7 +38,6 @@ class Entity
    end
 
    attr_reader :definition, :accessors
-   alias entity definition
    
    def operations()
       @definition.operations

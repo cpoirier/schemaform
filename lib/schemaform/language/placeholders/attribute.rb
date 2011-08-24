@@ -50,7 +50,7 @@ class Attribute < Placeholder
    def present?( true_value = nil, false_value = nil )
       true_value  = ExpressionCapture.capture(true_value )
       false_value = ExpressionCapture.capture(false_value)      
-      result_type = true_value ? ExpressionCapture.merge_types(true_value, false_value) : ExpressionCapture.resolve_type(:boolean)
+      result_type = true_value ? ExpressionCapture.merge_types(true_value.get_type, false_value.get_type) : ExpressionCapture.resolve_type(:boolean)
 
       result_type.expression(Productions::PresentCheck.new(self, true_value, false_value))
    end

@@ -109,7 +109,7 @@ module Language
       
       # class ImpliedScope < Production
       #    def initialize( scope )
-      #       if scope.is_a?(Language::Attribute) && scope.production.is_a?(Accessor) && scope.production.symbol == :email
+      #       if scope.is_a?(Language::Attribute) && scope.get_production.is_a?(Accessor) && scope.get_production.symbol == :email
       #          Printer.dump(scope)
       #          fail 
       #       end

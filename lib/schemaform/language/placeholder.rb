@@ -31,9 +31,29 @@ class Placeholder
    def initialize( type, production = nil )
       @type       = type
       @production = production
+      
+      warn_once("remove type(), production(), and description() placeholders once testing is complete")
+   end
+      
+   def type()
+      fail "rename to get_type()"
    end
    
-   attr_reader :type, :production
+   def production()
+      fail "rename to get_production()"
+   end
+   
+   def description()
+      fail "rename to get_description()"
+   end
+   
+   def get_type()
+      @type
+   end
+   
+   def get_production()
+      @production
+   end
    
    def ==( rhs )
       @type.capture_method(self, :==, [rhs])
@@ -44,7 +64,7 @@ class Placeholder
    end
    
    def print( printer )
-      printer.print("#{description}")
+      printer.print("#{get_description}")
       if @production then
          printer.puts( " resulting from #{@production.description}:" )
          printer.indent{ @production.print(printer) }
@@ -53,8 +73,8 @@ class Placeholder
       end
    end
    
-   def description()
-      "#{type.description}"
+   def get_description()
+      "#{get_type.description}"
    end
    
 end # Placeholder

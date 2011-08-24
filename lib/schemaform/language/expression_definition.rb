@@ -29,10 +29,10 @@ module ExpressionDefinition
       true_branch  = ExpressionCapture.capture(true_branch )
       false_branch = ExpressionCapture.capture(false_branch)
 
-      # assert(condition.type.boolean_type, "the if_then_else condition must have a boolean type")
+      # assert(condition.get_type.boolean_type, "the if_then_else condition must have a boolean type")
 
       production = Productions::IfThenElse.new(condition, true_branch, false_branch)
-      ExpressionCapture.merge_types(true_branch, false_branch).expression(production)
+      ExpressionCapture.merge_types(true_branch.get_type, false_branch.get_type).expression(production)
    end
    
    def self.parameter!( number )
@@ -40,25 +40,25 @@ module ExpressionDefinition
    end
    
    def self.and!( *clauses )
-      boolean = ExpressionCapture.resolve_type(:boolean)
+      boolean_type = ExpressionCapture.resolve_type(:boolean)
       
       check do
          clauses.each do |clause| 
             type_check(:clause, clause, Placeholder)
-            assert(boolean.assignable_from?(clause.type), "expected boolean expression for logical and, found #{clause.type.description}")
+            assert(boolean_type.assignable_from?(clause.get_type), "expected boolean expression for logical and, found #{clause.get_type.description}")
          end
       end
       
-      boolean.capture(Productions::And.new(clauses))
+      boolean_type.expression(Productions::And.new(clauses))
    end
 
    def self.or!( *clauses )
-      boolean = ExpressionCapture.resolve_type(:boolean)
+      boolean_type = ExpressionCapture.resolve_type(:boolean)
       clauses = clauses.collect do |clause| 
-         assert(boolean.assignable_from?(clause.type), "expected boolean expression for logical and, found #{clause.type.description}")
+         assert(boolean.assignable_from?(clause.get_type), "expected boolean expression for logical and, found #{clause.get_type.description}")
       end
       
-      boolean.capture(Productions::Or.new(clauses))
+      boolean_type.expression(Productions::Or.new(clauses))
    end
    
    def self.not!( clause )
@@ -66,7 +66,7 @@ module ExpressionDefinition
       # 
       # boolean = ExpressionCapture.resolve_type(:boolean)
       # clause  = ExpressionCapture.capture(clause).tap do |captured|
-      #    assert(boolean.assignable_from?(captured.type), "expected boolean expression for logical not, found #{lhs.type.description}")
+      #    assert(boolean.assignable_from?(captured.get_type), "expected boolean expression for logical not, found #{lhs.get_type.description}")
       # end
       # 
       # boolean.capture(Productions::Not.new(clause))

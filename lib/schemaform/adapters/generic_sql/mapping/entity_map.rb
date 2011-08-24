@@ -108,7 +108,7 @@ class EntityMap
    
    # 
    # def project( expressions )
-   #    productions = expressions.collect{|e| e.production}
+   #    productions = expressions.collect{|e| e.get_production}
    #    all_fields  = productions.collect{|p| @mappings[p.attribute.get_definition][p.class]}.flatten.uniq.compact
    #    
    # 

@@ -35,7 +35,7 @@ class Entity < Placeholder
       super
    end
 
-   def description()
+   def get_description()
       "0x#{self.object_id.to_s(16)} #{@entity.name} #{@type.description}"      
    end
 

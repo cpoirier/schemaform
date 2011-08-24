@@ -32,7 +32,7 @@ class Parameter < Placeholder
       super
    end
    
-   def description()
+   def get_description()
       "Parameter #{@number}"
    end
    

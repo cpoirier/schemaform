@@ -36,7 +36,7 @@ class EntityTuple < Tuple
       @names  = entity.pedigree.collect{|e| e.name}
    end
    
-   def related( entity_name, link_attribute = nil, &link_expression )
+   def get_related( entity_name, link_attribute = nil, &link_expression )
       related_entity = @entity.schema.entities.find(entity_name)
       link_path      = nil
 
@@ -79,7 +79,7 @@ class EntityTuple < Tuple
       super
    end
 
-   def description()
+   def get_description()
       "0x#{self.object_id.to_s(16)} #{@entity.declared_heading.name} #{@type.description}"
    end
 

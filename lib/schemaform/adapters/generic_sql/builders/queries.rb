@@ -56,7 +56,7 @@ class Adapter
 
 
    def plan_placeholder( placeholder, query_plan )
-      placeholder.production ? dispatch_plan(placeholder.production, query_plan) : nil
+      placeholder.get_production ? dispatch_plan(placeholder.get_production, query_plan) : nil
    end
    
    

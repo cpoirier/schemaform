@@ -26,13 +26,12 @@ module Schemaform
 class Schema
 class Projection < Element
 
-   def initialize( entity, name, attributes, utilization = 0 )
+   def initialize( entity, name, attributes )
       super(entity, name)
       @attributes  = attributes
-      @utilization = utilization
    end
    
-   attr_reader :attributes, :utilization
+   attr_reader :attributes
 
 end # Projection
 end # Schema

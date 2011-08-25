@@ -103,7 +103,7 @@ class EntityDefinition
       projection_name = configuration.fetch(:name)
 
       warn_once("does using the expression system to create projections cause problems with type resolution?")
-      @entity.projections.register Schema::Projection.new(@entity, projection_name, @entity.project_attributes(*attribute_names, &block), configuration.fetch(:utilization, 0))
+      @entity.projections.register Schema::Projection.new(@entity, projection_name, @entity.project_attributes(*attribute_names, &block))
    end
    
    

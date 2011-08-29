@@ -34,6 +34,13 @@ class Schema
          @plan ||= Plan::Entity.new(self)
       end
    end
+   
+   
+   class Derivation < Relation
+      def plan()
+         @plan ||= Plan::Derivation.new(self)
+      end
+   end
 
    
    class Tuple < Element

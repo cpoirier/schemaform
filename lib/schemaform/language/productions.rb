@@ -120,7 +120,7 @@ module Language
 
       class Projection
          def attribute_definitions()
-            @attributes.collect{|attribute| attribute.get_definition}
+            @attributes.collect{|attribute| p attribute.class.name; attribute.get_definition}
          end
       end
    end

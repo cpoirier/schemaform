@@ -32,7 +32,7 @@ class Accessor
          Language::ExpressionCapture.resolution_scope(entity.schema) do 
             comparisons = []
             key.attributes.each_with_index do |attribute, index|
-               comparisons << (tuple[attribute.name] == parameter!(index))
+               comparisons << (tuple[attribute.name] == parameter(index))
             end
 
             and!(*comparisons)

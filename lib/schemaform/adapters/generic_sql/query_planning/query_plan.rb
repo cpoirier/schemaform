@@ -20,24 +20,57 @@
 
 
 #
-# Captures a named Projection for the Entity.
+# Holds a complete plan for executing a Schemaform query, and provides the machinery to do so.
 
 module Schemaform
-class Schema
-class Projection < Element
-
-   def initialize( entity, name, proc )
-      super(entity, name)
-      @proc       = proc
-      @attributes = nil 
+module Adapters
+module GenericSQL
+class QueryPlan   
+   include QualityAssurance
+   
+   def initialize( adapter )
+      @adapter = adapter
+      @steps   = [RetrievalStep.new()]
+      
+      # @join_plan      = JoinPlan.new()
+      # @predicate_plan = PredicatePlan.new()
    end
    
-   attr_reader :proc
-   
-   def attributes
-      @attributes ||= @proc.call(context)
+   def enter_predicate_and()
+      yield
    end
+   
+   def enter_predicate_or()
+      yield
+   end
+   
+   def enter_predicate_comparison( operator )
+      
+      yield
+   end
+   
+   def enter_predicate_comparison_lhs()
+      yield
+   end
+   
+   def enter_predicate_comparison_rhs()
+      yield
+   end
+   
+   def enter_value_accessor()
+      yield
+   end
+   
+   def connect( source, name )
+      # if source.is_an?(Schema::Entity) then
+      # else
+      #    
+      p source.class.name
+      fail_todo
+   end 
 
-end # Projection
-end # Schema
+
+end # QueryPlan
+end # GenericSQL
+end # Adapters
 end # Schemaform

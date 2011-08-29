@@ -53,6 +53,17 @@ class SchemaDefinition
    
    
    #
+   # Defines an entity that is derived from other entities.
+   
+   def derive_entity( name, &block )
+      Schema::Derivation.new(name, @schema).tap do |derivation|
+         @schema.relations.register(derivation)
+         DerivationDefinition.process(derivation, &block)
+      end
+   end
+   
+   
+   #
    # Defines a tuple within the Schema.
    
    def define_tuple( name, &block )

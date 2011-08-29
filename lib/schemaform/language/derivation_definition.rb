@@ -18,40 +18,27 @@
 #             limitations under the License.
 # =============================================================================================
 
-
+require Schemaform.locate("relation_definition.rb")
 
 #
-# An expression-valued vessel.
+# comment
 
 module Schemaform
-class Schema
-class Formula < Element
+module Language
+class DerivationDefinition < RelationDefinition
+   
+   def initialize( derivation )
+      super(derivation)
+      @derivation = derivation
+   end
 
-   def initialize( proc, context, *parameters )
-      super(context)
-      
-      check do
-         parameters.each do |parameter|
-            type_check(:parameter, parameter, Element)
-         end
-      end
-      
-      @proc       = proc
-      @parameters = parameters
+   #
+   # Defines the relation using relational algebra.
+   
+   def formula( &block )
+      @derivation.proc = block
    end
    
-   attr_reader :proc
-      
-   def type()
-      marker.type
-   end
-   
-   def recreate_in( new_context, changes = nil )
-      self.class.new(@proc, new_context)
-   end
-
-
-end # Expression
-end # Schema
+end # DerivationDefinition
+end # Language
 end # Schemaform
-

@@ -30,8 +30,9 @@ class Schema
 class Entity < Relation
       
    def initialize( name, base_entity, schema )
-      super(Tuple.new(self), schema, name)
-      @declared_heading = Tuple.new(self, nil, heading.attributes)
+      super(schema, name)
+      @heading          = Tuple.new(self)
+      @declared_heading = Tuple.new(self, nil, @heading.attributes)
 
       #
       # Import the base entity identifier attributes.
@@ -45,17 +46,13 @@ class Entity < Relation
       else
          @identifier = @heading.register(IDAttribute.new(@heading, self))
       end
-
-      #
-      # Other stuff.
-      
-      @keys        = Registry.new("entity #{full_name}", "a key"       )
-      @operations  = Registry.new("entity #{full_name}", "an operation")
-      @projections = Registry.new("entity #{full_name}", "a projection")
    end
    
-   attr_reader :keys, :operations, :projections
    attr_reader :identifier, :declared_heading, :pedigree, :base_entity
+   
+   def type()
+      @type ||= SetType.build(TupleType.new(@heading), :context => context)
+   end
    
    def id()
       (@declared_heading.name.to_s.identifier_case + "_id").intern
@@ -66,7 +63,7 @@ class Entity < Relation
    end
    
    def find( local_path )
-      tuple      = heading
+      tuple      = @heading
       attribute  = nil
       
       while attribute.nil? && (name = local_path.shift)
@@ -121,39 +118,9 @@ class Entity < Relation
       return @heading.attribute?(name)
    end
    
-   #
-   # Returns true if the named key is defined in this or any base entity.
-   
-   def key?( name )
-      return true if @keys.member?(name)
-      return @base_entity.key?(name) if @base_entity.exists?
-      return false
-   end
-
-   
-   #
-   # Returns true if the named projection is defined in this or any base entity.
-   
-   def projection?( name )
-      return true if @projections.member?(name)
-      return @base_entity.projection?(name) if @base_entity.exists?
-      return false
-   end
-   
-   #
-   # If true, this entity is enumerated.
-   
-   def enumerated?()
-      @enumeration.exists?
-   end
-   
-
-   
 
 end # Entity
 end # Schema
 end # Schemaform
 
-
-require Schemaform.locate("key.rb")
 

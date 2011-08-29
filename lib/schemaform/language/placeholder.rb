@@ -31,10 +31,10 @@ class Placeholder
    def initialize( type, production = nil )
       @type       = type
       @production = production
-      
-      warn_once("remove type(), production(), and description() placeholders once testing is complete")
    end
       
+   warn_once("remove type(), production(), and description() placeholders once testing is complete")
+   
    def type()
       fail "rename to get_type()"
    end

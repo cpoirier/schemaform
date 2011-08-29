@@ -18,26 +18,21 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("generated_accessor.rb")
+
 
 #
-# Captures a named Projection for the Entity.
+# A simple attribute = value accessor.
 
 module Schemaform
 class Schema
-class Projection < Element
+class KeyAccessor < GeneratedAccessor
 
-   def initialize( entity, name, proc )
-      super(entity, name)
-      @proc       = proc
-      @attributes = nil 
-   end
-   
-   attr_reader :proc
-   
-   def attributes
-      @attributes ||= @proc.call(context)
+   def initialize( key )
+      super(key.context, key.name, key.proc)
+      @key = key
    end
 
-end # Projection
+end # KeyAccessor
 end # Schema
 end # Schemaform

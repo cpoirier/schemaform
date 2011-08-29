@@ -35,7 +35,14 @@ module ExpressionDefinition
       ExpressionCapture.merge_types(true_branch.get_type, false_branch.get_type).expression(production)
    end
    
-   def self.parameter!( number )
+   def self.all( relation_name )
+      ExpressionCapture.resolution_scope do |schema|
+         assert(schema.relations.member?(relation_name), "unable to find relation [#{relation_name}] in resolution scope")
+         schema.relations[relation_name].expression 
+      end
+   end
+   
+   def self.parameter( number )
       Parameter.new(number)
    end
    

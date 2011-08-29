@@ -20,24 +20,23 @@
 
 
 #
-# Captures a named Projection for the Entity.
+# A simple attribute = value accessor, generated from an attribute list.
 
 module Schemaform
 class Schema
-class Projection < Element
+class GeneratedAccessor < Accessor
 
-   def initialize( entity, name, proc )
-      super(entity, name)
-      @proc       = proc
-      @attributes = nil 
+   def initialize( relation, name, selector )
+      super(relation, name)
+      @selector = selector
    end
-   
-   attr_reader :proc
    
    def attributes
-      @attributes ||= @proc.call(context)
+      @attributes ||= @selector.call(context)
    end
+   
+   
 
-end # Projection
+end # GeneratedAccessor
 end # Schema
 end # Schemaform

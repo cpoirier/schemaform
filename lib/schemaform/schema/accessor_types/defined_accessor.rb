@@ -20,26 +20,18 @@
 
 
 #
-# Holds a complete plan for executing a Schemaform query, and provides the machinery to do so.
+# An accesor in which the definer provides the entire where clause.
 
 module Schemaform
-module Adapters
-module GenericSQL
-class QueryPlan
+class Schema
+class DefinedAccessor < Accessor
 
-   # def initialize()
-   #    @entity_aliases  = {}
-   #    @used_attributes
-   # end
-   # 
-   # 
-   # def entity_alias( placeholder )
-   #    @entity_aliases[placeholder.object_id] ||= "e#{@entity_aliases.length + 1}"
-   # end
-   # 
-   # def use_field
+   def initialize( relation, name, proc )
+      super(relation, name)
+      @proc = proc
+   end
+   
 
-end # QueryPlan
-end # GenericSQL
-end # Adapters
+end # DefinedAccessor
+end # Schema
 end # Schemaform

@@ -38,11 +38,11 @@ class Workspace
    # Builds a Workspace from a list of Schemas.
    
    def initialize( database, schemas )
-      @name           = self.class.name(schemas)
-      @database       = database
-      @version_lookup = {}
-      @schema_lookup  = {}
-      @entity_lookup  = {}
+      @name            = self.class.name(schemas)
+      @database        = database
+      @version_lookup  = {}
+      @schema_lookup   = {}
+      @relation_lookup = {}
 
       schemas.each do |schema|
          @version_lookup[schema.name] = {} unless @version_lookup.member?(schema.name)
@@ -50,8 +50,8 @@ class Workspace
          
          @schema_lookup[schema.name] = schema unless @schema_lookup.member?(schema.name)
          
-         schema.entities.each do |entity|
-            @entity_lookup[entity.name] = entity unless @entity_lookup.member?(schema.name)
+         schema.relations.each do |relation|
+            @relation_lookup[relation.name] = relation unless @relation_lookup.member?(schema.name)
          end
       end
    end
@@ -65,7 +65,7 @@ class Workspace
    def []( *address )
       entity = case address.length
       when 1
-         @entity_lookup.fetch(address.shift)
+         @relation_lookup.fetch(address.shift)
       when 2
          @schema_lookup.fetch(address.shift).fetch(address.shift)
       when 3

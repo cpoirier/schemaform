@@ -27,15 +27,6 @@ module Adapters
 module GenericSQL
 class Adapter
    
-   module AttributeAspects
-      Value                    = Language::Productions::ValueAccessor
-      Present                  = Language::Productions::PresentCheck
-      # ListFirstMember          = Language::Productions::
-      # ListLastMember           = Language::Productions::
-      # ListMemberNextMember     = Language::Productions::
-      # ListMemberPreviousMember = Language::Productions::
-   end
-   
    
    #
    # Lays out a Schema for use with the database. 
@@ -44,7 +35,7 @@ class Adapter
       @monitor.synchronize do
          unless @schema_maps.member?(definition)
             schema_name = Name.build(*definition.path)
-            @schema_maps[definition] = SchemaMap.new(definition).tap do |schema_map|
+            @schema_maps[definition] = SchemaMap.new(self, definition).tap do |schema_map|
 
                #
                # Create anchor tables and entity maps for each entity first. We need them in place for reference resolution.
@@ -98,7 +89,7 @@ class Adapter
    
    def lay_out_optional_attribute( attribute, builder )
       lay_out_attribute(attribute, builder) do
-         builder.define_meta(AttributeAspects::Present, "present", type_manager.boolean_type, build_required_mark())
+         builder.define_meta(Language::Productions::PresentCheck, "present", type_manager.boolean_type, build_required_mark())
       end
    end
    
@@ -219,7 +210,7 @@ class Adapter
       end
       
       def with_attribute( attribute )
-         @attribute_stack.push_and_pop(AttributeFrame.new(attribute, AttributeAspects::Value)) do
+         @attribute_stack.push_and_pop(AttributeFrame.new(attribute, Language::Productions::ValueAccessor)) do
             name_stack.push_and_pop((name_stack.top || @adapter.build_name()) + attribute.name) do
                yield
             end

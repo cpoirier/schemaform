@@ -27,7 +27,8 @@ module Adapters
 module GenericSQL
 class SchemaMap
 
-   def initialize( definition )
+   def initialize( adapter, definition )
+      @adapter     = adapter
       @definition  = definition
       @entity_maps = {}
       @tables      = []
@@ -40,7 +41,7 @@ class SchemaMap
    end
    
    def map( definition, anchor_table )
-      @entity_maps[definition] = EntityMap.new(self, definition, anchor_table)
+      @adapter.entity_maps[definition] = @entity_maps[definition] = EntityMap.new(self, definition, anchor_table)
       yield(@entity_maps[definition], anchor_table) if block_given?
    end
    

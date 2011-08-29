@@ -26,12 +26,22 @@ module Language
 module ExpressionCapture
    extend QualityAssurance
    
-   def self.resolution_scope( schema )
+   def self.resolution_scope( schema = nil )
       Thread[:expression_contexts] = [] unless Thread.key?(:expression_contexts)
-      Thread[:expression_contexts].push_and_pop(schema) do
-         yield
+      if schema then
+         Thread[:expression_contexts].push_and_pop(schema) do
+            yield
+         end
+      else
+         assert(Thread[:expression_contexts].not_empty?, "ExpressionCapture should have a resolution_scope in place")
+         if block_given? then
+            yield(Thread[:expression_contexts].top)
+         else
+            Thread[:expression_contexts].top
+         end
       end
    end
+   
    
    
    
@@ -47,8 +57,9 @@ module ExpressionCapture
    
    def self.resolve_type( name )
       return name if name.is_a?(Schema::Type)
-      schema = Thread[:expression_contexts].top or fail "ExpressionCapture needs a resolution_scope in place before being able to resolve_type()"
-      schema.types.member?(name) ? schema.types[name] : schema.send((name.to_s + "_type").intern)      
+      resolution_scope do |schema|
+         schema.types.member?(name) ? schema.types[name] : schema.send((name.to_s + "_type").intern)      
+      end
    end
    
    def self.capture_type( type, production = nil )
@@ -154,7 +165,7 @@ class Schema
    
    class Element
       def expression( production = nil )
-         fail_unless_overridden self, :capture
+         fail_unless_overridden self, :expression
       end
       
       def capture_method( receiver, method_name, args = [], block = nil )
@@ -235,6 +246,8 @@ class Schema
          case method_name
          when :+, :-
             Language::ExpressionCapture.capture_binary_operator(method_name, receiver, args.shift)
+         when :==
+            Language::ExpressionCapture.capture_comparison_operator(method_name, receiver, args.shift)
          when :sum, :average
             check{ assert(!receiver.get_type.effective_type.member_type.collection_type?, "how do we do aggregation across nested collections?") }
             receiver.get_type.effective_type.member_type.expression(Language::Productions::Aggregation.new(receiver, method_name))
@@ -399,7 +412,7 @@ class Schema
    class VolatileAttribute < DerivedAttribute
       
       def type()
-         @type ||= capture.get_type
+         @type ||= expression.get_type
       end
       
       #
@@ -431,9 +444,9 @@ class Schema
    end
 
 
-   class Entity < Relation
+   class Relation < Element
       def expression( production = nil )
-         Language::Entity.new(self, production)
+         Language::Relation.new(self, production)
       end
       
       def project_attributes( *names, &block )
@@ -444,11 +457,68 @@ class Schema
          expression.project(*names, &block).get_production.attributes.collect{|attribute| attribute.evaluate}
       end
    end
-   
+
+   class Entity < Relation
+      def expression( production = nil )
+         Language::Entity.new(self, production)
+      end
+   end
+
+   class Derivation < Relation
+      def type()
+         (@type ||= analyze_formula) || schema.unknown_type
+      end
+      
+      def analyze_formula()
+         result = nil
+         
+         unless @analyzing
+            # debug("processing in #{full_name}")
+
+            Language::ExpressionCapture.resolution_scope(schema) do
+               begin
+                  @analyzing = true  # Ensure any self-references don't retrigger analysis
+                  result = Language::ExpressionCapture.capture_expression(root_tuple.expression(), @proc)
+               ensure
+                  @analyzing = false
+               end
+            end
+         end
+         
+         if result && !result.get_type.unknown_type? then
+            # debug("#{full_name} resolved to #{result.get_type.description}")
+            result.get_type
+         else
+            # debug("#{full_name} could not be resolved at this time")
+            nil
+         end
+      end
+   end
    
 
+   class GeneratedAccessor
+      def expression( production = nil )
+         attributes = attributes()
+         
+         ExpressionCapture.resolution_scope(schema) do 
+            context.expression(production).where do |tuple|
+               comparisons = []
+               attributes.each_with_index do |attribute, index|
+                  comparisons << (tuple[attribute.name] == parameter(index))
+               end
+
+               and!(*comparisons)
+            end
+         end
+      end
+   end
    
-      
+   class DefinedAccessor
+      def expression( production = nil )
+         @proc.call(context.expression(production))
+      end
+   end
+   
 
 end # Schema
 end # Schemaform

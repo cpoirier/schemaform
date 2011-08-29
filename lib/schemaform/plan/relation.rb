@@ -19,25 +19,28 @@
 # =============================================================================================
 
 
+
 #
-# Captures a named Projection for the Entity.
+# Wraps a Schema-defined Relation for use at runtime.
 
 module Schemaform
-class Schema
-class Projection < Element
-
-   def initialize( entity, name, proc )
-      super(entity, name)
-      @proc       = proc
-      @attributes = nil 
-   end
+module Plan
+class Relation
    
-   attr_reader :proc
-   
-   def attributes
-      @attributes ||= @proc.call(context)
+   def initialize( definition )
+      @definition = definition
    end
 
-end # Projection
-end # Schema
+   attr_reader :definition
+   
+   def accessors()
+      @definition.accessors
+   end
+   
+   def operations()
+      @definition.operations
+   end
+
+end # Relation
+end # Plan
 end # Schemaform

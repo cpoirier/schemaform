@@ -20,24 +20,18 @@
 
 
 #
-# Captures a named Projection for the Entity.
+# Holds a description of a query predicate, and information on potential ways to go about
+# executing it.
 
 module Schemaform
-class Schema
-class Projection < Element
-
-   def initialize( entity, name, proc )
-      super(entity, name)
-      @proc       = proc
-      @attributes = nil 
-   end
+module Adapters
+module GenericSQL
+class UpdateStep
    
-   attr_reader :proc
-   
-   def attributes
-      @attributes ||= @proc.call(context)
+   def initialize()
    end
 
-end # Projection
-end # Schema
+end # UpdateStep
+end # GenericSQL
+end # Adapters
 end # Schemaform

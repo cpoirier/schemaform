@@ -18,26 +18,22 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("element.rb")
+
 
 #
-# Captures a named Projection for the Entity.
+# Base class for an accessor on a Relation.
 
 module Schemaform
 class Schema
-class Projection < Element
+class Accessor < Element
 
-   def initialize( entity, name, proc )
-      super(entity, name)
-      @proc       = proc
-      @attributes = nil 
+   def initialize( relation, name )
+      super(relation, name)
    end
    
-   attr_reader :proc
-   
-   def attributes
-      @attributes ||= @proc.call(context)
-   end
-
-end # Projection
+end # Accessor
 end # Schema
 end # Schemaform
+
+Dir[Schemaform.locate("accessor_types/*.rb")].each {|path| require path}

@@ -20,24 +20,25 @@
 
 
 #
-# Captures a named Projection for the Entity.
+# Provides access to a named Relation. 
 
 module Schemaform
-class Schema
-class Projection < Element
+module Language
+class Relation < Placeholder
 
-   def initialize( entity, name, proc )
-      super(entity, name)
-      @proc       = proc
-      @attributes = nil 
+   def initialize( relation, production = nil )
+      super(relation.type, production)
+      @relation = relation
    end
    
-   attr_reader :proc
-   
-   def attributes
-      @attributes ||= @proc.call(context)
+   def method_missing( symbol, *args, &block )
+      super
    end
 
-end # Projection
-end # Schema
+   def get_description()
+      "0x#{self.object_id.to_s(16)} #{@relation.name} #{@type.description}"      
+   end
+
+end # Relation
+end # Language
 end # Schemaform

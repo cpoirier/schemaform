@@ -18,26 +18,24 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("relation.rb")
+
 
 #
-# Captures a named Projection for the Entity.
+# A named, derived relation within the schema.
 
 module Schemaform
 class Schema
-class Projection < Element
-
-   def initialize( entity, name, proc )
-      super(entity, name)
-      @proc       = proc
-      @attributes = nil 
+class Derivation < Relation
+      
+   def initialize( name, schema, proc = nil )
+      super(schema, name)
+      @proc = proc
    end
    
-   attr_reader :proc
-   
-   def attributes
-      @attributes ||= @proc.call(context)
-   end
+   attr_accessor :proc
 
-end # Projection
+end # Derivation
 end # Schema
 end # Schemaform
+

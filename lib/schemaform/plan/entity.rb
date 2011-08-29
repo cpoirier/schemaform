@@ -18,6 +18,7 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("relation.rb")
 
 
 #
@@ -25,22 +26,10 @@
 
 module Schemaform
 module Plan
-class Entity
+class Entity < Relation
    
    def initialize( definition )
-      @definition = definition
-      @accessors  = {}
-            
-      definition.keys.each do |key|
-         @accessors[key.name] = Accessor.build_key_accessor(self, key)
-         @accessors[key.name.to_s] = @accessors[key.name]  # For convenience
-      end
-   end
-
-   attr_reader :definition, :accessors
-   
-   def operations()
-      @definition.operations
+      super(definition)
    end
 
 end # Entity

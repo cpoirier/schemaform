@@ -28,24 +28,55 @@ module Schemaform
 class Schema
 class Relation < Element
 
-   def initialize( heading, context = nil, name = nil )
-      super(context || heading.context, name)
-      @heading = heading
-      @type    = SetType.build(TupleType.new(heading), :context => context)
+   def initialize( context, name )
+      super(context, name)
+            
+      @keys        = Registry.new("#{full_name}", "a key"       )
+      @operations  = Registry.new("#{full_name}", "an operation")
+      @projections = Registry.new("#{full_name}", "a projection")
+      @accessors   = Registry.new("#{full_name}", "an accessor" )
    end
    
+   attr_reader :keys, :accessors, :operations, :projections
+
    def heading()
-      @heading
+      type.member_type.tuple
    end
    
    def type()
-      @type
+      fail_unless_overridden self, :type
    end
+   
    
    def project( *attributes )
       Relation.new(heading.project(*attributes), schema)
    end
    
+   #
+   # Returns true if the named key is defined in this or any base entity.
+   
+   def key?( name )
+      return true if @keys.member?(name)
+      return @base_entity.key?(name) if @base_entity.exists?
+      return false
+   end
+
+   
+   #
+   # Returns true if the named projection is defined in this or any base entity.
+   
+   def projection?( name )
+      return true if @projections.member?(name)
+      return @base_entity.projection?(name) if @base_entity.exists?
+      return false
+   end
+   
+   
+   
 end # Relation
 end # Schema
 end # Schemaform
+
+
+require Schemaform.locate("key.rb")
+

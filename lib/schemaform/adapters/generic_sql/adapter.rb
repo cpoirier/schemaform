@@ -99,7 +99,7 @@ class Adapter
    end
    
 
-   attr_reader :address, :type_manager, :schema_class, :table_class, :field_class, :index_class, :separator
+   attr_reader :address, :type_manager, :schema_class, :table_class, :field_class, :index_class, :separator, :schema_maps, :entity_maps
    
    def url()
       @address.url
@@ -123,6 +123,7 @@ protected
       @address      = address
       @tables       = Registry.new()    # name => Table
       @schema_maps  = {}                # Schemaform::Schema => SchemaMap
+      @entity_maps  = {}                # Schemaform::Schema::Entity => EntityMap
       @query_plans  = {}                # Language::Placeholder => QueryPlan
       @monitor      = Monitor.new()
       @overrides    = overrides
@@ -144,7 +145,7 @@ end # GenericSQL
 end # Adapters
 end # Schemaform
 
-["primitives", "builders", "mapping", "query_language"].each do |subdir|
+["primitives", "builders", "mapping", "query_planning"].each do |subdir|
    Dir[Schemaform.locate("#{subdir}/*.rb")].each{|path| require path}
 end
 

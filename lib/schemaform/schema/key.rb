@@ -24,8 +24,8 @@ module Schemaform
 class Schema
 class Key < Projection
       
-   def initialize(entity, name, attributes)
-      super(entity, name, attributes)
+   def initialize(entity, name, proc)
+      super(entity, name, proc)
    end   
    
 end # Key

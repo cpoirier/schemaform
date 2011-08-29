@@ -24,39 +24,37 @@
 
 module Schemaform
 module Runtime
-class ConnectedEntity
+class ConnectedRelation
    include QualityAssurance
    extend  QualityAssurance
 
    def initialize( transaction, definition )
       @transaction = transaction
       @definition  = definition
-      @plan        = definition.plan
       @mappings    = {}
    end
    
    def method_missing( symbol, *args, &block )
       if @mappings.member?(symbol) then
          fail_todo
-      elsif @plan.operations.member?(symbol) then
-         return @plan.operations[symbol].call(@transaction, *args, &block)
+      elsif @definition.operations.member?(symbol) then
+         return @definition.operations[symbol].call(@transaction, *args, &block)
       else
          case name = symbol.to_s
          when /^get_(\w+)_by_(\w+)$/
-            projection_name = $1
-            accessor_name   = $2
+            projection_name = $1.intern
+            accessor_name   = $2.intern
 
             fail_todo
             
-            if @plan.projections.member?(projection_name) && @plan.accessors.member?(accessor_name) then
-               accessor = @plan.accessors[accessor_name].projection(projection_name)
+            if @definition.projections.member?(projection_name) && @definition.accessors.member?(accessor_name) then
+               accessor = @definition.accessors[accessor_name].projection(projection_name)
             end
          
          when /^get_by_(\w+)$/
-            accessor_name = $1
-            if @plan.accessors.member?(accessor_name) then
-               accessor_plan = @plan.accessors[accessor_name]
-               return @transaction.retrieve(accessor_plan.query)
+            accessor_name = $1.intern
+            if @definition.accessors.member?(accessor_name) then
+               return @transaction.retrieve(@definition.accessors[accessor_name].expression)
             end
          end
       end
@@ -64,7 +62,7 @@ class ConnectedEntity
       super
    end
 
-end # ConnectedEntity
+end # ConnectedRelation
 end # Runtime
 end # Schemaform
 

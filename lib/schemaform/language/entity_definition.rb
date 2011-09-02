@@ -18,27 +18,40 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("relation_definition.rb")
 
 #
 # comment
 
 module Schemaform
 module Language
-class EntityDefinition < RelationDefinition
+class EntityDefinition
    include QualityAssurance 
-   
-   
-   def initialize( entity )
-      super(entity)
-      @entity = entity
+      
+   def self.process( schema, name, parent, &block )
+      dsl = new(schema, name, parent)
+      dsl.instance_eval(&block)
+      dsl.entity
    end
+      
+   def initialize( schema, name, parent )
+      @schema   = schema
+      @name     = name
+      @parent   = parent
+      @entity   = nil
+   end
+   
+   attr_reader :entity
 
 
    #
-   # Triggers the inline definition of the Tuple for the Entity.
+   # Triggers the inline definition of an OriginalEntity in terms of a Tuple.
    
    def each( tuple_name, &block )
+      assert(@entity.nil?, "you can define the entity using one \"each\" or \"as\" clause only")
+      
+      @entity = Schema::OriginalEntity.new(@name, @parent, @schema)
+      @schema.entities.register(@entity)
+      
       @entity.declared_heading.tap do |tuple|
          assert( tuple.name.nil?, "expected unnamed tuple for TupleDefinition::each()")
          
@@ -52,11 +65,118 @@ class EntityDefinition < RelationDefinition
    
    
    #
+   # Triggers the definition of a DerivedEntity.
+   
+   def as( &block )
+      assert(@entity.nil?, "you can define the entity using one \"each\" or \"as\" clause only")
+      assert(@parent.nil?, "derived entities cannot have a base entity"                        )
+      
+      @entity = Schema::DerivedEntity.new(@name, @schema, block)
+      @schema.entities.register(@entity)
+   end
+   
+   
+   
+   
+   #
    # Defines a constraint on the entity that will be checked on save.
    
    def constrain( description, proc = nil, &block )
+      assert(@entity.exists?, "you must define the entity using one \"each\" or \"as\" clause before defining any constraints")
       warn_todo("constraint support in Entity")
    end
+   
+
+   #
+   # Defines a candidate key on the entity -- a subset of attributes that can uniquely identify
+   # a record within the set. 
+   #
+   # There are several ways to call it:
+   #    key *symbols
+   #    key name, :on => array of symbols
+   #    key name, :on => lambda expression that results in an array of attributes
+   #    key name, :on => nil do |tuple|
+   #       [tuple.x, tuple.y, ...]
+   #    end
+   #
+   # Keys can support a :where clause, which is used to limit the scope of the uniqueness. These
+   # "partial" keys are particuarly useful for optional attributes, where you might only want 
+   # present values to be unique. The value of the :where clause should be a lambda expression that
+   # takes the entity tuple as sole parameter. Note that you can only supply nil for one or the other
+   # of :on or :where, if you want to use the block form. 
+   
+   def key( *args, &block )
+      assert(@entity.exists?, "you must define the entity using one \"each\" or \"as\" clause before defining any keys")
+      args = [args.collect{|symbol| symbol.to_s}.join("_and_"), {:on => args}] unless args.last.is_a?(Hash)
+      
+      name, hash = *args
+      attributes = hash.fetch(:on) || block
+      if hash.member?(:where) then
+         where = hash.fetch(:where) || block
+         fail_todo
+      else
+         key = Schema::Key.new(@entity, name, lambda{|entity| entity.project_attributes(attributes)})
+         @entity.keys.register key
+         @entity.accessors.register Schema::KeyAccessor.new(key)
+      end
+   end
+   
+   
+   #
+   # Defines a projection of attributes that can be used to limit the data transferred back 
+   # when tuples are retrieved.
+   #
+   # There are several ways to call it:
+   #    projection name, :project => array of symbols
+   #    projection name, :project => lambda expression that results in an array of attributes
+   #    projection name, :project => nil do |tuple|
+   #       [tuple.x, tuple.y, ...]
+   #    end
+   
+   def projection( name, details, &block )
+      assert(@entity.exists?, "you must define the entity using one \"each\" or \"as\" clause before defining any projections")
+      attributes = details.fetch(:project) || block
+      @entity.projections.register Schema::Projection.new(@entity, name, lambda{|entity| entity.project_attributes(attributes)})
+   end
+   
+   
+   #
+   # Defines an accessor on the entity. Projections will automatically be applied to your accessors, so 
+   # always project out the full entity.
+   #
+   # There are several ways to call it:
+   #    accessor *symbols
+   #    accessor name, :on => array of symbols
+   #    accessor name, :where => complete query on the entity that specifies the tuples to return
+   #    accessor name, :where => nil do |tuple|
+   #       tuple.x == parameter(0) & tuple.y == parameter(1)
+   #    end
+      
+   def accessor( *args, &block )
+      assert(@entity.exists?, "you must define the entity using one \"each\" or \"as\" clause before defining any accessors")
+      args = [args.collect{|symbol| symbol.to_s}.join("_and_"), {:on => args}] unless args.last.is_a?(Hash)
+      
+      name, hash = *args
+      if hash.member?(:on) then
+         attributes = hash[:on]
+         @entity.accessors.register Schema::GeneratedAccessor.new(@entity, name, lambda{|entity| entity.project_attributes(attributes)} )
+      elsif hash.member?(:where) then
+         @entity.accessors.register Schema::DefinedAccessor.new(@entity, name, hash.fetch(:where) || block)
+      else
+         fail
+      end
+   end
+   
+   
+   #
+   # Defines an operation on the entity. Operations are free-form methods added to the
+   # Entity class internally.
+   
+   def operation( name, &block )
+      assert(@entity.exists?, "you must define the entity using one \"each\" or \"as\" clause before defining any operations")
+      @entity.operations.register(block, name)
+   end
+   
    
 end # EntityDefinition
 end # Language

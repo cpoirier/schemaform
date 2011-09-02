@@ -119,11 +119,13 @@ class Tuple < Element
       end
    end
    
-   def describe( indent = "", name_override = nil, suffix = nil )
+   def print_to( printer, name_override = nil )
       super
-      child_indent = indent + "   "
-      @attributes.each do |attribute|
-         attribute.describe(child_indent)
+      printer.indent do
+         width = @attributes.collect{|a| a.name.to_s.length}.max
+         @attributes.each do |attribute|
+            attribute.print_to(printer, width)
+         end
       end
    end
    

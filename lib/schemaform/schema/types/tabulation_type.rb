@@ -38,7 +38,7 @@ class TabulationType < ListType
    end
    
    def description()
-      "[" + @tuple_type.description.to_s + "]"
+      "tabulation_of(" + @tuple_type.description.to_s + ")"
    end
 
 

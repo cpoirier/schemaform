@@ -29,10 +29,10 @@ module Language
       
       include QualityAssurance
       
-      def print( printer )
+      def print_to( printer )
          width = fields.collect{|n| n.to_s.length}.max()
          each do |name, value|
-            printer.label(name.to_s.ljust(width)){ printer.puts(value) }
+            printer.label(name.to_s.ljust(width)){ printer.print(value) }
          end
       end
       
@@ -66,7 +66,7 @@ module Language
       end
       
       def description()
-         self.class.name.split("::").last
+         self.class.unqualified_name
       end
       
       @@defined_subclass_field_lists = {}
@@ -106,11 +106,16 @@ module Language
       Aggregation     = Production.define( :relation, :operator         )
       OrderBy         = Production.define( :relation, :ordering         )
       RelatedTuples   = Production.define( :relation, :link_path        )
+
+      # ==========================================================================================
+      # Other
+      
+      MemberOfSet     = Production.define( :set, :value )
       
       # class ImpliedScope < Production
       #    def initialize( scope )
       #       if scope.is_a?(Language::Attribute) && scope.get_production.is_a?(Accessor) && scope.get_production.symbol == :email
-      #          Printer.dump(scope)
+      #          Printer.print(scope)
       #          fail 
       #       end
       #       @scope = scope

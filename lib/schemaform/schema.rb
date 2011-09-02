@@ -34,7 +34,7 @@ class Schema
    #                                       Public Interface
    # ==========================================================================================
 
-   attr_reader :supervisor, :types, :entities, :relations, :tuples, :dsl, :name, :version
+   attr_reader :supervisor, :types, :entities, :tuples, :dsl, :name, :version
    
    def path()
       [@name]
@@ -91,14 +91,14 @@ class Schema
    end
    
    
-   def describe( indent = "", name_override = nil, suffix = nil )
-      puts "#{indent}#{self.class.name.split("::").last}: #{name_override || @name}#{suffix ? " " + suffix : ""}"
-      child_indent = indent + "   "
-      @entities.each do |entity|
-         entity.describe(child_indent)
+   def print_to( printer )
+      printer.label "Schema #{@name}, version #{@version}" do
+         @entities.each do |entity|
+            entity.print_to(printer)
+         end
       end
-   end
-   
+      exit
+   end   
    
 
    def schema_id()
@@ -128,9 +128,8 @@ protected
    def initialize( name, version, &block )      
       @name        = name
       @version     = version
-      @tuples      = Registry.new("schema [#{@name}]", "a tuple"              )
-      @relations   = Registry.new("schema [#{@name}]", "a relation"           )
-      @entities    = Registry.new("schema [#{@name}]", "an entity", @relations)
+      @tuples      = Registry.new("schema [#{@name}]", "a tuple"  )
+      @entities    = Registry.new("schema [#{@name}]", "an entity")
       @types       = TypeRegistry.new("schema [#{@name}]")
       @monitor     = Monitor.new()
       @schema_id   = {}

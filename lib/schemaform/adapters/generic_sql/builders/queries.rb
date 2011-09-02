@@ -64,7 +64,7 @@ class Adapter
       # relation, criteria
 
 
-      Printer.dump(restriction)
+      Printer.print(restriction)
       analyze_predicate(restriction.criteria, query_plan)
       fail_todo
    end

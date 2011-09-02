@@ -40,7 +40,11 @@ class SetType < CollectionType
    end
 
    def description()
-      "(" + @member_type.description + ")"
+      "set of #{@member_type.description}"
+   end
+   
+   def print_to( printer, label = "set of" )
+      super
    end
    
 end # SetType

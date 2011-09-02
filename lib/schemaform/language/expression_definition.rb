@@ -35,10 +35,10 @@ module ExpressionDefinition
       ExpressionCapture.merge_types(true_branch.get_type, false_branch.get_type).expression(production)
    end
    
-   def self.all( relation_name )
+   def self.all( entity_name )
       ExpressionCapture.resolution_scope do |schema|
-         assert(schema.relations.member?(relation_name), "unable to find relation [#{relation_name}] in resolution scope")
-         schema.relations[relation_name].expression 
+         assert(schema.entities.member?(entity_name), "unable to find entity [#{entity_name}] in resolution scope")
+         schema.entities[entity_name].expression 
       end
    end
    

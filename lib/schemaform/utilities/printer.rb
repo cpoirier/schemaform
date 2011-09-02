@@ -30,12 +30,11 @@ class Printer
       yield(new(stream, indent))
    end
    
-   def self.dump( object, indent = "DUMP: ", stream = $stdout )
+   def self.print( object, indent = "DUMP: ", stream = $stdout )
       Printer.run(stream, indent) do |printer|
-         printer.puts(object)
+         printer.print(object)
       end
    end
-   
    
    def initialize( stream = $stdout, indent = "" )
       @stream     = stream
@@ -98,92 +97,91 @@ class Printer
 
    def label( label, terminator = ":", separator = "#{terminator} " )
       case self[:label_style]
-      when nil, :square
+      when :square
          header = "#{label}#{separator}"
 
          print header
          indent(header.length) do
             yield
          end
-      when :simple
+      when nil, :simple
          body = buffer(false){ yield }
          body.chomp!
          
-         if body.includes?("\n") then
-            puts "#{label}#{separator}"
-            indent(){ puts(body) }
+         if body.includes?("\n") || @newlines_suppressed then
+            print "#{label}#{separator}"
+            indent(){ print(body) }
          else
-            puts "#{label}#{separator}#{body}"
+            print "#{label}#{separator}#{body}"
          end
       end
    end
 
    
    #
-   # Writes some text to the stream.
+   # Prints an object to the stream. Note that print() does not follow the Ruby convention
+   # about ending the line: print always acts in block mode, unless you set inline to true,
+   # in order to give intuitive results when printing complex objects. It is probably better 
+   # to do your own string converstion and use << if you want direct control over line endings.
    
-   def <<( text )
-      print(text)
-      self
-   end
-
-
-   #
-   # Writes a full line of text, with end of line marker, to the stream.
-   
-   def puts( text = "" )
-      print( text )
-      end_line()
-   end
-
-
-   #
-   # Writes data to the stream.
-   
-   def print( data )
+   def print( data, inline = false )
       return if data.nil?
 
       case data
       when NilClass
          # no op
       when String
-         if @at_bol then
-            @stream << @indent
-            @at_bol = false
-         end
-
-         if data[-1..-1] == "\n" then
-            @at_bol = true
-            @stream << data.slice(0..-2).gsub("\n", "\n#{@indent}")
-            @stream << "\n"
-         else
-            @stream << data.gsub("\n", "\n#{@indent}")
-         end
+         self << data
       when Array
          data.each_with_index do |value, i|
-            label("[#{i}]", ""){puts(value)}
+            label("[#{i}]", ""){print(value)}
          end
       when Hash
          data.each do |name, value|
-            label("[#{name}]", ""){puts(value)}
+            label("[#{name}]", ""){print(value)}
          end
       else
-         if data.responds_to?(:print) then
-            data.print(self)
+         if data.responds_to?(:print_to) then
+            data.print_to(self)
          elsif data.responds_to?(:to_s) then
             print(data.to_s)
          else
             print(data.inspect)
          end
       end
+      
+      end_line() unless inline
    end
+
+
+   #
+   # Writes some text to the stream.
+   
+   def <<( text )
+      if @at_bol then
+         @stream << @indent
+         @at_bol = false
+      end
+      
+      if text[-1..-1] == "\n" then
+         @at_bol = true
+         @stream << text.slice(0..-2).gsub("\n", "\n#{@indent}")
+         @stream << "\n"
+      else
+         @stream << text.gsub("\n", "\n#{@indent}")
+      end
+      
+      self
+   end
+
+
 
    
    #
    # Ends the current line.
    
    def end_line()
-      print("\n") unless @at_bol
+      self << "\n" unless @at_bol
    end
 
    
@@ -192,13 +190,13 @@ class Printer
    
    def blank_lines( count = 2 )
       end_line()
-      count.times { puts }
+      count.times { self << "\n" }
    end
 
    
    #
    # Initiates a temporary buffer within the indenter. If the block exits normally, any text written
-   # during your block will be written to the real stream or returned.
+   # during your block will be written to the real stream. Returns the buffered text.
       
    def buffer( commit = true )
       state   = [@stream, @at_bol, @indent]
@@ -212,7 +210,8 @@ class Printer
          @stream, @at_bol, @indent = *state
       end
 
-      commit ? print(buffer) : buffer
+      self << buffer if commit
+      buffer
    end
 
 

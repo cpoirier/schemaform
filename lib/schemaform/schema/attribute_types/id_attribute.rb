@@ -19,8 +19,6 @@
 # =============================================================================================
 
 
-require Schemaform.locate("writable_attribute.rb")
-
 
 #
 # An ID attribute within the tuple. This is automatically generated and should never be created
@@ -28,14 +26,19 @@ require Schemaform.locate("writable_attribute.rb")
 
 module Schemaform
 class Schema
-class IDAttribute < WritableAttribute
+class IDAttribute < Attribute
    
    def initialize( tuple, entity, name = :id, type = nil )
-      super(name, tuple, IdentifierType.new(entity))
+      super(name, tuple)
+      @type = IdentifierType.new(entity)
    end
    
    def recreate_in( new_context, changes = nil )
       self.class.new(new_context, @type.entity, @name, @type)
+   end
+
+   def writable?()
+      true
    end
    
 end # IDAttribute

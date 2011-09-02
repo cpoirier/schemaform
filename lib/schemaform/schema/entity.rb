@@ -18,52 +18,76 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("relation.rb")
-require Schemaform.locate("tuple.rb"   )
+require Schemaform.locate("element.rb")
 
 
 #
-# A single entity within the schema.
+# Base class for named entities (which are either defined or derived).
 
 module Schemaform
 class Schema
-class Entity < Relation
-      
-   def initialize( name, base_entity, schema )
-      super(schema, name)
-      @heading          = Tuple.new(self)
-      @declared_heading = Tuple.new(self, nil, @heading.attributes)
+class Entity < Element
 
-      #
-      # Import the base entity identifier attributes.
-
-      @base_entity = base_entity
-      @pedigree    = [self]
-
-      if base_entity then
-         @pedigree   = base_entity.pedigree + [self]
-         @identifier = @heading.register(RequiredAttribute.new(:id, @heading, @base_entity.reference_type))  # @base_entity.reference_@base_entity.identifier)   # base_entity.identifier.recreate_in(@heading))
-      else
-         @identifier = @heading.register(IDAttribute.new(@heading, self))
-      end
+   def initialize( context, name )
+      super(context, name)
+            
+      @keys        = Registry.new("#{full_name}", "a key"       )
+      @operations  = Registry.new("#{full_name}", "an operation")
+      @projections = Registry.new("#{full_name}", "a projection")
+      @accessors   = Registry.new("#{full_name}", "an accessor" )
    end
    
-   attr_reader :identifier, :declared_heading, :pedigree, :base_entity
+   attr_reader :keys, :accessors, :operations, :projections
+
+   def heading()
+      type.member_type.tuple
+   end
    
    def type()
-      @type ||= SetType.build(TupleType.new(@heading), :context => context)
+      fail_unless_overridden self, :type
    end
    
-   def id()
-      (@declared_heading.name.to_s.identifier_case + "_id").intern
+   def description()
+      full_name() + " " + super
+   end
+   
+   def writable?()
+      false
+   end
+   
+   #
+   # Returns true if the named key is defined in this or any base entity.
+   
+   def key?( name )
+      return true if @keys.member?(name)
+      return @base_entity.key?(name) if @base_entity.exists?
+      return false
    end
 
-   def root_tuple()
-      heading
+   
+   #
+   # Returns true if the named projection is defined in this or any base entity.
+   
+   def projection?( name )
+      return true if @projections.member?(name)
+      return @base_entity.projection?(name) if @base_entity.exists?
+      return false
+   end
+
+   
+   #
+   # Returns true if the named attribute is defined in this or any base entity.
+   
+   def attribute?( name )
+      return heading.attribute?(name)
    end
    
+   
+   #
+   # Finds an attribute within the Entity by name path.
+   
    def find( local_path )
-      tuple      = @heading
+      tuple      = heading
       attribute  = nil
       
       while attribute.nil? && (name = local_path.shift)
@@ -78,49 +102,12 @@ class Entity < Relation
       attribute
    end
 
-   def identifier_type( context = nil )
-      @identifier.type
-   end
-   
-   def reference_type( context = nil )
-      context = @context if context.nil?
-      ReferenceType.new(@name, :context => context)
-   end
-   
-   def has_base_entity?()
-      @base_entity.exists?
-   end
-   
-   def description()
-      full_name() + " " + super
-   end
-   
-   def primary_key()
-      return @keys[@primary_key] unless @primary_key.nil?
-      return @base_entity.primary_key unless @base_entity.nil?
-      return nil
-   end
-   
-   def register_tuple( tuple )
-      schema.register_tuple(tuple)
-   end
-   
-   def describe( indent = "", name_override = nil, suffix = nil )
-      super
-      @heading.describe(indent + "   ", @declared_heading.name)
-   end
    
    
-   #
-   # Returns true if the named attribute is defined in this or any base entity.
-   
-   def attribute?( name )
-      return @heading.attribute?(name)
-   end
-   
-
 end # Entity
 end # Schema
 end # Schemaform
+
+Dir[Schemaform.locate("entity_types/*.rb")].each {|path| require path}
 
 

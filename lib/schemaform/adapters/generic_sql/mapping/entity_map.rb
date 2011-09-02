@@ -98,7 +98,7 @@ class EntityMap
    end
 
    def build_query( predicate, projection )
-      Printer.dump(predicate)
+      Printer.print(predicate)
       
       fail_todo
       

@@ -232,7 +232,7 @@ class Schema
    class NumericType < ScalarType
       def capture_method( receiver, method_name, args = [], block = nil )
          case method_name
-         when :floor
+         when :floor, :ceil
             Language::ExpressionCapture.capture_method_call(:integer, receiver, method_name, args, block)
          else
             super
@@ -309,6 +309,10 @@ class Schema
             else
                super
             end
+         when :member?
+            search_term = Language::ExpressionCapture.capture(args.shift)
+            production  = Language::Productions::MemberOfSet.new(receiver, search_term)
+            Language::ExpressionCapture.resolve_type(:boolean).expression(production)
          else 
             super
          end
@@ -376,12 +380,6 @@ class Schema
       def expression( production = nil )
          Language::Attribute.new(self, production)
       end
-   end
-   
-   class DerivedAttribute < Attribute
-      def type()
-         (@type ||= analyze_formula) || schema.unknown_type
-      end
       
       def analyze_formula()
          result = nil
@@ -407,46 +405,24 @@ class Schema
             nil
          end
       end
+      
    end
    
-   class VolatileAttribute < DerivedAttribute
-      
+   class DerivedAttribute < Attribute
       def type()
-         @type ||= expression.get_type
-      end
-      
-      #
-      # Volatile attributes are essentially macros. We treat the formula as if it were used
-      # inline in the context. However, to enable that, we disallow recursion.
-
-      def expression( production = nil )
-         warn_todo("must recursion be excluded from volatile attributes?")
-         
-         result = nil
-         if @analyzing then
-            fail "#{full_name} is a self-referencing volatile attribute, which is not presently supported"
-         else
-            # debug("processing in #{full_name}")
-            
-            Language::ExpressionCapture.resolution_scope(schema) do
-               begin
-                  warn_todo("shouldn't the expression for a Volatile attribute link in with the context Production?")
-                  @analyzing = true  # Set true to ensure any self-references are detected
-                  result = Language::ExpressionCapture.capture_expression(root_tuple.expression(production), @proc)
-               ensure
-                  @analyzing = false
-               end
-            end
-         end
-         
-         return result
+         (@type ||= analyze_formula) || schema.unknown_type
       end
    end
-
-
-   class Relation < Element
+   
+   class OptionalAttribute < Attribute
+      def type()
+         (@type ||= analyze_formula) || schema.unknown_type         
+      end
+   end
+   
+   class Entity < Element
       def expression( production = nil )
-         Language::Relation.new(self, production)
+         Language::Entity.new(self, production)
       end
       
       def project_attributes( *names, &block )
@@ -458,13 +434,7 @@ class Schema
       end
    end
 
-   class Entity < Relation
-      def expression( production = nil )
-         Language::Entity.new(self, production)
-      end
-   end
-
-   class Derivation < Relation
+   class DerivedEntity < Entity
       def type()
          (@type ||= analyze_formula) || schema.unknown_type
       end
@@ -478,7 +448,9 @@ class Schema
             Language::ExpressionCapture.resolution_scope(schema) do
                begin
                   @analyzing = true  # Ensure any self-references don't retrigger analysis
-                  result = Language::ExpressionCapture.capture_expression(root_tuple.expression(), @proc)
+                  result = Language::ExpressionDefinition.module_exec(&@proc).tap do |captured_expression|
+                     type_check(:captured_expression, captured_expression, Language::Placeholder)
+                  end
                ensure
                   @analyzing = false
                end
@@ -533,7 +505,7 @@ end # Schemaform
 module Schemaform
 class Schema
 
-   class Entity < Relation
+   class Entity < Element
 
       #
       # Recurses through the attributes, calling your block at each with the attribute

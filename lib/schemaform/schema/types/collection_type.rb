@@ -67,6 +67,12 @@ class CollectionType < Type
          return common_type
       end
    end
+
+   def print_to( printer, label = "collection of" )
+      printer.label(label, "") do
+         @member_type.print_to(printer)
+      end
+   end
    
 
 end # CollectionType

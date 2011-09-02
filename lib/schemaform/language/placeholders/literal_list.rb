@@ -29,7 +29,7 @@ class LiteralList < Placeholder
 
       member_type = Thread[:expression_contexts].top.unknown_type
       members.each do |member|
-         member_type = member_type.best_common_type(member.type)
+         member_type = member_type.best_common_type(member.get_type)
       end
       
       super(Thread[:expression_contexts].top.build_list_type(member_type))

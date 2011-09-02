@@ -19,22 +19,23 @@
 # =============================================================================================
 
 
-require Schemaform.locate("writable_attribute.rb")
-
 
 #
 # A required attribute -- one that must be present within its context TupleType.
 
 module Schemaform
 class Schema
-class RequiredAttribute < WritableAttribute
+class RequiredAttribute < Attribute
 
+   def initialize( name, tuple, type )
+      super(name, tuple)
+      @type = type
+   end
    
-protected
-
-   extend QualityAssurance
-   warn_todo("build the constructor for the TupleClass")
-   warn_todo("build a general runtime Tuple class that can wrap a hash")
+   
+   def writable?()
+      true
+   end
    
 
 end # RequiredAttribute

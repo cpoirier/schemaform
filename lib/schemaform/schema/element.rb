@@ -89,8 +89,15 @@ class Element
       description
    end
    
-   def describe( indent = "", name_override = nil, suffix = nil )
-      puts "#{indent}#{self.class.name.split("::").last}: #{name_override || @name}#{suffix ? " " + suffix : ""}"
+   def print_to( printer, name_override = nil )
+      label = "#{self.class.unqualified_name} #{name_override || @name}"
+      if block_given? then
+         printer.label label do
+            yield
+         end
+      else
+         printer.print label
+      end
    end
    
    

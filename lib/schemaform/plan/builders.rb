@@ -29,19 +29,12 @@ class Schema
    end
    
    
-   class Entity < Relation
+   class Entity < Element
       def plan()
          @plan ||= Plan::Entity.new(self)
       end
    end
    
-   
-   class Derivation < Relation
-      def plan()
-         @plan ||= Plan::Derivation.new(self)
-      end
-   end
-
    
    class Tuple < Element
       def plan()

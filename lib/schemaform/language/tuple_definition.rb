@@ -59,7 +59,7 @@ class TupleDefinition
 
 
    #
-   # Defines a required attribute or subtuple within the entity.  To define a subtuple, supply a 
+   # Defines a required attribute or subtuple within the entity. To define a subtuple, supply a 
    # block instead of a type.
 
    def required( name, type_name = nil, modifiers = {}, &block )
@@ -68,45 +68,41 @@ class TupleDefinition
 
    
    #
-   # Defines an optional attribute or subtuple within the entity.  To define a subtuple, supply
-   # a block instead of a type.
+   # Defines an optional attribute or subtuple within the entity. To define a subtuple, supply
+   # a block instead of a type. 
+   #
+   # Optional attributes have a default value that will be used if no value is supplied. This is 
+   # optional value is generally supplied via the :default modifier, and can be a static value
+   # or a formula by which a static value will be calculated (when the tuple is created or when 
+   # an existing value for the attribute is cleared).
+   #
+   # As a convenience, as long as you are not supplying a subtuple, you can supply a Proc (not a 
+   # block) in place of the type_name, which will be used as the default, with the attribute type 
+   # inferred from the formula.
    
    def optional( name, type_name = nil, modifiers = {}, &block )
-      @tuple.attributes.register Schema::OptionalAttribute.new(name, @tuple, type_for(type_name, modifiers, name, &block))
+      if type_name.is_a?(Proc) then
+         assert(block.nil?, "please use the formal syntax for default if you are defining a subtuple")
+         @tuple.attributes.register Schema::OptionalAttribute.new(name, @tuple, nil, type_name)
+      else
+         @tuple.attributes.register Schema::OptionalAttribute.new(name, @tuple, type_for(type_name, modifiers, name, &block))
+      end
    end
    
       
    #
-   # Defines a static attribute within the tuple. A static attribute is filled once when
-   # the tuple is created, and thereafter only if you update one of its roots within the
-   # tuple itself.
-
-   def static( name, *args, &block )
-      derived(name, Schema::StaticAttribute, *args, &block)
-   end   
-   
-   
-   #
-   # Defines a maintained attribute within the tuple. A maintained attribute is kept
+   # Defines a derived attribute within the tuple. A derived attribute is kept
    # up to date for you by the system, and you can rely on it being up to date at the
    # end of every transaction. Supply a Proc or a block.  
 
-   def maintained( name, *args, &block )
-      derived(name, Schema::MaintainedAttribute, *args, &block)
-   end   
-   
-   
-   #
-   # Defines a volatile attribute within the tuple. A volatile attribute is calculated
-   # on every use (it is never stored in the database). Be careful with this: too much
-   # complexity in a volatile attribute will mean all processing must be moved into
-   # Ruby memory, and that can be very expensive. 
+   def derived( name, *args, &block )
+      modifiers = args.first.is_a?(Hash) ? args.shift : {}
+      proc      = block || args.shift
 
-   def volatile( name, *args, &block )
-      derived(name, Schema::VolatileAttribute, *args, &block)
+      @tuple.attributes.register Schema::DerivedAttribute.new(name, @tuple, proc)
    end   
    
-   
+
    #
    # Defines a constraint on the tuple that will be checked on save.
    
@@ -154,17 +150,6 @@ class TupleDefinition
    
 private
 
-   #
-   # Creates a derived field of the appropriate class.
-   
-   def derived( name, clas, *args, &block )
-      modifiers = args.first.is_a?(Hash) ? args.shift : {}
-      proc      = block || args.shift
-
-      @tuple.attributes.register clas.new(name, @tuple, proc)
-   end
-   
-   
    #
    # Retrieves or builds a definition for the given name.
    

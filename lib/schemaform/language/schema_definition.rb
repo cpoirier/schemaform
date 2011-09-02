@@ -44,25 +44,11 @@ class SchemaDefinition
       if parent && !parent.is_an?(Schema::Entity) then
          parent = @schema.entities.find(parent, checks_enabled?)
       end
+
+      EntityDefinition.process(@schema, name, parent, &block)
+   end
+   
       
-      Schema::Entity.new(name, parent, @schema).tap do |entity|
-         @schema.entities.register(entity)
-         EntityDefinition.process(entity, &block)
-      end
-   end
-   
-   
-   #
-   # Defines an entity that is derived from other entities.
-   
-   def derive_entity( name, &block )
-      Schema::Derivation.new(name, @schema).tap do |derivation|
-         @schema.relations.register(derivation)
-         DerivationDefinition.process(derivation, &block)
-      end
-   end
-   
-   
    #
    # Defines a tuple within the Schema.
    

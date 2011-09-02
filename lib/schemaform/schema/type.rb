@@ -138,8 +138,8 @@ class Type < Element
       return "an unnamed #{self.class.name.sub("Type", "").sub(/.*::/, "").identifier_case} type"
    end
    
-   def describe( indent = "", name_override = nil, suffix = nil )
-      super( indent, description )
+   def print_to( printer )
+      printer.print( description )
    end
    
    

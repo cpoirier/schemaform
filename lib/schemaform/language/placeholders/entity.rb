@@ -18,23 +18,27 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("relation.rb")
 
 #
 # Provides access to a whole Entity. 
 
 module Schemaform
 module Language
-class Entity < Relation
+class Entity < Placeholder
 
    def initialize( entity, production = nil )
-      super(entity, production)
+      super(entity.type, production)
       @entity = entity
    end
    
    def method_missing( symbol, *args, &block )
       super
    end
+   
+   def get_description()
+      "0x#{self.object_id.to_s(16)} #{@entity.name} #{@type.description}"      
+   end
+   
 
 end # Entity
 end # Language

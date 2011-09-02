@@ -47,8 +47,8 @@ class TupleType < Type
       @tuple.description
    end
    
-   def describe( indent = "", name_override = nil, suffix = nil )
-      @tuple.describe(indent, name_override, suffix)
+   def print_to( printer )
+      @tuple.print_to(printer)
    end
 
    def attribute?( attribute_name )

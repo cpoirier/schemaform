@@ -42,6 +42,11 @@ class ListType < CollectionType
       "list of #{member_type.description}"
    end
    
+   def print_to( printer, label = "list of" )
+      super
+   end
+   
+   
 end # ListType
 end # Schema
 end # Schemaform

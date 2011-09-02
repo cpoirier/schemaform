@@ -19,15 +19,27 @@
 # =============================================================================================
 
 
-require Schemaform.locate("writable_attribute.rb")
-
 
 #
 # An optional attribute -- one that will show a default value if not specifically set.
 
 module Schemaform
 class Schema
-class OptionalAttribute < WritableAttribute
+class OptionalAttribute < Attribute
+
+   def initialize( name, tuple, type, proc = nil )
+      super(name, tuple)
+      @type = type
+      @proc = proc
+   end
+
+   def recreate_in( new_context, changes = nil )
+      self.class.new(@name, new_context, @type, @proc)
+   end
+   
+   def writable?()
+      true
+   end
 
    def required?()
       false

@@ -63,9 +63,9 @@ class Attribute < Element
       path.slice(root_tuple.path.length..-1) 
    end
 
-   def describe( indent = "", name_override = nil, suffix = nil )
-      super(indent, name_override)
-      type.describe(indent + "   ", "")
+   def print_to( printer, width = nil )
+      printer.print("#{@name.to_s.ljust(width > 25 ? width : 25)} ", true)
+      type.print_to(printer)
    end
    
    def writable?()

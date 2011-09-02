@@ -63,13 +63,13 @@ class Placeholder
       @type.capture_method(self, symbol, args, block) or fail "cannot dispatch [#{symbol}] on type #{@type.description} (#{@type.class.name})"
    end
    
-   def print( printer )
-      printer.print("#{get_description}")
+   def print_to( printer )
       if @production then
-         printer.puts( " resulting from #{@production.description}:" )
-         printer.indent{ @production.print(printer) }
+         printer.label( "#{get_description} resulting from #{@production.description}:" ) do
+            printer.print(@production)
+         end
       else
-         printer.end_line()
+         printer.print("#{get_description}")
       end
    end
    

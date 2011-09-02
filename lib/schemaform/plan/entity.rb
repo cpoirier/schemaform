@@ -18,18 +18,26 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("relation.rb")
-
 
 #
 # Wraps a Schema-defined Entity for use at runtime.
 
 module Schemaform
 module Plan
-class Entity < Relation
+class Entity
    
    def initialize( definition )
-      super(definition)
+      @definition = definition
+   end
+
+   attr_reader :definition
+   
+   def accessors()
+      @definition.accessors
+   end
+   
+   def operations()
+      @definition.operations
    end
 
 end # Entity

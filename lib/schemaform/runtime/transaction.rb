@@ -32,21 +32,21 @@ class Transaction
       @connection = connection
       @monitor    = Monitor.new()
       
-      @connected_relations = {}
+      @connected_entities = {}
    end
    
    attr_reader :workspace, :connection
          
       
    #
-   # Returns a runtime, connected version of the named relation for you to use. Address formats are:
-   #  * relation_name
-   #  * schema_name, relation_name
-   #  * schema_name, schema_version, relation_name
+   # Returns a runtime, connected version of the named entity for you to use. Address formats are:
+   #  * entity_name
+   #  * schema_name, entity_name
+   #  * schema_name, schema_version, entity_name
 
-   def []( *relation_address )
-      relation = @workspace[*relation_address]
-      @connected_relations[relation] || @monitor.synchronize{@connected_relations[relation] ||= ConnectedRelation.new(self, relation)}
+   def []( *entity_address )
+      entity = @workspace[*entity_address]
+      @connected_entities[entity] || @monitor.synchronize{@connected_entities[entity] ||= ConnectedEntity.new(self, entity)}
    end
    
    

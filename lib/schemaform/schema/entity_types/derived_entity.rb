@@ -38,6 +38,12 @@ class DerivedEntity < Entity
       type.member_type.tuple
    end
    
+   def print_to( printer )
+      super do
+         root_tuple.print_to(printer)
+      end
+   end
+   
 
 end # DerivedEntity
 end # Schema

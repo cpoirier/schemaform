@@ -97,7 +97,6 @@ class Schema
             entity.print_to(printer)
          end
       end
-      exit
    end   
    
 

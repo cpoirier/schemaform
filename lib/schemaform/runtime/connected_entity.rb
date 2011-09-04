@@ -61,7 +61,7 @@ class ConnectedEntity
       
       super
    end
-
+   
 end # ConnectedEntity
 end # Runtime
 end # Schemaform

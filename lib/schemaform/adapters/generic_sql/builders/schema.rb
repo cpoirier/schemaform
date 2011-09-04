@@ -27,6 +27,13 @@ module Adapters
 module GenericSQL
 class Adapter
    
+   #
+   # Checks if the specified Schema has been laid out.
+   
+   def laid_out?( definition )
+      @schema_maps.member?(definition)
+   end
+   
    
    #
    # Lays out a Schema for use with the database. 
@@ -42,11 +49,11 @@ class Adapter
 
                definition.entities.each do |entity|
                   schema_map.map(entity, define_table(schema_name + entity.name)) do |entity_map, table|
-                     if entity.has_base_entity? then
+                     if entity.base_entity.exists? then
                         table.identifier = table.define_reference_field(entity.id, entity_map.base_map.anchor_table, build_primary_key_mark())
                         entity_map.link_child_to_parent(table.identifier)
                      else
-                        table.identifier = table.define_identifier_field(entity.id, build_primary_key_mark())
+                        table.identifier = table.define_identifier_field(entity.id || :id, build_primary_key_mark())
                      end
                   end
                end
@@ -55,11 +62,12 @@ class Adapter
                # Now, fill them in with the basic data structure.
 
                definition.entities.each do |entity|
+                  debug(entity.full_name)
                   builder = @overrides.fetch(:lay_out_builder_class, LayOutBuilder).new(self, schema_map.entity_maps[entity])
 
                   entity.heading.attributes.each do |attribute|
                      next if attribute.name == entity.id
-                     next if entity.base_entity && entity.base_entity.declared_heading.attribute?(attribute.name)
+                     next if entity.base_entity.exists? && entity.base_entity.declared_heading.attribute?(attribute.name)
 
                      dispatch_lay_out(attribute, builder)
                   end
@@ -80,16 +88,17 @@ class Adapter
       send_specialized(:lay_out, element, builder)
    end
    
-   def lay_out_attribute( attribute, builder )
+   def lay_out_attribute( attribute, builder, before = true )
       builder.with_attribute(attribute) do
+         yield if block_given? && before
          send_specialized(:lay_out, attribute.type, builder)
-         yield if block_given?
+         yield if block_given? && !before
       end
    end
    
    def lay_out_optional_attribute( attribute, builder )
-      lay_out_attribute(attribute, builder) do
-         builder.define_meta(Language::Productions::PresentCheck, "present", type_manager.boolean_type, build_required_mark())
+      lay_out_attribute(attribute, builder, true) do
+         builder.define_meta(Language::Productions::PresentCheck, "is_present", type_manager.boolean_type, build_required_mark())
       end
    end
    

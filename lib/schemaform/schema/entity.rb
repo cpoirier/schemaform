@@ -39,6 +39,18 @@ class Entity < Element
    
    attr_reader :keys, :accessors, :operations, :projections
 
+   def base_entity()
+      nil
+   end
+   
+   def id()
+      nil
+   end
+   
+   def identifier()
+      nil
+   end
+   
    def heading()
       type.member_type.tuple
    end

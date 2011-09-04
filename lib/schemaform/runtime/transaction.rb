@@ -60,6 +60,10 @@ class Transaction
       end
    end
    
+   def print_to( printer )
+      @adapter.print_to(printer)
+   end
+   
 
 
 end # Transaction

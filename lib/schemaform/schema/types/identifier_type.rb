@@ -28,7 +28,7 @@ class IdentifierType < Type
 
    def initialize( entity, attrs = {} )
       attrs[:context  ] = entity unless attrs.member?(:context)
-      attrs[:base_type] = entity.has_base_entity? ? entity.base_entity.identifier_type : attrs.fetch(:context).schema.identifier_type unless attrs.member?(:base_type)
+      attrs[:base_type] = entity.base_entity.exists? ? entity.base_entity.identifier_type : attrs.fetch(:context).schema.identifier_type unless attrs.member?(:base_type)
       super attrs
       @entity = entity
    end

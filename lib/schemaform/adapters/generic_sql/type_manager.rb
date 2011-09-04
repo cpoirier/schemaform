@@ -57,8 +57,12 @@ class TypeManager
       integer_type()
    end
    
-   def integer_type(range = nil )
+   def integer_type( range = nil )
       TypeInfo.new(self, "integer", 4)
+   end
+   
+   def real_type( range = nil)
+      TypeInfo.new(self, "real", 8)
    end
    
    def date_time_type()
@@ -79,8 +83,10 @@ class TypeManager
          end
       when Schemaform::Schema::BooleanType, :boolean
          boolean_type()
-      when Schemaform::Schema::IntegerType
+      when Schemaform::Schema::IntegerType, :integer
          integer_type(type.range)
+      when Schemaform::Schema::NumericType, :real
+         real_type(type.range)
       when Schemaform::Schema::DateTimeType
          date_time_type()
       when Schemaform::Schema::EnumeratedType
@@ -89,8 +95,6 @@ class TypeManager
          else
             integer_type(type.evaluated_type.range)
          end
-      when :integer
-         integer_type()
       else
          fail_todo type.class.name
       end

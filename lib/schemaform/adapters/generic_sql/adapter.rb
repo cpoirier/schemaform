@@ -117,6 +117,16 @@ class Adapter
       end
    end
    
+   def print_to( printer )
+      printer.label("#{self.class.namespace_module.unqualified_name} Adapter for #{@address.url}") do
+         printer.label("Tables") do
+            @tables.each do |table|
+               printer.print(table.to_sql_create)
+            end
+         end
+      end
+   end
+   
 
 protected
    def initialize( address, overrides = {} )

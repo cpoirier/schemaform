@@ -230,10 +230,10 @@ end
 
 
 # =============================================================================================
-#                                        Class Extensions
+#                                       Module Extensions
 # =============================================================================================
 
-class Class
+class Module
    
    #===========================================================================================
    if !method_defined?(:unqualified_name) then
@@ -243,6 +243,36 @@ class Class
       
       def unqualified_name()
          @unqualified_name ||= self.name.split("::").last
+      end
+   end
+   
+   
+end
+
+
+# =============================================================================================
+#                                        Class Extensions
+# =============================================================================================
+
+class Class
+   
+   #===========================================================================================
+   if !method_defined?(:namespace_module) then
+      
+      #
+      # Returns the namespace in which the class is defined.
+      
+      def namespace_module()
+         unless defined?(@namespace_module)
+            if marker = self.name.rindex("::") then
+               namespace_name = self.name[0..(marker-1)]
+               @namespace_module = eval(namespace_name)
+            else
+               @namespace_module = nil
+            end
+         end
+         
+         @namespace_module
       end
    end
    

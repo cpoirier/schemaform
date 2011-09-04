@@ -45,7 +45,7 @@ class OriginalEntity < Entity
       end
    end
    
-   attr_reader :identifier, :declared_heading, :pedigree, :base_entity
+   attr_reader :identifier, :heading, :declared_heading, :pedigree, :base_entity
    
    def writable?()
       true
@@ -70,10 +70,6 @@ class OriginalEntity < Entity
    def reference_type( context = nil )
       context = @context if context.nil?
       ReferenceType.new(@name, :context => context)
-   end
-   
-   def has_base_entity?()
-      @base_entity.exists?
    end
    
    def primary_key()

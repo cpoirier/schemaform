@@ -31,8 +31,8 @@ class Adapter
    #
    # Renders some Adapter object into a SQL create statement.
    
-   def render_sql_create( object )
-      send_specialized(:render_sql_create, object)
+   def render_sql_create( object, *data )
+      send_specialized(:render_sql_create, object, *data)
    end
 
    def render_sql_create_schema( schema )
@@ -42,16 +42,17 @@ class Adapter
    def render_sql_create_table( table )
       warn_todo("add keys and indices to table create")
       
-      fields  = table.fields.collect{|field| render_sql_create(field)}
+      width   = table.fields.collect{|field| field.name.to_s.length}.max()
+      fields  = table.fields.collect{|field| render_sql_create(field, width)}
       keys    = []
       clauses = fields + keys
       
       "CREATE TABLE #{quote_identifier(table.name)}\n(\n   #{clauses.join(",\n   ")}\n);"
    end
       
-   def render_sql_create_field( field )
+   def render_sql_create_field( field, width )
       modifiers = field.marks.collect{|mark| render_sql_create(mark)}
-      [quote_identifier(field.name), field.type.sql, *modifiers].join(" ")
+      [quote_identifier(field.name).ljust(width+3), field.type.sql, *modifiers].join(" ")
    end
    
    def render_sql_create_generated_mark( mark )

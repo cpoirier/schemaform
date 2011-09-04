@@ -40,7 +40,7 @@ class ReferenceType < Type
    attr_reader :entity_name
    
    def base_type()
-      if @entity && @entity.has_base_entity? then
+      if @entity && @entity.base_entity.exists? then
          @entity.base_entity.identifier_type
       else
          schema.identifier_type

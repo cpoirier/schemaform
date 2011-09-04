@@ -62,6 +62,8 @@ class Table
       @adapter.render_sql_create(self)
    end
    
+   
+   
 protected
 
    def initialize( adapter, name )

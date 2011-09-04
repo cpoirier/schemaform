@@ -64,8 +64,14 @@ class Workspace
    
    def []( *address )
       entity = case address.length
-      when 1
-         @entity_lookup.fetch(address.shift)
+      when 1         
+         case address.first
+         when Schema::Entity
+            entity = address.shift
+            @version_lookup.fetch(entity.schema.version).fetch(entity.schema.name).fetch(entity.name)
+         else
+            @entity_lookup.fetch(address.shift)
+         end
       when 2
          @schema_lookup.fetch(address.shift).fetch(address.shift)
       when 3
@@ -74,8 +80,6 @@ class Workspace
          fail
       end
    end
-   
-
    
 end # Workspace
 end # Runtime

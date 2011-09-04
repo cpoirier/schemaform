@@ -425,12 +425,16 @@ class Schema
          Language::Entity.new(self, production)
       end
       
-      def project_attributes( *names, &block )
-         expression.project(*names, &block).get_production.attribute_definitions
+      def project_attributes( specification )
+         if specification.is_a?(Proc) then
+            expression.project(&specification).get_production.attribute_definitions
+         else
+            expression.project(*specification).get_production.attribute_definitions
+         end
       end
 
-      def project_attribute_expressions( *names, &block )
-         expression.project(*names, &block).get_production.attributes.collect{|attribute| attribute.evaluate}
+      def project_attribute_expressions( specification )
+         project_attributes(specification).get_production.attributes.collect{|attribute| attribute.evaluate}
       end
    end
 

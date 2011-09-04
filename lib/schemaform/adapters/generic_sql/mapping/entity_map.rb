@@ -36,7 +36,7 @@ class EntityMap
       @entity         = entity
       @anchor_table   = anchor_table
       @tables         = [anchor_table]
-      @base_map       = base_map || @schema_map[entity.base_entity]
+      @base_map       = base_map || (entity.base_entity.exists? ? @schema_map[entity.base_entity] : nil)
       @parent_links   = {}                                  # child Table => Link
       @all_links      = Hash.new(){|h, k| h[k] = {}}        # descendent Table => { ancestor Table => Link }
       @mappings       = Hash.new(){|h, k| h[k] = {}}        # Schema::Attribute => { aspect => Field }

@@ -65,8 +65,7 @@ class QueryPlan
       # if source.is_an?(Schema::Entity) then
       # else
       #    
-      p source.class.name
-      fail_todo
+      fail_todo source.class.name
    end 
 
 

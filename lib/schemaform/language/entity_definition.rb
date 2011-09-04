@@ -114,7 +114,7 @@ class EntityDefinition
       if hash.member?(:where) then
          where = hash.fetch(:where) || block
          fail_todo
-      else
+      else         
          key = Schema::Key.new(@entity, name, lambda{|entity| entity.project_attributes(attributes)})
          @entity.keys.register key
          @entity.accessors.register Schema::KeyAccessor.new(key)

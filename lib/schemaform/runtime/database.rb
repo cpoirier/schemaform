@@ -53,7 +53,7 @@ class Database
    # Provides a context in which your block can do work in the database. You must specify the
    # Schemas you will be working with, in the order of name precedence. 
 
-   def transact_with( available_schemas )
+   def transact_with( *available_schemas )
       workspace = build_workspace(available_schemas)
       @adapter.transact do |connection|
          yield(Transaction.new(workspace, connection))
@@ -71,7 +71,7 @@ protected
    end
 
 
-   def build_workspace( *schemas )
+   def build_workspace( schemas )
       workspace_name = Workspace.name(schemas)
 
       unless @workspaces.member?(workspace_name)
@@ -86,18 +86,18 @@ protected
    
    def upgrade_schema( schema )
       return if @versions.fetch(schema.name, 0) >= schema.version
-      @monitor.synchronize do
-         @adapter.transact do |connection|
-            schema_name = schema.name.to_s.identifier_case
-            installed_version = self.versions_table[schema_name, connection]
-            if installed_version == 0 then
-               @adapter.lay_out(schema).tables.each do |table|
-                  table.install(connection)
-               end
-               @versions[schema.name] = self.versions_table[schema_name, connection] = 1
-            elsif installed_version < schema.version then
-               fail "no version upgrade support yet"
+      @adapter.transact do |connection|
+         schema_name = schema.name.to_s.identifier_case
+         installed_version = self.versions_table[schema_name, connection]
+         if installed_version == 0 then
+            @adapter.lay_out(schema).tables.each do |table|
+               table.install(connection)
             end
+            @versions[schema.name] = self.versions_table[schema_name, connection] = 1
+         elsif installed_version < schema.version then
+            fail "no version upgrade support yet"
+         else
+            @adapter.lay_out(schema)
          end
       end
    end
@@ -117,8 +117,8 @@ protected
          end
       end
    end
-
-
+   
+   
    
 private
    def initialize( adapter )

@@ -36,6 +36,10 @@ class EntityTuple < Tuple
       @names  = entity.pedigree.collect{|e| e.name}
    end
    
+   def key()
+      self[@entity.id]
+   end
+   
    def get_related( entity_name, link_attribute = nil, &link_expression )
       related_entity = @entity.schema.entities.find(entity_name)
       link_path      = nil

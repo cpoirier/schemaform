@@ -62,7 +62,6 @@ class Adapter
                # Now, fill them in with the basic data structure.
 
                definition.entities.each do |entity|
-                  debug(entity.full_name)
                   builder = @overrides.fetch(:lay_out_builder_class, LayOutBuilder).new(self, schema_map.entity_maps[entity])
 
                   entity.heading.attributes.each do |attribute|

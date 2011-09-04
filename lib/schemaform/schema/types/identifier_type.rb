@@ -27,10 +27,10 @@ class Schema
 class IdentifierType < Type
 
    def initialize( entity, attrs = {} )
-      attrs[:context  ] = entity unless attrs.member?(:context)
-      attrs[:base_type] = entity.base_entity.exists? ? entity.base_entity.identifier_type : attrs.fetch(:context).schema.identifier_type unless attrs.member?(:base_type)
+      attrs[:context] = entity unless attrs.member?(:context)
       super attrs
-      @entity = entity
+      @entity    = entity
+      @base_type = ReferenceType.new(entity)
    end
    
    attr_reader :entity

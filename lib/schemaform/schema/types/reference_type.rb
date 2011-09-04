@@ -23,14 +23,17 @@ module Schemaform
 class Schema
 class ReferenceType < Type
 
-   def initialize( entity_name, attrs )
+   def initialize( entity_name, attrs = {} )
       attrs.delete(:base_type)
-      super attrs
       if entity_name.is_an?(Entity) then
-         @entity_name = entity_name.name
+         entity          = entity_name
+         attrs[:context] = entity unless attrs.member?(:context)
+         super attrs
+         @entity_name = entity.name
          @entity      = entity
          warn_once("is there a downside to initializing a ReferenceType directly to an Entity?")
       else
+         super attrs
          type_check(:entity_name, entity_name, Symbol)
          @entity_name = entity_name
          @entity      = nil
@@ -39,11 +42,12 @@ class ReferenceType < Type
    
    attr_reader :entity_name
    
-   def base_type()
-      if @entity && @entity.base_entity.exists? then
-         @entity.base_entity.identifier_type
+   def base_type()      
+      return @base_type if @base_type.exists?
+      if referenced_entity && referenced_entity.base_entity.exists? then
+         @base_type = ReferenceType.new(referenced_entity.base_entity)
       else
-         schema.identifier_type
+         nil
       end
    end
    
@@ -61,6 +65,10 @@ class ReferenceType < Type
    
    def verify()
       assert(referenced_entity(), "unable to find referenced entity #{@entity_name}")
+   end
+   
+   def ==( rh_type )
+      return (rh_type.is_a?(ReferenceType) && rh_type.referenced_entity == referenced_entity) || super
    end
 
 end # ReferenceType

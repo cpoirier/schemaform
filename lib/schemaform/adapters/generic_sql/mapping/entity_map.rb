@@ -151,7 +151,7 @@ protected
       
       attr_reader :internal, :external
       
-      def eql?( rhs )
+      def ==( rhs )
          if rhs.is_a?(Field) then
             @internal == rhs || @external == rhs
          else

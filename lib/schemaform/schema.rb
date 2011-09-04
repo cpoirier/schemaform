@@ -108,7 +108,7 @@ class Schema
       schema_id.hash()
    end
    
-   def eql?( rhs )
+   def ==( rhs )
       return super unless rhs.responds_to?(:schema_id)
       return schema_id() == rhs.schema_id()
    end

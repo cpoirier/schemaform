@@ -60,7 +60,7 @@ class Name
       to_s.hash()
    end
    
-   def eql?( rhs )
+   def ==( rhs )
       to_s == rhs.to_s
    end
    

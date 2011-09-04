@@ -186,7 +186,7 @@ class Type < Element
    # type.
    
    def assignable_from?( rh_type )
-      unknown_type? || rh_type.unknown_type? ? nil : rh_type.descendent_of?(self)
+      unknown_type? || rh_type.unknown_type? ? false : rh_type.descendent_of?(self)
    end
    
    
@@ -258,6 +258,7 @@ class Type < Element
       return self     if assignable_from?(rhs_type)
       return rhs_type if rhs_type.assignable_from?(self)
       
+      
       #
       # If we are going to have to do the work, search each pedigree
       # for a member that is assignable from the other side.
@@ -296,6 +297,11 @@ class Type < Element
    end
    
    
+   def ==( rh_type )
+      return true if rh_type.name == name
+      return true if (!!rh_type.name ^ !!name) && rh_type.class == self.class
+      return false
+   end
    
 
 end # Type

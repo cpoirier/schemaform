@@ -68,7 +68,7 @@ class Adapter
                      next if attribute.name == entity.id
                      next if entity.base_entity.exists? && entity.base_entity.declared_heading.attribute?(attribute.name)
 
-                     dispatch_lay_out(attribute, builder)
+                     dispatch(:lay_out, attribute, builder)
                   end
                   
                   entity.keys.each do |key|
@@ -83,10 +83,6 @@ class Adapter
    end
 
 
-   def dispatch_lay_out( element, builder )
-      send_specialized(:lay_out, element, builder)
-   end
-   
    def lay_out_attribute( attribute, builder, before = true )
       builder.with_attribute(attribute) do
          yield if block_given? && before
@@ -109,7 +105,7 @@ class Adapter
    
    def lay_out_tuple( tuple, builder )
       tuple.attributes.each do |attribute|
-         dispatch_lay_out(attribute, builder)
+         dispatch(:lay_out, attribute, builder)
       end
    end
    
@@ -134,11 +130,11 @@ class Adapter
    end
 
    def lay_out_tuple_type( type, builder )
-      dispatch_lay_out(type.tuple, builder)
+      dispatch(:lay_out, type.tuple, builder)
    end
    
    def lay_out_user_defined_type( type, builder )
-      dispatch_lay_out(type.base_type, builder)
+      dispatch(:lay_out, type.base_type, builder)
    end
 
    def lay_out_unknown_type( type, builder )
@@ -154,10 +150,10 @@ class Adapter
    
    def lay_out_collection_type__member_type( member_type, builder )
       if member_type.naming_type? then
-         dispatch_lay_out(member_type, builder)
+         dispatch(:lay_out, member_type, builder)
       else
          builder.with_name("value") do
-            dispatch_lay_out(member_type, builder)
+            dispatch(:lay_out, member_type, builder)
          end
       end
    end

@@ -29,10 +29,12 @@ module Language
       
       include QualityAssurance
       
-      def print_to( printer )
-         width = fields.collect{|n| n.to_s.length}.max()
-         each do |name, value|
-            printer.label(name.to_s.ljust(width)){ printer.print(value) }
+      def print_to( printer, top = true )
+         printer.label(top ? self.class.unqualified_name : nil) do
+            width = fields.collect{|n| n.to_s.length}.max()
+            each do |name, value|
+               printer.label(name.to_s.ljust(width)){ printer.print(value) }
+            end
          end
       end
       

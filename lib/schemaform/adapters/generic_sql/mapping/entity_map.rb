@@ -96,7 +96,7 @@ class EntityMap
       return @base_map.get_field_for_attribute(attribute, aspect) if @base_map
       return nil
    end
-
+   
    def build_query( predicate, projection )
       Printer.print(predicate)
       

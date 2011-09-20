@@ -32,7 +32,7 @@ class Adapter
    # Renders some Adapter object into a SQL create statement.
    
    def render_sql_create( object, *data )
-      send_specialized(:render_sql_create, object, *data)
+      dispatch(:render_sql_create, object, *data)
    end
 
    def render_sql_create_schema( schema )

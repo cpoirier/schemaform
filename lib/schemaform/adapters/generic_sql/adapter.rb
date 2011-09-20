@@ -133,7 +133,7 @@ protected
       @address      = address
       @tables       = Registry.new()    # name => Table
       @schema_maps  = {}                # Schemaform::Schema => SchemaMap
-      @entity_maps  = {}                # Schemaform::Schema::Entity => EntityMap
+      @entity_maps  = {}                # Schemaform::Schema::Entity => EntityMap      
       @query_plans  = {}                # Language::Placeholder => QueryPlan
       @monitor      = Monitor.new()
       @overrides    = overrides
@@ -149,6 +149,9 @@ protected
    @@adapters = {}
 
 
+   alias dispatch send_specialized
+   
+   
 
 end # Adapter
 end # GenericSQL

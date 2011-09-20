@@ -96,10 +96,11 @@ class Printer
    # under the label if not.
 
    def label( label, terminator = ":", separator = "#{terminator} " )
+      return yield if label.nil? || label.empty?
+      header = "#{label}#{separator}"
+
       case self[:label_style]
       when :square
-         header = "#{label}#{separator}"
-
          print header
          indent(header.length) do
             yield
@@ -108,11 +109,11 @@ class Printer
          body = buffer(false){ yield }
          body.chomp!
          
-         if body.includes?("\n") || @newlines_suppressed then
-            print "#{label}#{separator}"
+         if body.includes?("\n") || @indent.length + header.length + body.length > 80 then
+            print header
             indent(){ print(body) }
          else
-            print "#{label}#{separator}#{body}"
+            print "#{header}#{body}"
          end
       end
    end

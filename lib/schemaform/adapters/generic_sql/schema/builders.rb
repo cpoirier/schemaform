@@ -28,6 +28,15 @@ module GenericSQL
 class Adapter
    
    #
+   # Retrieves the EntityMap for the specified Entity.
+   
+   def map_entity( entity )
+      lay_out(entity.schema) unless @entity_maps.member?(entity)
+      return @entity_maps.fetch(entity)
+   end
+   
+   
+   #
    # Checks if the specified Schema has been laid out.
    
    def laid_out?( definition )

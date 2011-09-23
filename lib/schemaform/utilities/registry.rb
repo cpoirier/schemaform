@@ -26,7 +26,7 @@ module Schemaform
 class Registry
    include QualityAssurance
    include Enumerable
-
+   
    def initialize( owner_description = "the registry", member_description = "an object", chain = nil )
       @registry           = {}
       @order              = []
@@ -159,6 +159,20 @@ class Registry
       return nil unless fail_if_missing
       fail("unrecognized [#{name}]")
    end
+
+
+   #
+   # Creates a copy of this registry, possibly with renamed members (if you supply a block).
+   
+   def dup()
+      Registry.new().tap do |copy|
+         each do |name, value|
+            name = yield(name, value) if block_given?
+            copy.register(value, name)
+         end
+      end
+   end
+
 
 end # Registry
 end # Schemaform

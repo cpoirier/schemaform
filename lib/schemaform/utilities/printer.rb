@@ -43,6 +43,7 @@ class Printer
       @properties = {}
    end
    
+   attr_reader :stream
    
    
    #
@@ -125,7 +126,7 @@ class Printer
    # in order to give intuitive results when printing complex objects. It is probably better 
    # to do your own string converstion and use << if you want direct control over line endings.
    
-   def print( data, inline = false )
+   def print( data, end_line = true )
       return if data.nil?
 
       case data
@@ -151,7 +152,7 @@ class Printer
          end
       end
       
-      end_line() unless inline
+      end_line() if end_line
    end
 
 

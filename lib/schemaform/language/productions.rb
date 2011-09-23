@@ -18,6 +18,8 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("schemaform/utilities/printable_struct.rb")
+
 
 module Schemaform
 module Language
@@ -25,54 +27,7 @@ module Language
    #
    # Base class for productions -- things that describe who a Placeholder was calculated.
 
-   class Production
-      
-      include QualityAssurance
-      
-      def print_to( printer, top = true )
-         printer.label(top ? self.class.unqualified_name : nil) do
-            width = fields.collect{|n| n.to_s.length}.max()
-            each do |name, value|
-               printer.label(name.to_s.ljust(width)){ printer.print(value) }
-            end
-         end
-      end
-      
-
-      #
-      # Defines a Production class that takes a standard parameter list and provides
-      # retrievers to access them.
-   
-      def self.define( *parameters )
-         Class.new(self) do
-            @@defined_subclass_field_lists[self] = parameters
-            
-            define_method(:initialize) do |*values|
-               fields.each{|name| instance_variable_set("@#{name}".intern, values.shift)}
-            end
-
-            parameters.each do |name|
-               attr_reader "#{name}".intern
-            end
-         end         
-      end
-      
-      def fields()
-         @@defined_subclass_field_lists[self.class]
-      end
-      
-      def each()
-         fields.each do |name|
-            yield(name, instance_variable_get("@#{name}".intern))
-         end
-      end
-      
-      def description()
-         self.class.unqualified_name
-      end
-      
-      @@defined_subclass_field_lists = {}
-      
+   class Production < PrintableStruct
    end # Production
    
 

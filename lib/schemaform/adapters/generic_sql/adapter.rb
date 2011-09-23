@@ -149,8 +149,18 @@ protected
    @@adapters = {}
 
 
-   alias dispatch send_specialized
-   
+   if Schemaform.in_development? then
+      def dispatch( method, determinant, *args, &block )
+         begin
+            send_specialized(method, determinant, *args, &block)
+         rescue Baseline::SpecializationFailure => e
+            Printer.print(determinant, "DETERMINANT: ") if e.data[:determinant] === determinant
+            raise
+         end
+      end
+   else
+      alias dispatch send_specialized
+   end
    
 
 end # Adapter
@@ -158,7 +168,7 @@ end # GenericSQL
 end # Adapters
 end # Schemaform
 
-["primitives", "builders", "mapping", "query_planning"].each do |subdir|
+["schema", "mapping", "queries"].each do |subdir|
    Dir[Schemaform.locate("#{subdir}/*.rb")].each{|path| require path}
 end
 

@@ -19,29 +19,45 @@
 # =============================================================================================
 
 
+#
+# Base class for any SQL relation.
+
 module Schemaform
-module Language
-class Parameter < Placeholder
+module Adapters
+module GenericSQL
+module Queries
+   
+   Comparison = PrintableStruct.define(:operator, :lhs, :rhs)
+   Field      = PrintableStruct.define(:name                )
+   Parameter  = PrintableStruct.define(:number              )
 
-   def initialize( number, type = nil )
-      super(type || ExpressionCapture.unknown_type)
-      @number = number
+
+   class And
+      def initialize( *clauses )
+         @clauses = []
+         clauses.each do |clause|
+            if clause.is_an?(And) then
+               @clauses.concat(clause.clauses)
+            else
+               @clauses << clause
+            end
+         end
+      end
+
+      attr_reader :clauses
+      
+      def print_to( printer )
+         printer.label(self.class.unqualified_name) do
+            @clauses.each do |clause|
+               clause.print_to(printer)
+            end
+         end
+      end
    end
-   
-   def method_missing( symbol, *args, &block )
-      super
-   end
-   
-   def get_number()
-      @number
-   end
-   
-   def get_description()
-      "Parameter #{@number}"
-   end
-   
-   
-end # Parameter
-end # Language
+
+   class Or < And ; end
+
+end # Queries
+end # GenericSQL
+end # Adapters
 end # Schemaform
-

@@ -19,29 +19,26 @@
 # =============================================================================================
 
 
+#
+# Base class for any SQL relation.
+
 module Schemaform
-module Language
-class Parameter < Placeholder
+module Adapters
+module GenericSQL
+module Queries
+class Relation
+   include QualityAssurance
 
-   def initialize( number, type = nil )
-      super(type || ExpressionCapture.unknown_type)
-      @number = number
+   def fields()
+      warn_unless_overridden self, :fields
    end
    
-   def method_missing( symbol, *args, &block )
-      super
+   def source()
+      warn_unless_overridden self, :source
    end
    
-   def get_number()
-      @number
-   end
-   
-   def get_description()
-      "Parameter #{@number}"
-   end
-   
-   
-end # Parameter
-end # Language
+end # Relation
+end # Queries
+end # GenericSQL
+end # Adapters
 end # Schemaform
-

@@ -18,30 +18,34 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("relation.rb")
+
+
+#
+# A projection (with possible renaming) of attributes.
 
 module Schemaform
-module Language
-class Parameter < Placeholder
+module Adapters
+module GenericSQL
+module Queries
+class Projection < Relation
 
-   def initialize( number, type = nil )
-      super(type || ExpressionCapture.unknown_type)
-      @number = number
+   def initialize( source, mappings = {} )
+      @source   = source
+      @mappings = mappings
+      @fields   = Registry.new()
+
+      @source.fields.each do |name, type|
+         if mappings.member?(name) then
+            @fields.register(name, mappings[name])  # name is the value, mappings[name] (the new name) is the key
+         end
+      end
    end
    
-   def method_missing( symbol, *args, &block )
-      super
-   end
+   attr_reader :source, :mappings, :fields
    
-   def get_number()
-      @number
-   end
-   
-   def get_description()
-      "Parameter #{@number}"
-   end
-   
-   
-end # Parameter
-end # Language
+end # Projection
+end # Queries
+end # GenericSQL
+end # Adapters
 end # Schemaform
-

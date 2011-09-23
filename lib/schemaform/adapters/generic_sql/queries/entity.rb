@@ -18,30 +18,38 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("relation.rb")
+
+
+#
+# A single query (or subquery).
 
 module Schemaform
-module Language
-class Parameter < Placeholder
+module Adapters
+module GenericSQL
+module Queries
+class Entity < Relation
 
-   def initialize( number, type = nil )
-      super(type || ExpressionCapture.unknown_type)
-      @number = number
+   def initialize( entity_map, prefix = Name.empty )
+      warn_once("the source entity needs a projection list", "BUG")
+      
+      @entity_map = entity_map 
+      @prefix     = prefix
+      @fields     = Registry.new()
+      
+      @entity_map.anchor_table.fields.each do |name, type|
+         @fields.register(name, name)
+      end
    end
    
-   def method_missing( symbol, *args, &block )
-      super
+   attr_reader :fields, :entity_map, :prefix
+   
+   def source()
+      fail
    end
    
-   def get_number()
-      @number
-   end
-   
-   def get_description()
-      "Parameter #{@number}"
-   end
-   
-   
-end # Parameter
-end # Language
+end # Entity
+end # Queries
+end # GenericSQL
+end # Adapters
 end # Schemaform
-

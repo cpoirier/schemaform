@@ -39,6 +39,10 @@ class Entity < Placeholder
       "0x#{self.object_id.to_s(16)} #{@entity.name} #{@type.description}"      
    end
    
+   def get_definition()
+      @entity
+   end
+   
 
 end # Entity
 end # Language

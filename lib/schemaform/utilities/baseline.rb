@@ -219,7 +219,7 @@ class Object
          if fallback then
             return fallback.call(determinant, *parameters)
          else
-            fail "unable to find specialization of #{name} for #{determinant_class.name}"
+            raise Baseline::SpecializationFailure.new("unable to find specialization of #{name} for #{determinant_class.name}", :determinant => determinant)
          end
       end
       
@@ -1040,6 +1040,7 @@ module Baseline
 
    class AssertionFailure < Bug; end
    class TypeCheckFailure < Bug; end
+   class SpecializationFailure < Bug ; end
 
 end # Baseline
 

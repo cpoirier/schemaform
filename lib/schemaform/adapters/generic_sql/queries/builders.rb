@@ -19,6 +19,7 @@
 # =============================================================================================
 
 
+
 #
 # Adds query planning code to the Adapter.
 
@@ -39,7 +40,7 @@ class Adapter
          # store only the first plan, so that resources can be tied to the object.
          
          sources    = {}
-         query_plan = query_plan(definition, )
+         query_plan = plan_query_structure(definition)
          @monitor.synchronize do
             unless @query_plans.member?(definition)
                @query_plans[definition] = query_plan
@@ -47,63 +48,79 @@ class Adapter
          end
       end
       
-      @query_plans[definition]
+      @query_plans[definition].tap do |query_plan|
+         Printer.print(render_sql_query(query_plan))
+      end
    end
    
-   def query_plan( object )
+   def plan_query_structure( object, naming_context = NamingContext.new() )
       case object
-      when Language::Placeholder
-         dispatch(:query_plan, object.get_production)
       when Language::Production
-         dispatch(:query_plan, object)
+         dispatch(:plan, object, naming_context)
+      when Language::Entity
+         Queries::Entity.new(map_entity(object.get_definition), naming_context.current)
+      when Language::Parameter
+         Queries::Parameter.new(object.get_number)
+      when Language::Placeholder
+         dispatch(:plan, object.get_production, naming_context)
       else
          fail "#{object.class.name} not supported"
       end
    end
+   
+   alias plan_query_expression plan_query_structure
+   
 
-   def query_plan_restriction( restriction )
-      QueryPlan::Restriction.new(query_plan(restriction.criteria))
+   def plan_restriction( restriction, naming_context )
+      source   = plan_query_structure(restriction.relation)
+      criteria = plan_query_expression(restriction.criteria)
+      
+      Queries::Restriction.new(source, criteria)
    end
 
-   def query_plan_and( production )
-      QueryPlan::And.new(*production.clauses.collect{|c| query_plan(c)})
+
+
+   def plan_comparison( comparison, naming_context )
+      lhs = plan_query_expression(comparison.lhs)
+      rhs = plan_query_expression(comparison.rhs)
+      
+      Queries::Comparison.new(comparison.operator, lhs, rhs)
    end
    
-   def query_plan_or( production )
-      QueryPlan::Or.new(*production.clauses.collect{|c| query_plan(c)})
+   
+   def plan_value_accessor( production, naming_context )
+      Queries::Field.new(naming_context.current + production.attribute.get_production.symbol.to_s)
    end
 
-   def query_plan_comparison( production )
-      case production.operator
-      when :==
-         QueryPlan::IsEqual.new(query_plan(production.lhs), query_plan(production.rhs))
-      else
-         fail_todo production.operator
+
+
+   # select member_id, email, display_name, created, profile_name, profile, authentication, wfg, following
+   # from random_members r1
+   # where created = ?
+   
+   
+   
+   
+
+
+   
+
+
+   class NamingContext
+      attr_reader :current
+      def initialize() ; @current = Name.empty ; end
+      def enter( name ) 
+         old = @current
+         begin
+            @current = @current + name
+         ensure
+            @current = old
+         end
       end
    end
-   
-   def query_plan_value_accessor( production )
-      QueryPlan::Value.new(query_plan(production.attribute))
-   end
-   
-   def analyze_predicate_accessor( production )
-      QueryPlan::Attribute.new(query_plan(production.receiver.get_production), production.symbol)
-   end
-   
-   def query_plan_each_tuple( production )
-      map_query_source(production.relation)
-   end
-   
-   
-   
-   
-   
-   
-
-
-
 
 end # Adapter
 end # GenericSQL
 end # Adapters
 end # Schemaform
+

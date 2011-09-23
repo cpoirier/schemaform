@@ -141,6 +141,14 @@ module Schemaform
    end
    
    @@epoch = Time.now()
+   
+   
+   #
+   # Returns true if Schemaform seems to be running in a development environment.
+   
+   def self.in_development?()
+      @@in_development ||= File.exists?(File.dirname(__FILE__) + "/../.git")
+   end
       
       
 private
@@ -155,6 +163,7 @@ private
    
    @@schemas = Registry.new("Schemaform")
    
+
 end # Schemaform
 
 

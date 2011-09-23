@@ -64,7 +64,7 @@ class Attribute < Element
    end
 
    def print_to( printer, width = nil )
-      printer.print("#{self.class.unqualified_name.to_s.ljust(18)} #{@name.to_s.ljust(width > 25 ? width : 25)} ", true)
+      printer.print("#{self.class.unqualified_name.to_s.ljust(18)} #{@name.to_s.ljust(width > 25 ? width : 25)} ", false)
       type.print_to(printer)
    end
    

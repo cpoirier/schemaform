@@ -18,30 +18,36 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("relation.rb")
+
+
+#
+# A single query (or subquery).
 
 module Schemaform
-module Language
-class Parameter < Placeholder
+module Adapters
+module GenericSQL
+module Queries
+class Restriction < Relation
 
-   def initialize( number, type = nil )
-      super(type || ExpressionCapture.unknown_type)
-      @number = number
+   def initialize( source, criteria )
+      if source.is_a?(Restriction) then
+         @source   = source.source
+         @criteria = And.new(source.criteria, criteria)
+      else
+         @source   = source
+         @criteria = criteria
+      end
    end
    
-   def method_missing( symbol, *args, &block )
-      super
+   attr_reader :source, :criteria
+   
+   def fields()
+      @source.fields
    end
    
-   def get_number()
-      @number
-   end
-   
-   def get_description()
-      "Parameter #{@number}"
-   end
-   
-   
-end # Parameter
-end # Language
+end # Restriction
+end # Queries
+end # GenericSQL
+end # Adapters
 end # Schemaform
-

@@ -26,8 +26,15 @@ module Schemaform
 module Adapters
 module GenericSQL
 module Queries
-class Relation
+class Query 
    include QualityAssurance
+   
+   def initialize( adapter )
+      @adapter = adapter
+      @sql     = nil
+   end
+   
+   attr_reader :adapter
 
    def fields()
       warn_unless_overridden self, :fields
@@ -37,7 +44,13 @@ class Relation
       warn_unless_overridden self, :source
    end
    
-end # Relation
+   def execute( connection, parameters = [] )
+      @sql = @adapter.render_sql_query(self) if @sql.nil?
+      connection.retrieve(@sql, *parameters)
+   end
+   
+   
+end # Query
 end # Queries
 end # GenericSQL
 end # Adapters

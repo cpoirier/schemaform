@@ -18,7 +18,7 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("relation.rb")
+require Schemaform.locate("query.rb")
 
 
 #
@@ -28,9 +28,11 @@ module Schemaform
 module Adapters
 module GenericSQL
 module Queries
-class Restriction < Relation
+class Restriction < Query
 
    def initialize( source, criteria )
+      super(source.adapter)
+      
       if source.is_a?(Restriction) then
          @source   = source.source
          @criteria = And.new(source.criteria, criteria)

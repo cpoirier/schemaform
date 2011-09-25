@@ -18,7 +18,7 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("relation.rb")
+require Schemaform.locate("query.rb")
 
 
 #
@@ -28,9 +28,11 @@ module Schemaform
 module Adapters
 module GenericSQL
 module Queries
-class Projection < Relation
+class Projection < Query
 
    def initialize( source, mappings = {} )
+      super(source.adapter)
+      
       @source   = source
       @mappings = mappings
       @fields   = Registry.new()

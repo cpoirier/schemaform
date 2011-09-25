@@ -34,7 +34,7 @@ class SchemaMap
       @tables      = []
    end
    
-   attr_reader :definition, :entity_maps, :tables
+   attr_reader :adapter, :definition, :entity_maps, :tables
    
    def []( entity_definition )
       @entity_maps[entity_definition]

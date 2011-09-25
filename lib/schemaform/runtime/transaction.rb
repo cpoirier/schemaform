@@ -55,7 +55,7 @@ class Transaction
    # of rows retrieved (and processed by your block).
    
    def retrieve( query, parameters = [] )
-      @adapter.plan_query(query).execute_for_retrieval(@connection, parameters) do |row|
+      @adapter.plan_query(query).execute(@connection, parameters) do |row|
          yield(Tuple.new(row))
       end
    end

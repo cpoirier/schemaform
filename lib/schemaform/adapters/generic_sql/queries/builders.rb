@@ -49,7 +49,7 @@ class Adapter
       end
       
       @query_plans[definition].tap do |query_plan|
-         Printer.print(render_sql_query(query_plan))
+         # Printer.print(render_sql_query(query_plan))
       end
    end
    

@@ -18,7 +18,7 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("relation.rb")
+require Schemaform.locate("query.rb")
 
 
 #
@@ -28,10 +28,11 @@ module Schemaform
 module Adapters
 module GenericSQL
 module Queries
-class Entity < Relation
+class Entity < Query
 
    def initialize( entity_map, prefix = Name.empty )
       warn_once("the source entity needs a projection list", "BUG")
+      super(entity_map.adapter)
       
       @entity_map = entity_map 
       @prefix     = prefix

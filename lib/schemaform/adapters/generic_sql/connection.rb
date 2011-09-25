@@ -47,7 +47,6 @@ class Connection
       fail_unless_overridden self, :query
    end
 
-
    def insert( sql, *parameters )
       fail_unless_overridden self, :insert
    end

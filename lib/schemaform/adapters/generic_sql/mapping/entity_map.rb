@@ -44,8 +44,12 @@ class EntityMap
       @copies         = Hash.new(){|h, k| h[k] = []}        # source Field => [all copies]
       @schema_map.register_table(anchor_table)
    end
-
+   
    attr_reader :schema_map, :entity, :anchor_table, :base_map
+   
+   def adapter()
+      @schema_map.adapter
+   end
 
    def link_child_to_parent( reference_field )
       child_table  = reference_field.table

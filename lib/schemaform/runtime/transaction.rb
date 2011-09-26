@@ -36,6 +36,19 @@ class Transaction
    end
    
    attr_reader :workspace, :connection
+   
+   
+   #
+   # Creates a second, separate transaction that shares only the workspace with this one. 
+   # It has a separate commit scope. That said, unless you take action to intercept it, an 
+   # exception that kills the out of band transaction can propogate into and kill your 
+   # original transaction, so trap accordingly.
+
+   def out_of_band()
+      @workspace.database.transact_with(@workspace) do |transaction|
+         yield(transaction)
+      end
+   end
          
       
    #

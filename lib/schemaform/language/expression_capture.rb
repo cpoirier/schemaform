@@ -476,7 +476,7 @@ class Schema
       def expression( production = nil )
          attributes = attributes()
          
-         ExpressionCapture.resolution_scope(schema) do 
+         Language::ExpressionCapture.resolution_scope(schema) do 
             context.expression(production).where do |tuple|
                comparisons = []
                attributes.each_with_index do |attribute, index|
@@ -491,7 +491,13 @@ class Schema
    
    class DefinedAccessor
       def expression( production = nil )
-         @proc.call(context.expression(production))
+         block = @proc
+         
+         Language::ExpressionCapture.resolution_scope(schema) do
+            context.expression(production).where do |tuple|
+               Language::ExpressionDefinition.module_exec(tuple, &block)
+            end
+         end
       end
    end
    

@@ -35,7 +35,7 @@ module Queries
    class And
       def initialize( *clauses )
          @clauses = []
-         clauses.each do |clause|
+         clauses.flatten.each do |clause|
             if clause.is_an?(And) then
                @clauses.concat(clause.clauses)
             else

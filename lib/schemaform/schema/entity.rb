@@ -33,8 +33,8 @@ class Entity < Element
             
       @keys        = Registry.new("#{full_name}", "a key"       )
       @operations  = Registry.new("#{full_name}", "an operation")
-      @projections = Registry.new("#{full_name}", "a projection")
-      @accessors   = Registry.new("#{full_name}", "an accessor" )
+      @projections = Registry.new("#{full_name}", "a projection"){|name| name.to_s}
+      @accessors   = Registry.new("#{full_name}", "an accessor" ){|name| name.to_s}
    end
    
    attr_reader :keys, :accessors, :operations, :projections

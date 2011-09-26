@@ -91,7 +91,14 @@ class Adapter
    def plan_value_accessor( production, naming_context )
       Queries::Field.new(naming_context.current + production.attribute.get_production.symbol.to_s)
    end
+   
+   def plan_and( production, naming_context )
+      Queries::And.new(production.clauses.collect{|clause| plan_query_expression(clause, naming_context)})
+   end
 
+   def plan_or( production, naming_context )
+      Queries::Or.new(production.clauses.collect{|clause| plan_query_expression(clause, naming_context)})
+   end
 
 
    # select member_id, email, display_name, created, profile_name, profile, authentication, wfg, following

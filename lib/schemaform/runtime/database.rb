@@ -72,6 +72,11 @@ protected
 
 
    def build_workspace( schemas )
+      if schemas.length == 1 and schemas[0].is_a?(Workspace) then
+         assert(schemas[0].database == self, "you can only pass a Workspace if it is from this Database" )
+         return schemas[0] 
+      end
+      
       workspace_name = Workspace.name(schemas)
 
       unless @workspaces.member?(workspace_name)

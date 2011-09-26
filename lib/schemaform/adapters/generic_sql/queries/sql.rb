@@ -116,6 +116,20 @@ class Adapter
       render_sql_expression(comparison.rhs, printer, source_alias)
    end
 
+   def render_sql_expression_and( expression, printer, source_alias, conjunction = "and" )
+      if expression.clauses.length >= 1 then
+         expression.clauses.each_with_index do |clause, index|
+            printer.print(" #{conjunction} ", false) unless index == 0
+            render_sql_expression(clause, printer, source_alias)
+         end
+      else
+         printer.print("1 = 1", false)
+      end
+   end
+   
+   def render_sql_expression_or( expression, printer, source_alias )
+      render_sql_expression_and( expression, printer, source_alias, "or" )
+   end
 
 
 end # Adapter

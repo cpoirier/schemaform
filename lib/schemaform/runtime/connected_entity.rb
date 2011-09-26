@@ -42,8 +42,8 @@ class ConnectedEntity
       else
          case name = symbol.to_s
          when /^get_(\w+)_by_(\w+)$/
-            projection_name = $1.intern
-            accessor_name   = $2.intern
+            projection_name = $1
+            accessor_name   = $2
 
             fail_todo
             
@@ -52,7 +52,7 @@ class ConnectedEntity
             end
          
          when /^get_by_(\w+)$/
-            accessor_name = $1.intern
+            accessor_name = $1
             if @definition.accessors.member?(accessor_name) then
                return @transaction.retrieve(@definition.accessors[accessor_name].expression)
             end

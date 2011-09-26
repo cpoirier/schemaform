@@ -27,12 +27,13 @@ class Registry
    include QualityAssurance
    include Enumerable
    
-   def initialize( owner_description = "the registry", member_description = "an object", chain = nil )
+   def initialize( owner_description = "the registry", member_description = "an object", chain = nil, &name_cleaner )
       @registry           = {}
       @order              = []
       @chain              = chain
       @owner_description  = owner_description
       @member_description = member_description
+      @name_cleaner       = name_cleaner
    end
    
    def empty?()
@@ -110,6 +111,7 @@ class Registry
    
    def register( definition, name = nil )
       name = definition.name unless name
+      name = @name_cleaner.call(name) if @name_cleaner
       assert( name, "unable to find a name to use", :definition => definition )
       
       unless @registry.member?(name) && @registry[name].object_id == definition.object_id then
@@ -147,6 +149,7 @@ class Registry
    
    def find( name, fail_if_missing = true )
       # return name unless name.is_a?(Symbol) || name.is_a?(String)
+      name = @name_cleaner.call(name) if @name_cleaner
       
       definition = nil
       current    = name

@@ -53,8 +53,11 @@ class Workspace
          schema.entities.each do |entity|
             @entity_lookup[entity.name] = entity unless @entity_lookup.member?(entity.name)
          end
-      end
+      end      
    end
+   
+   attr_reader :database
+      
    
    #
    # Returns the Schema::Entity for the specified name vector:

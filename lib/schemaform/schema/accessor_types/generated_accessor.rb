@@ -26,8 +26,8 @@ module Schemaform
 class Schema
 class GeneratedAccessor < Accessor
 
-   def initialize( relation, name, selector )
-      super(relation, name)
+   def initialize( entity, name, selector )
+      super(entity, name)
       @selector = selector
    end
    

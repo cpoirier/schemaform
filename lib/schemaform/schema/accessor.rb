@@ -28,9 +28,11 @@ module Schemaform
 class Schema
 class Accessor < Element
 
-   def initialize( relation, name )
-      super(relation, name)
+   def initialize( entity, name )
+      super(entity, name)
    end
+   
+   alias entity context
    
 end # Accessor
 end # Schema

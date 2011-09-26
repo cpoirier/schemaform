@@ -26,8 +26,8 @@ module Schemaform
 class Schema
 class DefinedAccessor < Accessor
 
-   def initialize( relation, name, proc )
-      super(relation, name)
+   def initialize( entity, name, proc )
+      super(entity, name)
       @proc = proc
    end
    

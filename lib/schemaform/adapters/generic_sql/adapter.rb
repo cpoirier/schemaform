@@ -154,7 +154,7 @@ protected
          begin
             send_specialized(method, determinant, *args, &block)
          rescue Baseline::SpecializationFailure => e
-            Printer.print(determinant, "DETERMINANT: ") if e.data[:determinant] === determinant
+            Printer.print(determinant, "DETERMINANT: ") if e.data[:determinant].object_id === determinant.object_id
             raise
          end
       end

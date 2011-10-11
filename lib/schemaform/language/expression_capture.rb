@@ -305,7 +305,7 @@ class Schema
                   end
                end
 
-               Schema::ListType.build(member_type).expression(Language::Productions::OrderBy.new(receiver, *order_attributes))
+               Schema::ListType.build(member_type, :order => order_attributes).expression(Language::Productions::OrderBy.new(receiver, *order_attributes))
             else
                super
             end

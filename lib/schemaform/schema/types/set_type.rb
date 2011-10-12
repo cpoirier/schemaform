@@ -28,24 +28,6 @@ module Schemaform
 class Schema
 class SetType < CollectionType
    
-   def self.build( member_type, attrs = {} )
-      attrs[:context    ] = member_type unless attrs.member?(:context)
-      attrs[:member_type] = member_type
-      
-      if member_type.is_a?(TupleType) then
-         RelationType.new(attrs)
-      else
-         new(attrs)
-      end
-   end
-
-   def description()
-      "set of #{@member_type.description}"
-   end
-   
-   def print_to( printer, label = "set of" )
-      super
-   end
    
 end # SetType
 end # Schema

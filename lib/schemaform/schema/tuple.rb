@@ -19,6 +19,7 @@
 # =============================================================================================
 
 require Schemaform.locate("element.rb")
+require Schemaform.locate("attribute.rb")
 require Schemaform.locate("type.rb")
 
 
@@ -189,4 +190,5 @@ class Tuple < Element
 end # Tuple
 end # Schema
 end # Schemaform
+
 

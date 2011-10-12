@@ -255,7 +255,21 @@ class Schema
             check{ assert(!receiver.get_type.effective_type.member_type.collection_type?, "how do we do aggregation across nested collections?") }
             Language::ExpressionCapture.capture_type(:integer, Language::Productions::Aggregation.new(receiver, method_name))
          else
-            super
+            return super unless naming_type?
+            
+            case method_name
+            when :where
+               formula_context     = @member_type.expression(Language::Productions::EachTuple.new(receiver))
+               criteria_expression = Language::ExpressionCapture.capture_expression(formula_context, block, schema.boolean_type)
+               type_check(:criteria_expression, criteria_expression, Language::Placeholder)
+               self.expression(Language::Productions::Restriction.new(receiver, formula_context, criteria_expression))
+            when :project
+               warn_todo("validation on projection results")
+               placeholders = block ? block.call(@member_type.expression()) : args.collect{|name| @member_type.tuple[name].expression()}
+               self.expression(Language::Productions::Projection.new(receiver, placeholders))
+            else
+               super
+            end
          end
       end
 
@@ -313,26 +327,6 @@ class Schema
             search_term = Language::ExpressionCapture.capture(args.shift)
             production  = Language::Productions::MemberOfSet.new(receiver, search_term)
             Language::ExpressionCapture.resolve_type(:boolean).expression(production)
-         else 
-            super
-         end
-      end
-   end
-   
-   
-   
-   class RelationType < SetType
-      def capture_method( receiver, method_name, args = [], block = nil )
-         case method_name
-         when :where
-            formula_context     = @tuple_type.expression(Language::Productions::EachTuple.new(receiver))
-            criteria_expression = Language::ExpressionCapture.capture_expression(formula_context, block, schema.boolean_type)
-            type_check(:criteria_expression, criteria_expression, Language::Placeholder)
-            self.expression(Language::Productions::Restriction.new(receiver, formula_context, criteria_expression))
-         when :project
-            warn_todo("validation on projection results")
-            placeholders = block ? block.call(@tuple_type.expression()) : args.collect{|name| @tuple_type.tuple[name].expression()}
-            self.expression(Language::Productions::Projection.new(receiver, placeholders))
          else
             super
          end
@@ -340,7 +334,7 @@ class Schema
    end
    
    
-   
+
    class ReferenceType < Type
       def capture_accessor( receiver, attribute_name )
          return nil unless attribute?(attribute_name)

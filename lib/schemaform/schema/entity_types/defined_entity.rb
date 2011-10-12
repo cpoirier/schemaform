@@ -19,12 +19,13 @@
 # =============================================================================================
 
 
+
 #
 # An entity defined in terms of tuples and attributes and tuples, into which data can be written.
 
 module Schemaform
 class Schema
-class OriginalEntity < Entity
+class DefinedEntity < Entity
       
    def initialize( name, base_entity, schema )
       super(schema, name)
@@ -88,7 +89,7 @@ class OriginalEntity < Entity
       end
    end
 
-end # OriginalEntity
+end # DefinedEntity
 end # Schema
 end # Schemaform
 

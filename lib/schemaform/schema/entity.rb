@@ -120,6 +120,6 @@ end # Entity
 end # Schema
 end # Schemaform
 
-Dir[Schemaform.locate("entity_types/*.rb")].each {|path| require path}
 
+Dir[Schemaform.locate("entity_types/*.rb")].each {|path| require path}
 

@@ -27,25 +27,6 @@ module Schemaform
 class Schema
 class ListType < CollectionType
 
-   def self.build( member_type, attrs = {} )
-      attrs[:context    ] = member_type.schema unless attrs.member?(:context)
-      attrs[:member_type] = member_type
-      
-      if member_type.is_a?(TupleType) then
-         TabulationType.new(attrs)
-      else
-         new(attrs)
-      end
-   end
-   
-   def description()
-      "list of #{member_type.description}"
-   end
-   
-   def print_to( printer, label = "list of" )
-      super
-   end
-   
    
 end # ListType
 end # Schema

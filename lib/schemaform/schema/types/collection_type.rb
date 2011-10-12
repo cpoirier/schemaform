@@ -28,19 +28,32 @@ class CollectionType < Type
 
    attr_reader :member_type
 
+   def self.build( member_type, attrs = {} )
+      attrs[:member_type] = member_type
+      new(attrs)
+   end
+   
    def initialize( attrs = {} )
-      attrs[:context] = element_type.context unless attrs.member?(:context) || attrs.member?(:base_type)
+      @member_type = attrs.fetch(:member_type, nil) || schema.unknown_type
+      attrs[:context] = @member_type.schema unless attrs.member?(:context) || attrs.member?(:base_type)
       super(attrs)
       
-      @member_type = attrs.fetch(:member_type, nil) || schema.unknown_type
    end
    
    def generic?()
       @member_type == schema.unknown_type()
    end
    
+   def naming_type?
+      @member_type.naming_type?
+   end
+   
    def collection_type?()
       true
+   end
+   
+   def attribute?( attribute_name )
+      naming_type? && @member_type.attribute?(attribute_name)
    end
    
    def singular_type()
@@ -68,10 +81,14 @@ class CollectionType < Type
       end
    end
 
-   def print_to( printer, label = "collection of" )
-      printer.label(label, "") do
+   def print_to( printer, label = nil )
+      printer.label(label || type_description, "") do
          @member_type.print_to(printer)
       end
+   end
+   
+   def type_description()
+      @type_description ||= self.class.unqualified_name.identifier_case.sub(/_type$/, "") + "_of"
    end
    
 

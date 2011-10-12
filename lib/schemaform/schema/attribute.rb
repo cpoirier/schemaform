@@ -82,3 +82,4 @@ end # Schemaform
 
 
 Dir[Schemaform.locate("attribute_types/*.rb")].each {|path| require path}
+

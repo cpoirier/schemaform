@@ -44,12 +44,12 @@ class EntityDefinition
 
 
    #
-   # Triggers the inline definition of an OriginalEntity in terms of a Tuple.
+   # Triggers the inline definition of an DefinedEntity in terms of a Tuple.
    
    def each( tuple_name, &block )
       assert(@entity.nil?, "you can define the entity using one \"each\" or \"as\" clause only")
       
-      @entity = Schema::OriginalEntity.new(@name, @parent, @schema)
+      @entity = Schema::DefinedEntity.new(@name, @parent, @schema)
       @schema.entities.register(@entity)
       
       @entity.declared_heading.tap do |tuple|

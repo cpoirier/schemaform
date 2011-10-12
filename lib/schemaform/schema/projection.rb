@@ -18,6 +18,8 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("element.rb")
+
 
 #
 # Captures a named Projection for the Entity.

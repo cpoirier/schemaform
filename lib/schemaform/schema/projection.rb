@@ -18,7 +18,7 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("element.rb")
+require Schemaform.locate("component.rb")
 
 
 #
@@ -26,7 +26,7 @@ require Schemaform.locate("element.rb")
 
 module Schemaform
 class Schema
-class Projection < Element
+class Projection < Component
 
    def initialize( entity, name, proc )
       super(entity, name)

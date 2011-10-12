@@ -18,7 +18,7 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("element.rb")
+require Schemaform.locate("component.rb")
 
 
 #
@@ -31,7 +31,7 @@ require Schemaform.locate("element.rb")
 
 module Schemaform
 class Schema
-class Type < Element
+class Type < Component
    
    #
    # Extracts :check and :check_* entries from a set of constraints, returning an array of
@@ -151,7 +151,7 @@ class Type < Element
    #  :default   => the default value for this type
    #  :loader    => a Proc that converts data from disk into a memory representation (Object)
    #  :storer    => a Proc that converts object into data for storage on disk
-   #  :context   => an Element or Schema to use as context, if the base_type is not supplied
+   #  :context   => an Component or Schema to use as context, if the base_type is not supplied
    
    def initialize( attrs )
       super((attrs.member?(:context) ? attrs[:context] : attrs.fetch(:base_type).schema), attrs.fetch(:name, nil))

@@ -18,24 +18,36 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("component.rb")
+require Schemaform.locate("element.rb")
 
 
 #
-# Base class for an accessor on a Relation.
+# Base class for collection elements.
 
 module Schemaform
 class Schema
-class Accessor < Component
-
-   def initialize( entity, name )
-      super(entity, name)
+class Collection < Element
+   
+   def self.type_class()
+      fail_unless_overridden self, :type_class
    end
    
-   alias entity context
+   def initialize( member, context = nil )
+      super(context, self.class.type_class.build(member.type))
+      @member = member
+   end
    
-end # Accessor
+   attr_reader :member
+   
+   def has_attributes?()
+      @member.has_attributes?()
+   end
+   
+   def attribute?( name )
+      @member.attribute?(name)
+   end
+
+end # Collection
 end # Schema
 end # Schemaform
 
-Dir[Schemaform.locate("accessor_types/*.rb")].each {|path| require path}

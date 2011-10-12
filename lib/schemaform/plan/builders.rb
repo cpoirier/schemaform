@@ -29,7 +29,7 @@ class Schema
    end
    
    
-   class Entity < Element
+   class Entity < Component
       def plan()
          @plan ||= Plan::Entity.new(self)
       end
@@ -43,7 +43,7 @@ class Schema
    end
    
    
-   class Attribute < Element
+   class Attribute < Component
       def plan()
          @plan ||= Plan::Attribute.new(self)
       end

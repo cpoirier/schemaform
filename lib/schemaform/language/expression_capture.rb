@@ -163,7 +163,7 @@ end # Schemaform
 module Schemaform
 class Schema
    
-   class Element
+   class Component
       def expression( production = nil )
          fail_unless_overridden self, :expression
       end
@@ -184,7 +184,7 @@ class Schema
       end
    end   
    
-   class Type < Element
+   class Type < Component
       def expression( production = nil )
          Language::Placeholder.new(self, production)
       end      
@@ -370,7 +370,7 @@ class Schema
    
    
    
-   class Attribute < Element
+   class Attribute < Component
       def expression( production = nil )
          Language::Attribute.new(self, production)
       end
@@ -414,7 +414,7 @@ class Schema
       end
    end
    
-   class Entity < Element
+   class Entity < Component
       def expression( production = nil )
          Language::Entity.new(self, production)
       end
@@ -509,7 +509,7 @@ end # Schemaform
 module Schemaform
 class Schema
 
-   class Entity < Element
+   class Entity < Component
 
       #
       # Recurses through the attributes, calling your block at each with the attribute
@@ -562,7 +562,7 @@ class Schema
    end
    
 
-   class Element
+   class Component
       def search( path = nil, &block )
          return nil
       end

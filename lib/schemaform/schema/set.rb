@@ -18,24 +18,21 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("component.rb")
+require Schemaform.locate("collection.rb")
 
 
 #
-# Base class for an accessor on a Relation.
+# A set or relation (Tuple member) datum.
 
 module Schemaform
 class Schema
-class Accessor < Component
-
-   def initialize( entity, name )
-      super(entity, name)
+class Set < Collection
+   
+   def self.type_class()
+      SetType
    end
    
-   alias entity context
-   
-end # Accessor
+end # Set
 end # Schema
 end # Schemaform
 
-Dir[Schemaform.locate("accessor_types/*.rb")].each {|path| require path}

@@ -30,13 +30,13 @@ module Schemaform
 class Schema
 class Tuple < Element
 
+   def has_attributes?()
+      true
+   end
+   
    def initialize( context, name = nil, registry_chain = nil )
-      super(context, name)
-
-      @type = StructuredType.new(:context => self) do |name|
-         name.nil? ? @attributes.names : @attributes[name].type
-      end
-
+      super(context, StructuredType.new(:context => self){|name| name.nil? ? @attributes.names : @attributes[name].type}, name)
+      
       @attributes = Registry.new(self, "an attribute" , registry_chain)
       @tuples     = Registry.new(self, "a child tuple")
    end
@@ -47,7 +47,7 @@ class Tuple < Element
       @attributes.each{|attribute| attribute.verify()}
    end
    
-   attr_reader :attributes, :tuples, :type
+   attr_reader :attributes, :tuples
    
    def []( name )
       @attributes[name]

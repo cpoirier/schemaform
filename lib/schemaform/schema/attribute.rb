@@ -18,7 +18,7 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("element.rb")
+require Schemaform.locate("component.rb")
 
 
 #
@@ -27,7 +27,7 @@ require Schemaform.locate("element.rb")
 
 module Schemaform
 class Schema
-class Attribute < Element
+class Attribute < Component
    
    def initialize( name, tuple, type = nil )
       type_check(:tuple, tuple, Tuple)

@@ -32,6 +32,11 @@ class Set < Collection
       SetType
    end
    
+   def self.tuple_collection_name()
+      "Relation"
+   end
+   
+   
 end # Set
 end # Schema
 end # Schemaform

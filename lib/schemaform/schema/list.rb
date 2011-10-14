@@ -32,6 +32,11 @@ class List < Collection
       ListType
    end
    
+   def self.tuple_collection_name()
+      "Tabulation"
+   end
+   
+   
 end # List
 end # Schema
 end # Schemaform

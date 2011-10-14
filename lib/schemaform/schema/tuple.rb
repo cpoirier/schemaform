@@ -123,10 +123,14 @@ class Tuple < Element
    def print_to( printer, name_override = nil )
       super
       printer.indent do
-         width = @attributes.collect{|a| a.name.to_s.length}.max
-         @attributes.each do |attribute|
-            attribute.print_to(printer, width)
-         end
+         print_attributes_to(printer)
+      end
+   end
+   
+   def print_attributes_to( printer )
+      width = @attributes.collect{|a| a.name.to_s.length}.max
+      @attributes.each do |attribute|
+         attribute.print_to(printer, width)
       end
    end
    

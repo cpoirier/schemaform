@@ -42,7 +42,15 @@ class Element < Component
    def attribute?(name)
       false
    end
-
+   
+   def print_to( printer, name_override = nil )
+      if self.class == Element then
+         type.print_to(printer)
+      else
+         super
+      end
+   end
+   
 end # Element
 end # Schema
 end # Schemaform

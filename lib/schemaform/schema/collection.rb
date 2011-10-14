@@ -32,6 +32,10 @@ class Collection < Element
       fail_unless_overridden self, :type_class
    end
    
+   def self.tuple_collection_name()
+      nil
+   end
+   
    def initialize( member, context = nil )
       super(context || member.context, self.class.type_class.build(member.type))
       @member = member
@@ -46,6 +50,22 @@ class Collection < Element
    def attribute?( name )
       @member.attribute?(name)
    end
+   
+   def print_to( printer, name_override = nil )
+      if has_attributes? && (override = self.class.tuple_collection_name) then
+         name_override ||= member.name
+         label = "#{override} of"
+         label += " #{name_override}" if name_override
+         printer.label(label, "") do
+            @member.print_attributes_to(printer)
+         end
+      else
+         printer.label("#{self.class.unqualified_name} of", "") do
+            @member.print_to(printer)
+         end
+      end
+   end
+
 
 end # Collection
 end # Schema

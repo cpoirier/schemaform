@@ -68,8 +68,8 @@ class Attribute < Component
    end
 
    def print_to( printer, width = nil )
-      printer.print("#{self.class.unqualified_name.to_s.ljust(18)} #{@name.to_s.ljust(width > 25 ? width : 25)} ", false)
-      type.print_to(printer)
+      printer.print("#{self.class.unqualified_name.to_s.ljust(18)} #{@name.to_s.ljust(width > 15 ? width : 15)} ", false)
+      structure.print_to(printer)
    end
    
    def writable?()

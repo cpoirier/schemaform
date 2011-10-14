@@ -345,7 +345,7 @@ class Schema
       end
    end
    
-   class TupleType < Type
+   class TupleType < IndirectType
       def expression( production = nil )
          @tuple.expression(production)
       end

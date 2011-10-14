@@ -28,6 +28,13 @@ module Schemaform
 class Schema
 class SetType < CollectionType
    
+   #
+   # Returns an Element wrapper on this type.
+   
+   def to_element()
+      Set.new(@member_type.to_element(), context)
+   end
+
    
 end # SetType
 end # Schema

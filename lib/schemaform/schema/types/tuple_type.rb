@@ -18,45 +18,18 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("indirect_type.rb")
+
 
 module Schemaform
 class Schema
-class TupleType < Type
+class TupleType < IndirectType
 
+   alias tuple element
+   
    def initialize( tuple, attrs = {} )
-      attrs[:context] = tuple.context unless attrs.member?(:context)
-      super attrs
+      super 
       @tuple = tuple
-   end
-   
-   attr_reader :tuple
-   
-   def naming_type?
-      true
-   end
-   
-   def type()
-      @tuple.type
-   end
-   
-   def effective_type()
-      @tuple.tuple.effective_type
-   end
-   
-   def description()
-      @tuple.description
-   end
-   
-   def print_to( printer )
-      @tuple.print_to(printer)
-   end
-
-   def attribute?( attribute_name )
-      @tuple.attribute?(attribute_name)
-   end
-   
-   def verify()
-      @tuple.verify()
    end
    
 

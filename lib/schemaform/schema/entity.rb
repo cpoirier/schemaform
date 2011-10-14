@@ -39,6 +39,10 @@ class Entity < Component
    
    attr_reader :keys, :accessors, :operations, :projections
 
+   def structure()
+      fail_unless_overridden self, :structure
+   end
+
    def base_entity()
       nil
    end

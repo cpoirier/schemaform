@@ -170,6 +170,14 @@ class Type < Component
    def make_specific( modifiers )
       self
    end
+   
+   
+   #
+   # Returns an Element wrapper on this type.
+   
+   def to_element()
+      Element.new(context, self)
+   end
 
    
    #

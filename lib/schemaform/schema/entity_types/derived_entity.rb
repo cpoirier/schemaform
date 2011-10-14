@@ -33,7 +33,11 @@ class DerivedEntity < Entity
    end
    
    attr_accessor :proc
-
+   
+   def structure()
+      @structure ||= type.to_element
+   end
+   
    def root_tuple()
       type.member_type.tuple
    end

@@ -18,36 +18,53 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("element.rb")
-
-
-#
-# Base class for collection elements.
 
 module Schemaform
 class Schema
-class Collection < Element
-   
-   def self.type_class()
-      fail_unless_overridden self, :type_class
+class IndirectType < Type
+
+   def initialize( element, attrs = {} )
+      attrs[:context] = element.context unless attrs.member?(:context)
+      super attrs
+      @element = element
    end
    
-   def initialize( member, context = nil )
-      super(context || member.context, self.class.type_class.build(member.type))
-      @member = member
+   def to_element()
+      @element
    end
    
-   attr_reader :member
+   attr_reader :element
    
-   def has_attributes?()
-      @member.has_attributes?()
+   def naming_type?
+      @element.has_attributes?
    end
    
-   def attribute?( name )
-      @member.attribute?(name)
+   def attribute?( attribute_name )
+      @element.attribute?(attribute_name)
+   end
+   
+   def type()
+      @element.type
+   end
+   
+   def effective_type()
+      fail "is the old code a bug?"
+      @tuple.tuple.effective_type
+   end
+   
+   def description()
+      @element.description
+   end
+   
+   def print_to( printer )
+      @element.print_to(printer)
    end
 
-end # Collection
+   def verify()
+      @element.verify()
+   end
+   
+
+end # IndirectType
 end # Schema
 end # Schemaform
-

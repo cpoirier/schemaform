@@ -27,6 +27,13 @@ module Schemaform
 class Schema
 class ListType < CollectionType
 
+   #
+   # Returns an Element wrapper on this type.
+   
+   def to_element()
+      List.new(@member_type.to_element(), context)
+   end
+
    
 end # ListType
 end # Schema

@@ -29,8 +29,11 @@ class DefinedEntity < Entity
       
    def initialize( name, base_entity, schema )
       super(schema, name)
-      @heading          = Tuple.new(self)
-      @declared_heading = Tuple.new(self, nil, @heading.attributes)
+      @heading   = Tuple.new(self)
+      @structure = Set.new(@heading)
+      
+      @declared_heading   = Tuple.new(self, nil, @heading.attributes)
+      @declared_structure = Set.new(@declared_heading)
 
       #
       # Import the base entity identifier attributes.
@@ -46,7 +49,7 @@ class DefinedEntity < Entity
       end
    end
    
-   attr_reader :identifier, :heading, :declared_heading, :pedigree, :base_entity
+   attr_reader :identifier, :heading, :structure, :declared_heading, :declared_structure, :pedigree, :base_entity
    
    def writable?()
       true

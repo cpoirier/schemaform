@@ -34,6 +34,10 @@ class Attribute < Component
       super(tuple, name)
       @type = type
    end
+   
+   def structure()
+      @structure ||= type.to_element()
+   end
 
    def verify()
       type.verify()

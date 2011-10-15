@@ -157,7 +157,7 @@ end # Schemaform
 
 
 # =============================================================================================
-#                                           Placeholder Capture
+#                                        Placeholder Capture
 # =============================================================================================
 
 module Schemaform
@@ -375,42 +375,49 @@ class Schema
          Language::Attribute.new(self, production)
       end
       
-      def analyze_formula()
-         result = nil
-         
-         unless @analyzing
+      def formula()
+         unless @formula || @analyzing
             # debug("processing in #{full_name}")
 
             Language::ExpressionCapture.resolution_scope(schema) do
                begin
                   @analyzing = true  # Ensure any self-references don't retrigger analysis
-                  result = Language::ExpressionCapture.capture_expression(root_tuple.expression(), @proc)
+                  @formula   = Language::ExpressionCapture.capture_expression(root_tuple.expression(), @proc).tap do |captured_expression|
+                     type_check(:captured_expression, captured_expression, Language::Placeholder)
+                  end
                ensure
                   @analyzing = false
                end
             end
          end
          
-         if result && !result.get_type.unknown_type? then
-            # debug("#{full_name} resolved to #{result.get_type.description}")
-            result.get_type
-         else
-            # debug("#{full_name} could not be resolved at this time")
-            nil
-         end
+         @formula
       end
       
+      def formula_type()
+         if formula() then
+            type = @formula.get_type
+            unless type.unknown_type?
+               # debug("#{full_name} resolved to #{type.description}")
+               return type 
+            end
+         end
+         
+         # debug("#{full_name} could not be resolved at this time")
+         return nil
+      end
+
    end
    
    class DerivedAttribute < Attribute
       def type()
-         (@type ||= analyze_formula) || schema.unknown_type
+         (@type ||= formula_type) || schema.unknown_type
       end
    end
    
    class OptionalAttribute < Attribute
       def type()
-         (@type ||= analyze_formula) || schema.unknown_type         
+         (@type ||= formula_type) || schema.unknown_type         
       end
    end
    
@@ -434,19 +441,17 @@ class Schema
 
    class DerivedEntity < Entity
       def type()
-         (@type ||= analyze_formula) || schema.unknown_type
+         (@type ||= formula_type) || schema.unknown_type
       end
       
-      def analyze_formula()
-         result = nil
-         
-         unless @analyzing
+      def formula()
+         unless @formula || @analyzing
             # debug("processing in #{full_name}")
 
             Language::ExpressionCapture.resolution_scope(schema) do
                begin
                   @analyzing = true  # Ensure any self-references don't retrigger analysis
-                  result = Language::ExpressionDefinition.module_exec(&@proc).tap do |captured_expression|
+                  @formula   = Language::ExpressionDefinition.module_exec(&@proc).tap do |captured_expression|
                      type_check(:captured_expression, captured_expression, Language::Placeholder)
                   end
                ensure
@@ -455,13 +460,20 @@ class Schema
             end
          end
          
-         if result && !result.get_type.unknown_type? then
-            # debug("#{full_name} resolved to #{result.get_type.description}")
-            result.get_type
-         else
-            # debug("#{full_name} could not be resolved at this time")
-            nil
+         @formula
+      end
+      
+      def formula_type()
+         if formula() then
+            type = @formula.get_type
+            unless type.unknown_type?
+               # debug("#{full_name} resolved to #{type.description}")
+               return type 
+            end
          end
+         
+         # debug("#{full_name} could not be resolved at this time")
+         return nil
       end
    end
    

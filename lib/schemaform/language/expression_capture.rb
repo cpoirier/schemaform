@@ -376,17 +376,19 @@ class Schema
       end
       
       def formula()
-         unless @formula || @analyzing
-            # debug("processing in #{full_name}")
+         if defined?(@proc) then
+            unless @formula || @analyzing
+               # debug("processing in #{full_name}")
 
-            Language::ExpressionCapture.resolution_scope(schema) do
-               begin
-                  @analyzing = true  # Ensure any self-references don't retrigger analysis
-                  @formula   = Language::ExpressionCapture.capture_expression(root_tuple.expression(), @proc).tap do |captured_expression|
-                     type_check(:captured_expression, captured_expression, Language::Placeholder)
+               Language::ExpressionCapture.resolution_scope(schema) do
+                  begin
+                     @analyzing = true  # Ensure any self-references don't retrigger analysis
+                     @formula   = Language::ExpressionCapture.capture_expression(root_tuple.expression(), @proc).tap do |captured_expression|
+                        type_check(:captured_expression, captured_expression, Language::Placeholder)
+                     end
+                  ensure
+                     @analyzing = false
                   end
-               ensure
-                  @analyzing = false
                end
             end
          end

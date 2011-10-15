@@ -26,12 +26,12 @@ class LiteralSet < Placeholder
    def initialize( *members )
       @members = members
       
-      member_type = Thread[:expression_contexts].top.unknown_type
+      member_type = Thread[:formula_contexts].top.unknown_type
       members.each do |member|
          member_type = member_type.best_common_type(member.get_type)
       end
       
-      super(Thread[:expression_contexts].top.build_set_type(member_type))
+      super(Thread[:formula_contexts].top.build_set_type(member_type))
    end
    
    def method_missing( symbol, *args, &block )

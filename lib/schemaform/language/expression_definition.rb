@@ -21,24 +21,24 @@
 
 module Schemaform
 module Language
-module ExpressionDefinition
+module FormulaDefinition
    extend QualityAssurance
    
    def self.if_then_else( condition, true_branch, false_branch = nil )
-      condition    = ExpressionCapture.capture(condition   )
-      true_branch  = ExpressionCapture.capture(true_branch )
-      false_branch = ExpressionCapture.capture(false_branch)
+      condition    = FormulaCapture.capture(condition   )
+      true_branch  = FormulaCapture.capture(true_branch )
+      false_branch = FormulaCapture.capture(false_branch)
 
       # assert(condition.get_type.boolean_type, "the if_then_else condition must have a boolean type")
 
       production = Productions::IfThenElse.new(condition, true_branch, false_branch)
-      ExpressionCapture.merge_types(true_branch.get_type, false_branch.get_type).expression(production)
+      FormulaCapture.merge_types(true_branch.get_type, false_branch.get_type).placeholder(production)
    end
    
    def self.all( entity_name )
-      ExpressionCapture.resolution_scope do |schema|
+      FormulaCapture.resolution_scope do |schema|
          assert(schema.entities.member?(entity_name), "unable to find entity [#{entity_name}] in resolution scope")
-         schema.entities[entity_name].expression 
+         schema.entities[entity_name].placeholder 
       end
    end
    
@@ -47,7 +47,7 @@ module ExpressionDefinition
    end
    
    def self.and!( *clauses )
-      boolean_type = ExpressionCapture.resolve_type(:boolean)
+      boolean_type = FormulaCapture.resolve_type(:boolean)
       
       check do
          clauses.each do |clause| 
@@ -56,23 +56,23 @@ module ExpressionDefinition
          end
       end
       
-      boolean_type.expression(Productions::And.new(clauses))
+      boolean_type.placeholder(Productions::And.new(clauses))
    end
 
    def self.or!( *clauses )
-      boolean_type = ExpressionCapture.resolve_type(:boolean)
+      boolean_type = FormulaCapture.resolve_type(:boolean)
       clauses = clauses.collect do |clause| 
          assert(boolean.assignable_from?(clause.get_type), "expected boolean expression for logical and, found #{clause.get_type.description}")
       end
       
-      boolean_type.expression(Productions::Or.new(clauses))
+      boolean_type.placeholder(Productions::Or.new(clauses))
    end
    
    def self.not!( clause )
       fail_todo
       # 
-      # boolean = ExpressionCapture.resolve_type(:boolean)
-      # clause  = ExpressionCapture.capture(clause).tap do |captured|
+      # boolean = FormulaCapture.resolve_type(:boolean)
+      # clause  = FormulaCapture.capture(clause).tap do |captured|
       #    assert(boolean.assignable_from?(captured.get_type), "expected boolean expression for logical not, found #{lhs.get_type.description}")
       # end
       # 
@@ -80,7 +80,7 @@ module ExpressionDefinition
    end
 
    
-end # ExpressionDefinition
+end # FormulaDefinition
 end # Language
 end # Schemaform
 

@@ -19,25 +19,24 @@
 # =============================================================================================
 
 require Schemaform.locate("schemaform/schema.rb")
-Dir[Schemaform.locate("expression_capture/*.rb")].each{|path| require path}
 
 module Schemaform
 module Language
-module ExpressionCapture
+module FormulaCapture
    extend QualityAssurance
    
    def self.resolution_scope( schema = nil )
-      Thread[:expression_contexts] = [] unless Thread.key?(:expression_contexts)
+      Thread[:formula_contexts] = [] unless Thread.key?(:formula_contexts)
       if schema then
-         Thread[:expression_contexts].push_and_pop(schema) do
+         Thread[:formula_contexts].push_and_pop(schema) do
             yield
          end
       else
-         assert(Thread[:expression_contexts].not_empty?, "ExpressionCapture should have a resolution_scope in place")
+         assert(Thread[:formula_contexts].not_empty?, "FormulaCapture should have a resolution_scope in place")
          if block_given? then
-            yield(Thread[:expression_contexts].top)
+            yield(Thread[:formula_contexts].top)
          else
-            Thread[:expression_contexts].top
+            Thread[:formula_contexts].top
          end
       end
    end
@@ -63,7 +62,7 @@ module ExpressionCapture
    end
    
    def self.capture_type( type, production = nil )
-      resolve_type(type).expression(production)
+      resolve_type(type).placeholder(production)
    end
       
    
@@ -72,7 +71,7 @@ module ExpressionCapture
       when Placeholder, NilClass
          return value
       when Schema::Type
-         return value.expression(production)
+         return value.placeholder(production)
       when Array
          return LiteralList.new(*value.collect{|e| capture(e)})
       when Set
@@ -86,7 +85,7 @@ module ExpressionCapture
       when String
          return LiteralScalar.new(value, resolve_type(:text).make_specific(:length => value.length))
       else
-         fail "ExpressionCapture.capture() does not currently handle objects of type #{value.class.name}"
+         fail "FormulaCapture.capture() does not currently handle objects of type #{value.class.name}"
       end
    end
    
@@ -102,7 +101,7 @@ module ExpressionCapture
       result_type = merge_types(lhs.get_type, rhs.get_type)
       production  = Productions::BinaryOperator.new(operator, lhs, rhs)
       
-      result_type.expression(production)
+      result_type.placeholder(production)
    end
    
    def self.capture_comparison_operator( operator, lhs, rhs )
@@ -110,7 +109,7 @@ module ExpressionCapture
       rhs         = capture(rhs)
       production  = Productions::Comparison.new(operator, lhs, rhs)
 
-      resolve_type(:boolean).expression(production)
+      resolve_type(:boolean).placeholder(production)
    end   
    
    def self.capture_logical_and( lhs, rhs )
@@ -120,7 +119,7 @@ module ExpressionCapture
       assert(boolean.assignable_from?(lhs.get_type), "expected boolean expression on left-hand of logical and, found #{lhs.get_type.description}" )
       assert(boolean.assignable_from?(rhs.get_type), "expected boolean expression on right-hand of logical and, found #{rhs.get_type.description}")
 
-      boolean.expression(Productions::And.new([lhs, rhs]))
+      boolean.placeholder(Productions::And.new([lhs, rhs]))
    end
 
    def self.capture_logical_or( lhs, rhs )
@@ -130,25 +129,25 @@ module ExpressionCapture
       assert(boolean.assignable_from?(lhs.get_type), "expected boolean expression on left-hand of logical or, found #{lhs.get_type.description}" )
       assert(boolean.assignable_from?(rhs.get_type), "expected boolean expression on right-hand of logical or, found #{rhs.get_type.description}")
 
-      boolean.expression(Productions::Or.new([lhs, rhs]))
+      boolean.placeholder(Productions::Or.new([lhs, rhs]))
    end
 
-   def self.capture_expression( formula_context, block, result_type = nil, join_compatible_only = true )
-      Language::ExpressionCapture.resolution_scope(formula_context.get_type.schema) do
-         Language::ExpressionDefinition.module_exec(formula_context, &block).tap do |captured_expression|
-            type_check(:captured_expression, captured_expression, Language::Placeholder)
+   def self.capture_formula( formula_context, block, result_type = nil, join_compatible_only = true )
+      Language::FormulaCapture.resolution_scope(formula_context.get_type.schema) do
+         Language::FormulaDefinition.module_exec(formula_context, &block).tap do |captured_formula|
+            type_check(:captured_formula, captured_formula, Language::Placeholder)
             if result_type then
                if join_compatible_only then
-                  assert(result_type.join_compatible?(captured_expression.get_type), "expected expression result to be join compatible with #{result_type.description}, found #{captured_expression.get_type.description} instead")
+                  assert(result_type.join_compatible?(captured_formula.get_type), "expected expression result to be join compatible with #{result_type.description}, found #{captured_formula.get_type.description} instead")
                else                                                             
-                  assert(result_type.assignable_from?(captured_expression.get_type), "expected expression result to be assignable to #{result_type.description}, found #{captured_expression.get_type.description} instead")
+                  assert(result_type.assignable_from?(captured_formula.get_type), "expected expression result to be assignable to #{result_type.description}, found #{captured_formula.get_type.description} instead")
                end
             end
          end
       end
    end
       
-end # ExpressionCapture
+end # FormulaCapture
 end # Language
 end # Schemaform
 
@@ -164,16 +163,16 @@ module Schemaform
 class Schema
    
    class Component
-      def expression( production = nil )
-         fail_unless_overridden self, :expression
+      def placeholder( production = nil )
+         fail_unless_overridden self, :placeholder
       end
       
       def capture_method( receiver, method_name, args = [], block = nil )
          case method_name
          when :apply
             method, type, *parameters = *args
-            parameters = parameters.collect{|p| Language::ExpressionCapture.capture(p)}
-            Language::ExpressionCapture.capture_type(type, Language::Productions::Application.new(method, receiver, parameters))
+            parameters = parameters.collect{|p| Language::FormulaCapture.capture(p)}
+            Language::FormulaCapture.capture_type(type, Language::Productions::Application.new(method, receiver, parameters))
          else
             capture_accessor(receiver, method_name.to_s.tr("!", "").intern)
          end
@@ -185,7 +184,7 @@ class Schema
    end   
    
    class Type < Component
-      def expression( production = nil )
+      def placeholder( production = nil )
          Language::Placeholder.new(self, production)
       end      
    end
@@ -194,9 +193,9 @@ class Schema
       def capture_method( receiver, method_name, args = [], block = nil )
          case method_name
          when :+, :-, :*, :/, :%
-            Language::ExpressionCapture.capture_binary_operator(method_name, receiver, args.shift)
+            Language::FormulaCapture.capture_binary_operator(method_name, receiver, args.shift)
          when :==, :<, :>, :<=, :>=
-            Language::ExpressionCapture.capture_comparison_operator(method_name, receiver, args.shift)
+            Language::FormulaCapture.capture_comparison_operator(method_name, receiver, args.shift)
          else
             super
          end
@@ -207,9 +206,9 @@ class Schema
       def capture_method( receiver, method_name, args = [], block = nil )
          case method_name
          when :+, :-, :*, :/, :%
-            Language::ExpressionCapture.capture_binary_operator(method_name, receiver, args.shift)
+            Language::FormulaCapture.capture_binary_operator(method_name, receiver, args.shift)
          when :==, :<, :>, :<=, :>=
-            Language::ExpressionCapture.capture_comparison_operator(method_name, receiver, args.shift)
+            Language::FormulaCapture.capture_comparison_operator(method_name, receiver, args.shift)
          else
             super
          end
@@ -220,9 +219,9 @@ class Schema
       def capture_method( receiver, method_name, args = [], block = nil )
          case method_name
          when :&
-            Language::ExpressionCapture.capture_logical_and(receiver, args.shift)
+            Language::FormulaCapture.capture_logical_and(receiver, args.shift)
          when :|
-            Language::ExpressionCapture.capture_logical_or(receiver, args.shift)
+            Language::FormulaCapture.capture_logical_or(receiver, args.shift)
          else
             super
          end
@@ -233,7 +232,7 @@ class Schema
       def capture_method( receiver, method_name, args = [], block = nil )
          case method_name
          when :floor, :ceil
-            Language::ExpressionCapture.capture_method_call(:integer, receiver, method_name, args, block)
+            Language::FormulaCapture.capture_method_call(:integer, receiver, method_name, args, block)
          else
             super
          end
@@ -245,28 +244,27 @@ class Schema
       def capture_method( receiver, method_name, args = [], block = nil )
          case method_name
          when :+, :-
-            Language::ExpressionCapture.capture_binary_operator(method_name, receiver, args.shift)
+            Language::FormulaCapture.capture_binary_operator(method_name, receiver, args.shift)
          when :==
-            Language::ExpressionCapture.capture_comparison_operator(method_name, receiver, args.shift)
+            Language::FormulaCapture.capture_comparison_operator(method_name, receiver, args.shift)
          when :sum, :average
             check{ assert(!receiver.get_type.effective_type.member_type.collection_type?, "how do we do aggregation across nested collections?") }
-            receiver.get_type.effective_type.member_type.expression(Language::Productions::Aggregation.new(receiver, method_name))
+            receiver.get_type.effective_type.member_type.placeholder(Language::Productions::Aggregation.new(receiver, method_name))
          when :count
             check{ assert(!receiver.get_type.effective_type.member_type.collection_type?, "how do we do aggregation across nested collections?") }
-            Language::ExpressionCapture.capture_type(:integer, Language::Productions::Aggregation.new(receiver, method_name))
+            Language::FormulaCapture.capture_type(:integer, Language::Productions::Aggregation.new(receiver, method_name))
          else
             return super unless naming_type?
             
             case method_name
             when :where
-               formula_context     = @member_type.expression(Language::Productions::EachTuple.new(receiver))
-               criteria_expression = Language::ExpressionCapture.capture_expression(formula_context, block, schema.boolean_type)
-               type_check(:criteria_expression, criteria_expression, Language::Placeholder)
-               self.expression(Language::Productions::Restriction.new(receiver, formula_context, criteria_expression))
+               formula_context = @member_type.placeholder(Language::Productions::EachTuple.new(receiver))
+               criteria        = Language::FormulaCapture.capture_formula(formula_context, block, schema.boolean_type)
+               self.placeholder(Language::Productions::Restriction.new(receiver, formula_context, criteria))
             when :project
                warn_todo("validation on projection results")
-               placeholders = block ? block.call(@member_type.expression()) : args.collect{|name| @member_type.tuple[name].expression()}
-               self.expression(Language::Productions::Projection.new(receiver, placeholders))
+               placeholders = block ? block.call(@member_type.placeholder()) : args.collect{|name| @member_type.tuple[name].placeholder()}
+               self.placeholder(Language::Productions::Projection.new(receiver, placeholders))
             else
                super
             end
@@ -277,7 +275,7 @@ class Schema
          member_type = member_type().evaluated_type
          if member_type.responds_to?(:attribute?) then
             if captured = member_type.capture_method(receiver, attribute_name) then
-               return self.class.build(captured.get_type).expression(Language::Productions::Each.new(captured))
+               return self.class.build(captured.get_type).placeholder(Language::Productions::Each.new(captured))
             end            
          end
          
@@ -290,7 +288,7 @@ class Schema
       def capture_method( receiver, method_name, args = [], block = nil )
          case method_name
          when :join
-            Language::ExpressionCapture.capture_method_call(:text, receiver, method_name, args, block )
+            Language::FormulaCapture.capture_method_call(:text, receiver, method_name, args, block )
          else
             super
          end
@@ -319,14 +317,14 @@ class Schema
                   end
                end
 
-               Schema::ListType.build(member_type, :order => order_attributes).expression(Language::Productions::OrderBy.new(receiver, *order_attributes))
+               Schema::ListType.build(member_type, :order => order_attributes).placeholder(Language::Productions::OrderBy.new(receiver, *order_attributes))
             else
                super
             end
          when :member?
-            search_term = Language::ExpressionCapture.capture(args.shift)
+            search_term = Language::FormulaCapture.capture(args.shift)
             production  = Language::Productions::MemberOfSet.new(receiver, search_term)
-            Language::ExpressionCapture.resolve_type(:boolean).expression(production)
+            Language::FormulaCapture.resolve_type(:boolean).placeholder(production)
          else
             super
          end
@@ -340,14 +338,14 @@ class Schema
          return nil unless attribute?(attribute_name)
          
          entity = referenced_entity()
-         tuple  = entity.root_tuple.expression(Language::Productions::FollowReference.new(receiver))
+         tuple  = entity.root_tuple.placeholder(Language::Productions::FollowReference.new(receiver))
          Language::Attribute.new(entity.heading[attribute_name], Language::Productions::Accessor.new(tuple, attribute_name))
       end
    end
    
    class TupleType < IndirectType
-      def expression( production = nil )
-         @tuple.expression(production)
+      def placeholder( production = nil )
+         @tuple.placeholder(production)
       end
       
       def capture_method( receiver, method_name, args = [], block = nil )
@@ -362,7 +360,7 @@ class Schema
          Language::Attribute.new(self[attribute_name], Language::Productions::Accessor.new(receiver, attribute_name))
       end
       
-      def expression( production = nil )
+      def placeholder( production = nil )
          context.is_an?(Entity) ? Language::EntityTuple.new(context, production) : Language::Tuple.new(self, production)
       end
    end
@@ -371,7 +369,7 @@ class Schema
    
    
    class Attribute < Component
-      def expression( production = nil )
+      def placeholder( production = nil )
          Language::Attribute.new(self, production)
       end
       
@@ -380,11 +378,11 @@ class Schema
             unless @formula || @analyzing
                # debug("processing in #{full_name}")
 
-               Language::ExpressionCapture.resolution_scope(schema) do
+               Language::FormulaCapture.resolution_scope(schema) do
                   begin
                      @analyzing = true  # Ensure any self-references don't retrigger analysis
-                     @formula   = Language::ExpressionCapture.capture_expression(root_tuple.expression(), @proc).tap do |captured_expression|
-                        type_check(:captured_expression, captured_expression, Language::Placeholder)
+                     @formula   = Language::FormulaCapture.capture_formula(root_tuple.placeholder(), @proc).tap do |captured_formula|
+                        type_check(:captured_formula, captured_formula, Language::Placeholder)
                      end
                   ensure
                      @analyzing = false
@@ -424,15 +422,15 @@ class Schema
    end
    
    class Entity < Component
-      def expression( production = nil )
+      def placeholder( production = nil )
          Language::Entity.new(self, production)
       end
       
       def project_attributes( specification )
          if specification.is_a?(Proc) then
-            expression.project(&specification).get_production.attribute_definitions
+            placeholder.project(&specification).get_production.attribute_definitions
          else
-            expression.project(*specification).get_production.attribute_definitions
+            placeholder.project(*specification).get_production.attribute_definitions
          end
       end
 
@@ -450,11 +448,11 @@ class Schema
          unless @formula || @analyzing
             # debug("processing in #{full_name}")
 
-            Language::ExpressionCapture.resolution_scope(schema) do
+            Language::FormulaCapture.resolution_scope(schema) do
                begin
                   @analyzing = true  # Ensure any self-references don't retrigger analysis
-                  @formula   = Language::ExpressionDefinition.module_exec(&@proc).tap do |captured_expression|
-                     type_check(:captured_expression, captured_expression, Language::Placeholder)
+                  @formula   = Language::FormulaDefinition.module_exec(&@proc).tap do |captured_formula|
+                     type_check(:captured_formula, captured_formula, Language::Placeholder)
                   end
                ensure
                   @analyzing = false
@@ -481,11 +479,11 @@ class Schema
    
 
    class GeneratedAccessor
-      def expression( production = nil )
+      def placeholder( production = nil )
          attributes = attributes()
          
-         Language::ExpressionCapture.resolution_scope(schema) do 
-            context.expression(production).where do |tuple|
+         Language::FormulaCapture.resolution_scope(schema) do 
+            context.placeholder(production).where do |tuple|
                comparisons = []
                attributes.each_with_index do |attribute, index|
                   comparisons << (tuple[attribute.name] == parameter(index))
@@ -498,12 +496,12 @@ class Schema
    end
    
    class DefinedAccessor
-      def expression( production = nil )
+      def placeholder( production = nil )
          block = @proc
          
-         Language::ExpressionCapture.resolution_scope(schema) do
-            context.expression(production).where do |tuple|
-               Language::ExpressionDefinition.module_exec(tuple, &block)
+         Language::FormulaCapture.resolution_scope(schema) do
+            context.placeholder(production).where do |tuple|
+               Language::FormulaDefinition.module_exec(tuple, &block)
             end
          end
       end
@@ -533,9 +531,9 @@ class Schema
 
       def search( path = nil, &block )
          unless @heading.attributes.empty?
-            path = root_tuple.expression() if path.nil?
+            path = root_tuple.placeholder() if path.nil?
             @heading.attributes.each do |attribute|
-               attribute_path = attribute.expression(path)
+               attribute_path = attribute.placeholder(path)
                if result = yield(attribute, attribute_path) || attribute.search(attribute_path, &block) then
                   return result
                end
@@ -551,9 +549,9 @@ class Schema
    class Tuple < Element
       def search( path = nil, &block )
          unless @attributes.empty?
-            path = root_tuple.expression() if path.nil?
+            path = root_tuple.placeholder() if path.nil?
             @attributes.each do |attribute|
-               attribute_path = attribute.expression(path)
+               attribute_path = attribute.placeholder(path)
                if result = yield(attribute, attribute_path) || attribute.search(attribute_path, &block) then
                   return result
                end

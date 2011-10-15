@@ -24,7 +24,7 @@ module Language
 class Parameter < Placeholder
 
    def initialize( number, type = nil )
-      super(type || ExpressionCapture.unknown_type)
+      super(type || FormulaCapture.unknown_type)
       @number = number
    end
    

@@ -28,7 +28,7 @@ class Accessor
    
    def self.build_key_accessor( entity_plan, key )
       entity = entity_plan.definition
-      query  = entity.expression.where do |tuple|
+      query  = entity.placeholder.where do |tuple|
          Language::FormulaCapture.resolution_scope(entity.schema) do 
             comparisons = []
             key.attributes.each_with_index do |attribute, index|

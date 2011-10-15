@@ -54,7 +54,7 @@ class ConnectedEntity
          when /^get_by_(\w+)$/
             accessor_name = $1
             if @definition.accessors.member?(accessor_name) then
-               return @transaction.retrieve(@definition.accessors[accessor_name].expression)
+               return @transaction.retrieve(@definition.accessors[accessor_name].placeholder)
             end
          end
       end

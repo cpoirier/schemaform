@@ -29,7 +29,7 @@ class Attribute < Placeholder
    def initialize( definition, production = nil )
       super(definition.type, production)
       @definition = definition
-      @effective  = definition.type.expression(Productions::ValueAccessor.new(self))
+      @effective  = definition.type.placeholder(Productions::ValueAccessor.new(self))
    end
    
    def get_definition() ; @definition ; end
@@ -52,7 +52,7 @@ class Attribute < Placeholder
       false_value = FormulaCapture.capture(false_value)      
       result_type = true_value ? FormulaCapture.merge_types(true_value.get_type, false_value.get_type) : FormulaCapture.resolve_type(:boolean)
 
-      result_type.expression(Productions::PresentCheck.new(self, true_value, false_value))
+      result_type.placeholder(Productions::PresentCheck.new(self, true_value, false_value))
    end
    
    

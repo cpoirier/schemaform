@@ -34,10 +34,10 @@ class EntityDefinition
    end
       
    def initialize( schema, name, parent )
-      @schema   = schema
-      @name     = name
-      @parent   = parent
-      @entity   = nil
+      @schema = schema
+      @name   = name
+      @parent = parent
+      @entity = nil
    end
    
    attr_reader :entity
@@ -49,18 +49,16 @@ class EntityDefinition
    def each( tuple_name, &block )
       assert(@entity.nil?, "you can define the entity using one \"each\" or \"as\" clause only")
       
-      @entity = Schema::DefinedEntity.new(@name, @parent, @schema)
+      @entity = Schema::DefinedEntity.new(@name, @parent)
       @schema.entities.register(@entity)
       
-      @entity.declared_heading.tap do |tuple|
+      @entity.heading.tap do |tuple|
          assert( tuple.name.nil?, "expected unnamed tuple for TupleDefinition::each()")
          
          tuple.name = tuple_name
          @schema.tuples.register(tuple)
          TupleDefinition.process(tuple, &block)
       end
-
-      @entity.heading.rename(:id, @entity.id())
    end   
    
    
@@ -71,7 +69,7 @@ class EntityDefinition
       assert(@entity.nil?, "you can define the entity using one \"each\" or \"as\" clause only")
       assert(@parent.nil?, "derived entities cannot have a base entity"                        )
       
-      @entity = Schema::DerivedEntity.new(@name, @schema, block)
+      @entity = Schema::DerivedEntity.new(@name, block)
       @schema.entities.register(@entity)
    end
    

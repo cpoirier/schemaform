@@ -21,37 +21,55 @@
 
 module Schemaform
 class Schema
-class ReferenceType < Type
+class EntityReferenceType < Type
 
-   def initialize( collection, attrs = {} )
+   def initialize( entity_name, attrs = {} )
       attrs.delete(:base_type)
-      super attrs
-      
-      @collection = collection
+      if entity_name.is_an?(Entity) then
+         super attrs
+         @entity      = entity_name
+         @entity_name = entity_name.name
+         warn_once("is there a downside to initializing a ReferenceType directly to an Entity?")
+      else
+         super attrs
+         type_check(:entity_name, entity_name, Symbol)
+         @entity_name = entity_name
+         @entity      = nil
+      end
    end
    
+   attr_reader :entity_name
+   
    def base_type()      
-      fail_todo "convert from old ReferenceType code"
+      warn_todo("how does EntityReferenceType interact with ReferenceType")
       return @base_type if @base_type.exists?
       if referenced_entity && referenced_entity.base_entity.exists? then
-         @base_type = ReferenceType.new(referenced_entity.base_entity)
+         @base_type = EntityReferenceType.new(referenced_entity.base_entity)
       else
          nil
       end
    end
    
-   def referenced_collection()
-      @collection
+   def referenced_entity()
+      @entity ||= schema.entities.find(@entity_name)
    end
    
    def description()
-      "#{@collection.full_name} reference"
+      "#{referenced_entity.name} reference"
    end
 
+   def attribute?( attribute_name )
+      referenced_entity.attribute?(attribute_name)
+   end
+   
+   def verify()
+      assert(referenced_entity(), "unable to find referenced entity #{@entity_name}")
+   end
+   
    def ==( rh_type )
-      return (rh_type.is_a?(ReferenceType) && rh_type.referenced_collection == referenced_collection) || super
+      return (rh_type.is_a?(ReferenceType) && rh_type.referenced_entity == referenced_entity) || super
    end
 
-end # ReferenceType
+end # EntityReferenceType
 end # Schema
 end # Schemaform

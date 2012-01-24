@@ -29,38 +29,54 @@ class Schema
 class Collection < Element
    
    def self.type_class()
-      fail_unless_overridden self, :type_class
+      fail_unless_overridden
    end
    
-   def self.tuple_collection_name()
-      nil
+   def initialize( member, owner = nil )
+      super(self.class.type_class.build(member.type))
+      @member = member.acquire_for(self)
+      @meta   = Tuple.new().acquire_for(self)
+      @id     = @meta.register(IDAttribute.new(self))
+      @owner  = @meta.register(OwnerAttribute.new(owner)) if owner
    end
    
-   def initialize( member, context = nil )
-      super(context || member.context, self.class.type_class.build(member.type))
-      @member = member
+   def add_typing_information( names )
+      @meta.register(TypeAttribute.new(names))
    end
    
-   attr_reader :member
-   
+   attr_reader :member, :meta, :id, :owner
+
    def has_attributes?()
       @member.has_attributes?()
    end
-   
+
    def attribute?( name )
       @member.attribute?(name)
    end
    
+   def verify()
+      @member.verify()
+      @meta.verify()
+      super
+   end
+   
    def print_to( printer, name_override = nil )
-      if has_attributes? && (override = self.class.tuple_collection_name) then
-         name_override ||= member.name
-         label = "#{override} of"
-         label += " #{name_override}" if name_override
-         printer.label(label, "") do
-            @member.print_attributes_to(printer)
-         end
+      printer.label("#{self.class.unqualified_name} of", "") do
+         print_body_to(printer)
+      end
+   end
+   
+   def print_body_to( printer )
+      printer.print("Meta")
+      printer.indent do
+         @meta.print_attributes_to(printer)
+      end
+      
+      if @member.is_a?(Tuple) then
+         @member.print_to(printer)
       else
-         printer.label("#{self.class.unqualified_name} of", "") do
+         printer.print("Value")
+         printer.indent do
             @member.print_to(printer)
          end
       end

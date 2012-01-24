@@ -29,9 +29,12 @@ class Schema
 class Projection < Component
 
    def initialize( entity, name, proc )
-      super(entity, name)
+      super(name)
+      @entity     = entity
       @proc       = proc
       @attributes = nil 
+
+      acquire_for(@entity)
    end
    
    attr_reader :proc

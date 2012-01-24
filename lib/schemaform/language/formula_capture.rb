@@ -25,25 +25,6 @@ module Language
 module FormulaCapture
    extend QualityAssurance
    
-   def self.resolution_scope( schema = nil )
-      Thread[:formula_contexts] = [] unless Thread.key?(:formula_contexts)
-      if schema then
-         Thread[:formula_contexts].push_and_pop(schema) do
-            yield
-         end
-      else
-         assert(Thread[:formula_contexts].not_empty?, "FormulaCapture should have a resolution_scope in place")
-         if block_given? then
-            yield(Thread[:formula_contexts].top)
-         else
-            Thread[:formula_contexts].top
-         end
-      end
-   end
-   
-   
-   
-   
    def self.merge_types( *from )
       from.inject(resolve_type(:unknown)) do |merged, current|
          merged.best_common_type(current)
@@ -56,7 +37,7 @@ module FormulaCapture
    
    def self.resolve_type( name )
       return name if name.is_a?(Schema::Type)
-      resolution_scope do |schema|
+      Schema.current do |schema|
          schema.types.member?(name) ? schema.types[name] : schema.send((name.to_s + "_type").intern)      
       end
    end
@@ -133,7 +114,7 @@ module FormulaCapture
    end
 
    def self.capture_formula( formula_context, block, result_type = nil, join_compatible_only = true )
-      Language::FormulaCapture.resolution_scope(formula_context.get_type.schema) do
+      formula_context.get_type.schema.enter do
          Language::FormulaDefinition.module_exec(formula_context, &block).tap do |captured_formula|
             type_check(:captured_formula, captured_formula, Language::Placeholder)
             if result_type then
@@ -164,7 +145,7 @@ class Schema
    
    class Component
       def placeholder( production = nil )
-         fail_unless_overridden self, :placeholder
+         fail_unless_overridden
       end
       
       def capture_method( receiver, method_name, args = [], block = nil )
@@ -333,7 +314,7 @@ class Schema
    
    
 
-   class ReferenceType < Type
+   class EntityReferenceType < Type
       def capture_accessor( receiver, attribute_name )
          return nil unless attribute?(attribute_name)
          
@@ -361,7 +342,7 @@ class Schema
       end
       
       def placeholder( production = nil )
-         context.is_an?(Entity) ? Language::EntityTuple.new(context, production) : Language::Tuple.new(self, production)
+         root_tuple === self ? Language::EntityTuple.new(context_entity, production) : Language::Tuple.new(self, production)
       end
    end
    
@@ -378,7 +359,7 @@ class Schema
             unless @formula || @analyzing
                # debug("processing in #{full_name}")
 
-               Language::FormulaCapture.resolution_scope(schema) do
+               schema.enter do
                   begin
                      @analyzing = true  # Ensure any self-references don't retrigger analysis
                      @formula   = Language::FormulaCapture.capture_formula(root_tuple.placeholder(), @proc).tap do |captured_formula|
@@ -448,7 +429,7 @@ class Schema
          unless @formula || @analyzing
             # debug("processing in #{full_name}")
 
-            Language::FormulaCapture.resolution_scope(schema) do
+            schema.enter do
                begin
                   @analyzing = true  # Ensure any self-references don't retrigger analysis
                   @formula   = Language::FormulaDefinition.module_exec(&@proc).tap do |captured_formula|
@@ -482,7 +463,7 @@ class Schema
       def placeholder( production = nil )
          attributes = attributes()
          
-         Language::FormulaCapture.resolution_scope(schema) do 
+         schema.enter do
             context.placeholder(production).where do |tuple|
                comparisons = []
                attributes.each_with_index do |attribute, index|
@@ -499,7 +480,7 @@ class Schema
       def placeholder( production = nil )
          block = @proc
          
-         Language::FormulaCapture.resolution_scope(schema) do
+         schema.enter do
             context.placeholder(production).where do |tuple|
                Language::FormulaDefinition.module_exec(tuple, &block)
             end

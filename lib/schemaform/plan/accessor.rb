@@ -29,7 +29,7 @@ class Accessor
    def self.build_key_accessor( entity_plan, key )
       entity = entity_plan.definition
       query  = entity.placeholder.where do |tuple|
-         Language::FormulaCapture.resolution_scope(entity.schema) do 
+         entity.schema.enter do
             comparisons = []
             key.attributes.each_with_index do |attribute, index|
                comparisons << (tuple[attribute.name] == parameter(index))

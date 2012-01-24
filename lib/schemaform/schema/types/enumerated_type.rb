@@ -30,8 +30,7 @@ module Schemaform
 class Schema
 class EnumeratedType < ScalarType
 
-   def initialize( values, attrs )
-      context = attrs.fetch(:context)
+   def initialize( values, attrs = {} )
       @values = values
       
       #
@@ -47,7 +46,7 @@ class EnumeratedType < ScalarType
             string_length = value_length if value_length > string_length
          end
       
-         attrs[:base_type] = all_integers ? context.schema.integer_type : context.schema.text_type(string_length)
+         attrs[:base_type] = all_integers ? Schema.current.integer_type : Schema.current.text_type(string_length)
       end
       
       super attrs

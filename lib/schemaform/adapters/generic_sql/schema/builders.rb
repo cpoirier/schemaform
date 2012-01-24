@@ -75,7 +75,7 @@ class Adapter
 
                   entity.heading.attributes.each do |attribute|
                      next if attribute.name == entity.id
-                     next if entity.base_entity.exists? && entity.base_entity.declared_heading.attribute?(attribute.name)
+                     next if entity.base_entity.exists? && entity.base_entity.heading.attribute?(attribute.name)
 
                      dispatch(:lay_out, attribute, builder)
                   end
@@ -123,7 +123,8 @@ class Adapter
       fail "no lay_out support for #{type.class.name}"
    end
 
-   def lay_out_reference_type( type, builder )
+   def lay_out_entity_reference_type( type, builder )
+      fail_todo "convert from old ReferenceType"
       warn_todo("reference field null/default handling")
       
       referenced_entity_map = builder[type.referenced_entity] or fail "couldn't resolve a reference to entity [#{type.entity_name}]"

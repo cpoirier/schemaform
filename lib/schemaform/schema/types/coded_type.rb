@@ -28,9 +28,9 @@ module Schemaform
 class Schema
 class CodedType < EnumeratedType
 
-   def initialize( map, attrs )
+   def initialize( map, attrs = {} )
       values = map.values.uniq
-      super values, attrs
+      super(values, attrs)
       @map = map
    end
 

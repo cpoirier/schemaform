@@ -24,12 +24,16 @@ class Schema
 class IndirectType < Type
 
    def initialize( element, attrs = {} )
-      attrs[:context] = element.context unless attrs.member?(:context)
       super attrs
       @element = element
    end
    
-   def to_element()
+   def acquire_for( new_context )
+      @element.acquire_for(new_context)
+      super
+   end
+   
+   def to_element( context_collection = nil )
       @element
    end
    
@@ -62,6 +66,7 @@ class IndirectType < Type
 
    def verify()
       @element.verify()
+      super
    end
    
 

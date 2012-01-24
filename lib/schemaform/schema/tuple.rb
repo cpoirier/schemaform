@@ -34,17 +34,19 @@ class Tuple < Element
       true
    end
    
-   def initialize( context, name = nil, registry_chain = nil )
-      super(context, StructuredType.new(:context => self){|name| name.nil? ? @attributes.names : @attributes[name].type}, name)
+   def initialize( name = nil, registry_chain = nil )
+      super(TupleType.new(self), name)
       
       @attributes = Registry.new(self, "an attribute" , registry_chain)
       @tuples     = Registry.new(self, "a child tuple")
    end
    
    def verify()
-      return if @validated
-      @validated = true
-      @attributes.each{|attribute| attribute.verify()}
+      unless @validated
+         @validated = true         
+         @attributes.each{|attribute| attribute.verify()}
+      end
+      @validated
    end
    
    attr_reader :attributes, :tuples
@@ -73,7 +75,7 @@ class Tuple < Element
    
    def register( attribute )
       type_check(:attribute, attribute, Attribute)
-      @attributes.register(attribute)
+      @attributes.register(attribute.acquire_for(self))
    end
    
    def rename( from, to )
@@ -96,7 +98,7 @@ class Tuple < Element
    end
    
    def description()
-      (name.to_s != "" ? name.to_s : "") +  @type.description
+      (name.to_s != "" ? name.to_s : "") + "{" + names.join(", ") + "}"
    end
    
    def width()
@@ -104,7 +106,7 @@ class Tuple < Element
    end   
    
    def recreate_in( new_context, changes = nil )
-      self.new(new_context).tap do |tuple|
+      self.new().acquire_for(new_context).tap do |tuple|
          recreate_children_in(tuple, changes)
       end      
    end
@@ -128,19 +130,21 @@ class Tuple < Element
    end
    
    def print_attributes_to( printer )
-      width = @attributes.collect{|a| a.name.to_s.length}.max
+      class_width = @attributes.collect{|a| a.class.unqualified_name.to_s.length}.max
+      name_width  = @attributes.collect{|a| a.name.to_s.length}.max
+      
       @attributes.each do |attribute|
-         attribute.print_to(printer, width)
+         printer.print("#{attribute.class.unqualified_name.to_s.ljust(class_width)} #{attribute.name.to_s.ljust(name_width)} ", false)
+         attribute.structure.print_to(printer)
       end
    end
    
    def root_tuple()
-      case context
-      when Entity, Schema
-         self
-      else
-         context.root_tuple
-      end
+      @root_tuple ||= find_context(false, self){|context| context.is_a?(Tuple)}
+   end
+   
+   def context_entity()
+      @context_entity ||= find_context{|context| context.is_an?(Entity)}
    end
    
       

@@ -32,9 +32,14 @@ class List < Collection
       ListType
    end
    
-   def self.tuple_collection_name()
-      "Tabulation"
+   def initialize( member, owner = nil )
+      super
+      @next     = @meta.register(OptionalAttribute.new(:next    , ReferenceType.new(self)))
+      @previous = @meta.register(OptionalAttribute.new(:previous, ReferenceType.new(self)))
    end
+
+   attr_reader :next, :previous
+   
    
    
 end # List

@@ -29,18 +29,20 @@ module Schemaform
 class Schema
 class Attribute < Component
    
-   def initialize( name, tuple, type = nil )
-      type_check(:tuple, tuple, Tuple)
-      super(tuple, name)
+   def initialize( name, type = nil )
+      super(name)
       @type = type
+      @type.acquire_for(self) if @type
    end
    
    def structure()
-      @structure ||= type.to_element()
+      @structure ||= type.to_element(context.context_collection()).acquire_for(self)
    end
 
    def verify()
       type.verify()
+      assert(structure.exists?, "unable to build structure for #{full_name}")
+      structure.verify()
    end
    
    def type()
@@ -56,7 +58,7 @@ class Attribute < Component
    end
    
    def recreate_in( new_context, changes = nil )
-      self.class.new(@name, new_context, @type)
+      self.class.new(@name, @type).acquire_for(new_context)
    end
          
    def root_tuple()
@@ -68,7 +70,7 @@ class Attribute < Component
    end
 
    def print_to( printer, width = nil )
-      printer.print("#{self.class.unqualified_name.to_s.ljust(18)} #{@name.to_s.ljust(width > 19 ? width : 19)} ", false)
+      printer.print("#{self.class.unqualified_name.to_s} #{@name.to_s.ljust(width)} ", false)
       structure.print_to(printer)
    end
    
@@ -79,6 +81,7 @@ class Attribute < Component
    def required?()
       writable?()
    end
+      
    
 end # Attribute
 end # Schema

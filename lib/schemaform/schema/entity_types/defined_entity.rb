@@ -27,53 +27,47 @@ module Schemaform
 class Schema
 class DefinedEntity < Entity
       
-   def initialize( name, base_entity, schema )
-      super(schema, name)
-      @heading   = Tuple.new(self)
-      @structure = Set.new(@heading)
-      
-      @declared_heading   = Tuple.new(self, nil, @heading.attributes)
-      @declared_structure = Set.new(@declared_heading)
-
-      #
-      # Import the base entity identifier attributes.
-
+   def initialize( name, base_entity = nil )
+      super(name)
+      @heading     = Tuple.new()
+      @structure   = Set.new(@heading, base_entity ? base_entity.structure : nil).acquire_for(self)
       @base_entity = base_entity
-      @pedigree    = [self]
-
-      if base_entity then
-         @pedigree   = base_entity.pedigree + [self]
-         @identifier = @heading.register(RequiredAttribute.new(:id, @heading, @base_entity.reference_type))  # @base_entity.reference_@base_entity.identifier)   # base_entity.identifier.recreate_in(@heading))
-      else
-         @identifier = @heading.register(IDAttribute.new(@heading, self))
-      end
+      @pedigree    = base_entity ? base_entity.pedigree + [self] : [self]
+      
+      @synonyms = []
+      add_synonym(name)
    end
    
-   attr_reader :identifier, :heading, :structure, :declared_heading, :declared_structure, :pedigree, :base_entity
+   def add_synonym( name )
+      @synonyms << name
+      @base_entity.add_synonym(name) if @base_entity
+   end
+   
+   attr_reader :heading, :structure, :pedigree, :base_entity, :names
    
    def writable?()
       true
    end
    
    def type()
-      @type ||= SetType.build(TupleType.new(@heading), :context => context)
+      unless @type
+         @structure.add_typing_information(@synonyms) if @synonyms.length > 1
+         @type = @structure.type
+      end
+
+      @type
    end
    
-   def id()
-      (@declared_heading.name.to_s.identifier_case + "_id").intern
-   end
-
    def root_tuple()
       heading
    end
    
-   def identifier_type( context = nil )
+   def identifier_type()
       @identifier.type
    end
    
-   def reference_type( context = nil )
-      context = @context if context.nil?
-      ReferenceType.new(@name, :context => context)
+   def reference_type()
+      EntityReferenceType.new(@name)
    end
    
    def primary_key()
@@ -87,8 +81,9 @@ class DefinedEntity < Entity
    end
    
    def print_to( printer )
+      type()
       super do
-         @heading.print_to(printer, @declared_heading.name)
+         @structure.print_to(printer)
       end
    end
 

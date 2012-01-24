@@ -28,16 +28,40 @@ class Component
    include QualityAssurance
    extend QualityAssurance
 
-   def initialize( context, name = nil )
-      @context = context
+   def initialize( name = nil, context = nil )
+      type_check(:name, name, [Symbol, String], true)
+      type_check(:context, context, Component, true)
+      @schema  = Schema.current
+      @context = context || @schema
       @name    = name
-      
-      type_check(:context, @context, [Component, Schema])
+   end
+
+   attr_reader :schema, :context, :name
+   
+   def each_context()
+      result  = nil
+      current = @context
+      while current
+         result  = yield(current)
+         current = current.context
+      end      
+      result
    end
    
-   def context()
-      assert( @context, "Component is missing a context; either you did not initialize the Component, or you called an Component method before initialization is complete")
-      @context
+   def find_context( first = true, default = nil )
+      match = default
+      each_context do |current|
+         if yield(current) then
+            match = current
+            break if first
+         end
+      end
+      match
+   end
+   
+   def acquire_for( new_owner )
+      self.context = new_owner
+      self
    end
    
    def context=( new_context )
@@ -45,20 +69,11 @@ class Component
       @path = nil if defined?(@path)
    end
    
-   def schema()
-      assert( @context, "Component is missing a context; either you did not initialize the Component, or you called an Component method before initialization is complete")
-      @context.schema
-   end
-   
    def name=( name )
       @name = name
       @path = nil if defined?(@path)
    end
 
-   def name()
-      @name
-   end
-   
    def path()
       if @path.nil? then
          @path = []
@@ -79,6 +94,10 @@ class Component
    
    def full_name()
       path.collect{|n| n.to_s}.join(".")
+   end
+   
+   def verify()
+      true
    end
    
    def description()
@@ -106,12 +125,7 @@ class Component
    # changes, pass them through verbatim, for use by nested elements.
    
    def recreate_in( new_context, changes = nil )
-      clone.tap do |element|
-         element.instance_eval do
-            @context = new_context
-            @path    = nil
-         end
-      end
+      clone.acquire_for(new_context)
    end
    
    

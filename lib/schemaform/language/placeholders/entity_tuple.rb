@@ -36,10 +36,6 @@ class EntityTuple < Tuple
       @names  = entity.pedigree.collect{|e| e.name}
    end
    
-   def key()
-      self[@entity.id]
-   end
-   
    def get_related( entity_name, link_attribute = nil, &link_expression )
       related_entity = @entity.schema.entities.find(entity_name)
       link_path      = nil
@@ -55,7 +51,7 @@ class EntityTuple < Tuple
       else
          link_path = related_entity.search do |attribute, path|
             type = attribute.evaluated_type
-            next unless type.is_a?(Schema::ReferenceType)
+            next unless type.is_a?(Schema::EntityReferenceType)
             next unless @names.member?(type.entity_name)
             attribute.placeholder(path)
          end
@@ -68,7 +64,7 @@ class EntityTuple < Tuple
       end
       
       reference_type = link_path.instance_variable_get(:@definition).singular_type.evaluated_type
-      if !reference_type.is_a?(Schema::ReferenceType) then
+      if !reference_type.is_a?(Schema::EntityReferenceType) then
          fail "expected reference result from the link expression, found #{reference_type.class.name}"
       elsif !@names.member?(reference_type.entity_name) then
          fail "expected reference to #{@entity.full_name} as the result of the link expression"
@@ -84,7 +80,7 @@ class EntityTuple < Tuple
    end
 
    def get_description()
-      "0x#{self.object_id.to_s(16)} #{@entity.declared_heading.name} #{@type.description}"
+      "0x#{self.object_id.to_s(16)} #{@entity.heading.name} #{@type.description}"
    end
 
 

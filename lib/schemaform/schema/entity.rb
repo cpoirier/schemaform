@@ -28,8 +28,8 @@ module Schemaform
 class Schema
 class Entity < Component
 
-   def initialize( context, name )
-      super(context, name)
+   def initialize( name )
+      super(name)
             
       @keys        = Registry.new("#{full_name}", "a key"       )
       @operations  = Registry.new("#{full_name}", "an operation")
@@ -40,7 +40,7 @@ class Entity < Component
    attr_reader :keys, :accessors, :operations, :projections
 
    def structure()
-      fail_unless_overridden self, :structure
+      fail_unless_overridden
    end
 
    def base_entity()
@@ -48,11 +48,11 @@ class Entity < Component
    end
    
    def id()
-      nil
+      fail_obsolete
    end
    
    def identifier()
-      nil
+      fail_obsolete
    end
    
    def heading()
@@ -60,7 +60,13 @@ class Entity < Component
    end
    
    def type()
-      fail_unless_overridden self, :type
+      fail_unless_overridden
+   end
+   
+   def verify()
+      assert(type.verify()     , "unable to verify type for #{full_name}"     )
+      assert(structure.exists? , "unable to build structure for #{full_name}" )
+      assert(structure.verify(), "unable to verify structure for #{full_name}")
    end
    
    def description()

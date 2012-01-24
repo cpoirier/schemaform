@@ -24,13 +24,13 @@ module Schemaform
 class Schema
 class DerivedAttribute < Attribute
 
-   def initialize( name, tuple, proc )
-      super(name, tuple)
+   def initialize( name, proc )
+      super(name)
       @proc = proc
    end
    
    def recreate_in( new_context, changes = nil )
-      self.class.new(@name, new_context, @proc)
+      self.class.new(@name, @proc).acquire_for(new_context)
    end
    
    

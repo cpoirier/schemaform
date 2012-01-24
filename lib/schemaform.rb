@@ -22,8 +22,7 @@
 require "rubygems"
 require "sequel"
 require "set"
-
-require File.expand_path(File.dirname(__FILE__)) + "/schemaform/utilities/baseline.rb"
+require "baseline"
 
 
 #

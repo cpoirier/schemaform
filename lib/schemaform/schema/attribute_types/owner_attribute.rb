@@ -18,51 +18,29 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("component.rb")
 
 
 #
-# An element in the structure of an Entity.
+# An reference to the owning ID within another collection, for hierarchical structures.
+# This is automatically generated and should never be created by the schema designer.
 
 module Schemaform
 class Schema
-class Element < Component
+class OwnerAttribute < Attribute
    
-   def initialize( type, name = nil )
-      type_check(:type, type, Type)
-      super(name)
-      @type = type
+   def initialize( owning_collection, name = :owner_id, type = nil )
+      super(name, ReferenceType.new(owning_collection))
+      @owning_collection = owning_collection
+   end
+   
+   def recreate_in( new_context, changes = nil )
+      self.class.new(@owning_collection, @name, @type).acquire_for(new_context)
    end
 
-   attr_reader :type
-   
-   def has_attributes?()
-      false
+   def writable?()
+      true
    end
    
-   def attribute?(name)
-      false
-   end
-   
-   def print_to( printer, name_override = nil )
-      if self.class == Element then
-         type.print_to(printer)
-      else
-         super
-      end
-   end
-   
-   def context_collection()
-      each_context do |current|
-         return current if current.is_a?(Collection)
-      end
-   end
-   
-   def verify()
-      @type.verify()
-   end
-   
-end # Element
+end # OwnerAttribute
 end # Schema
 end # Schemaform
-

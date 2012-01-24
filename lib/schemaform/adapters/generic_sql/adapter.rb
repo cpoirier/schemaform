@@ -51,7 +51,7 @@ class Adapter
    # Creates an Address for the coordinates.
    
    def self.address( coordinates )
-      fail_unless_overridden self, :address
+      fail_unless_overridden
    end
    
    #
@@ -59,7 +59,7 @@ class Adapter
    # Individual adapters may implement connection pooling, at their option.
    
    def connect()
-      fail_unless_overridden self, :address
+      fail_unless_overridden
    end
    
    
@@ -79,7 +79,7 @@ class Adapter
    # Escapes special characters in a string for inclusion in a query.
    
    def escape_string( string )
-      fail_unless_overridden self, :connect
+      fail_unless_overridden
    end
    
    

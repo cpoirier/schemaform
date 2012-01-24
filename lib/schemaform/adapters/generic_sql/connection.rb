@@ -40,23 +40,23 @@ class Connection
    end
 
    def transact()
-      fail_unless_overridden self, :transact
+      fail_unless_overridden
    end
    
    def retrieve( sql, *parameters )
-      fail_unless_overridden self, :query
+      fail_unless_overridden
    end
 
    def insert( sql, *parameters )
-      fail_unless_overridden self, :insert
+      fail_unless_overridden
    end
 
    def update( sql, *parameters )
-      fail_unless_overridden self, :update
+      fail_unless_overridden
    end
    
    def execute( sql )
-      fail_unless_overridden self, :execute
+      fail_unless_overridden
    end
    
    def escape_string( string )        ; @adapter.escape_string(string)        ; end

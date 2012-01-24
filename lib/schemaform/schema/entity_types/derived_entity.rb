@@ -27,15 +27,15 @@ module Schemaform
 class Schema
 class DerivedEntity < Entity
       
-   def initialize( name, schema, proc = nil )
-      super(schema, name)
+   def initialize( name, proc = nil )
+      super(name)
       @proc = proc
    end
    
    attr_accessor :proc
    
    def structure()
-      @structure ||= type.to_element
+      @structure ||= type.to_element().acquire_for(self)
    end
    
    def root_tuple()
@@ -44,7 +44,7 @@ class DerivedEntity < Entity
    
    def print_to( printer )
       super do
-         root_tuple.print_to(printer)
+         structure.print_to(printer)
       end
    end
    

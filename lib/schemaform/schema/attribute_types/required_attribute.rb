@@ -27,9 +27,9 @@ module Schemaform
 class Schema
 class RequiredAttribute < Attribute
 
-   def initialize( name, tuple, type )
-      super(name, tuple)
-      @type = type
+   def initialize( name, type )
+      type_check(:type, type, Type)
+      super(name, type)
    end
    
    

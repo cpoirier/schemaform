@@ -28,7 +28,10 @@ class SchemaDefinition
    def self.process( schema, &block )
       schema.tap do 
          dsl = new(schema)
-         dsl.instance_eval(&block)
+         schema.enter do
+            dsl.instance_eval(&block)
+            schema.verify()
+         end
       end
    end
 
@@ -53,7 +56,7 @@ class SchemaDefinition
    # Defines a tuple within the Schema.
    
    def define_tuple( name, &block )
-      TupleDefinition.build(@schema, name, &block)
+      TupleDefinition.build(name, &block)
    end
 
 

@@ -31,8 +31,8 @@ class SetType < CollectionType
    #
    # Returns an Element wrapper on this type.
    
-   def to_element()
-      Set.new(@member_type.to_element(), context)
+   def to_element( context_collection = nil )
+      Set.new(@member_type.to_element(context), context_collection)
    end
 
    

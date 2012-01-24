@@ -36,7 +36,7 @@ module FormulaDefinition
    end
    
    def self.all( entity_name )
-      FormulaCapture.resolution_scope do |schema|
+      Schema.current do |schema|
          assert(schema.entities.member?(entity_name), "unable to find entity [#{entity_name}] in resolution scope")
          schema.entities[entity_name].placeholder 
       end

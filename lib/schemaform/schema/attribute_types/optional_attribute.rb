@@ -27,14 +27,13 @@ module Schemaform
 class Schema
 class OptionalAttribute < Attribute
 
-   def initialize( name, tuple, type, proc = nil )
-      super(name, tuple)
-      @type = type
+   def initialize( name, type, proc = nil )
+      super(name, type)
       @proc = proc
    end
 
    def recreate_in( new_context, changes = nil )
-      self.class.new(@name, new_context, @type, @proc)
+      self.class.new(@name, @type, @proc).acquire_for(new_context)
    end
    
    def writable?()

@@ -110,12 +110,17 @@ class Type < Component
       self
    end
    
+   def acquire_for( new_context )
+      # types are always owned directly be the schema
+   end
+   
    #
    # Verifies that the Type.
    
    def verify()
       true
    end
+   
 
 
    #
@@ -151,10 +156,9 @@ class Type < Component
    #  :default   => the default value for this type
    #  :loader    => a Proc that converts data from disk into a memory representation (Object)
    #  :storer    => a Proc that converts object into data for storage on disk
-   #  :context   => an Component or Schema to use as context, if the base_type is not supplied
    
    def initialize( attrs )
-      super((attrs.member?(:context) ? attrs[:context] : attrs.fetch(:base_type).schema), attrs.fetch(:name, nil))
+      super(attrs.fetch(:name, nil))
 
       @base_type = attrs.fetch(:base_type, nil)
       @default   = attrs.fetch(:default, @base_type ? @base_type.default : nil)  # Copied locally for convenience
@@ -175,11 +179,11 @@ class Type < Component
    #
    # Returns an Element wrapper on this type.
    
-   def to_element()
-      Element.new(context, self)
+   def to_element( context_collection = nil )
+      Element.new(self)
    end
 
-   
+
    #
    # Returns true if this and the other type can be joined.
    
@@ -272,8 +276,8 @@ class Type < Component
       # for a member that is assignable from the other side.
       
       if base_type.nil? || rhs_type.base_type.nil? then
-         return self.class.new(:context => context()) if self.class == rhs_type.class || self.is_a?(rhs_type.class)
-         return rhs_type.class.new(:context => context()) if rhs_type.is_a?(self.class)
+         return self.class.new() if self.class == rhs_type.class || self.is_a?(rhs_type.class)
+         return rhs_type.class.new() if rhs_type.is_a?(self.class)
          return schema.unknown_type()
       else
          lhs_common = nil

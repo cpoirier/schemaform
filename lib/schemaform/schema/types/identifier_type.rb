@@ -26,31 +26,25 @@ module Schemaform
 class Schema
 class IdentifierType < Type
 
-   def initialize( entity, attrs = {} )
-      attrs[:context] = entity unless attrs.member?(:context)
+   def initialize( collection, attrs = {} )
       super attrs
-      @entity    = entity
-      @base_type = ReferenceType.new(entity)
+      @collection = collection
+      @base_type  = ReferenceType.new(collection)
    end
    
-   attr_reader :entity
+   attr_reader :collection
    
    def naming_type?
-      true
+      fail_todo "why is this called?"
    end
    
-   def entity_name()
-      @entity.name
-   end
-   
-   def referenced_entity()
-      @entity
+   def referenced_collection()
+      @collection
    end
    
    def description()
-      "#{@entity.name} identifier"
+      "#{@collection.full_name} identifier"
    end
-   
    
    
 

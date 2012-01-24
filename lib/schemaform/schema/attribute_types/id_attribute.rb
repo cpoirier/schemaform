@@ -28,13 +28,13 @@ module Schemaform
 class Schema
 class IDAttribute < Attribute
    
-   def initialize( tuple, entity, name = :id, type = nil )
-      super(name, tuple)
-      @type = IdentifierType.new(entity)
+   def initialize( collection, name = :id, type = nil )
+      super(name, IdentifierType.new(collection))
+      @collection = collection
    end
    
    def recreate_in( new_context, changes = nil )
-      self.class.new(new_context, @type.entity, @name, @type)
+      self.class.new(@collection, @name, @type).acquire_for(new_context)
    end
 
    def writable?()

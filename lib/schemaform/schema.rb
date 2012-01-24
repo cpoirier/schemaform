@@ -26,7 +26,27 @@ require 'monitor'
 
 module Schemaform
 class Schema
+   extend  QualityAssurance
    include QualityAssurance
+   
+   def self.current( schema = nil )
+      assert(Thread.key?(:current_schema) && Thread[:current_schema].exists?, "Schema should have a current schema in place")
+      if block_given? then
+         yield(Thread[:current_schema])
+      else
+         Thread[:current_schema]
+      end
+   end
+   
+   def enter()
+      previous = Thread[:current_schema]
+      begin
+         Thread[:current_schema] = self
+         yield
+      ensure
+         Thread[:current_schema] = previous
+      end
+   end
    
    
    
@@ -42,6 +62,10 @@ class Schema
    
    def schema()
       self
+   end
+   
+   def context()
+      nil
    end
 
    def unknown_type()
@@ -73,11 +97,11 @@ class Schema
    end
    
    def build_list_type( member_type )
-      ListType.build(member_type, :context => self)
+      ListType.build(member_type)
    end
    
    def build_set_type( member_type )      
-      SetType.build(member_type, :context => self)
+      SetType.build(member_type)
    end
    
    def couple( database_url, settings = {} )
@@ -114,7 +138,10 @@ class Schema
    end
 
    def verify()
-      @tuples.each{|tuple| tuple.verify()}
+      enter do
+         @tuples.each{|tuple| tuple.verify()}
+         @entities.each{|entity| entity.verify()}
+      end
    end
 
 
@@ -133,25 +160,27 @@ protected
       @monitor     = Monitor.new()
       @schema_id   = {}
          
-      @types.register  UnknownType.new(:name => :unknown   , :context => self )
-      @types.register     VoidType.new(:name => :void      , :base_type => @types[:unknown])
-      @types.register         Type.new(:name => :any       , :base_type => @types[:unknown])
+      enter do
+         @types.register  UnknownType.new(:name => :unknown)
+         @types.register     VoidType.new(:name => :void      , :base_type => @types[:unknown])
+         @types.register         Type.new(:name => :any       , :base_type => @types[:unknown])
                                                            
-      @types.register   StringType.new(:name => :binary    , :base_type => @types[:any]) ; warn_once( "BUG: does the binary type need a different loader?" )
-      @types.register   StringType.new(:name => :text      , :base_type => @types[:any])
-      @types.register  BooleanType.new(:name => :boolean   , :base_type => @types[:any])
-      @types.register DateTimeType.new(:name => :datetime  , :base_type => @types[:any])
-      @types.register  NumericType.new(:name => :real      , :base_type => @types[:any] , :default => 0.0 )
-      @types.register  IntegerType.new(:name => :integer   , :base_type => @types[:real]   )
-      @types.register  NumericType.new(:name => :identifier, :base_type => @types[:integer])
+         @types.register   StringType.new(:name => :binary    , :base_type => @types[:any]) ; warn_once( "BUG: does the binary type need a different loader?" )
+         @types.register   StringType.new(:name => :text      , :base_type => @types[:any])
+         @types.register  BooleanType.new(:name => :boolean   , :base_type => @types[:any])
+         @types.register DateTimeType.new(:name => :datetime  , :base_type => @types[:any])
+         @types.register  NumericType.new(:name => :real      , :base_type => @types[:any] , :default => 0.0 )
+         @types.register  IntegerType.new(:name => :integer   , :base_type => @types[:real]   )
+         @types.register  NumericType.new(:name => :identifier, :base_type => @types[:integer])
 
-      @types.register UserDefinedType.new(:name => :ip, :base_type => @types[:text].make_specific(:length => 15))
-      
-      # @dsl.instance_eval do
-      #    define_type :symbol, :text, :length => 80, :check => lambda {|i| !!i.to_sym && i.to_sym.inspect !~ /"/}
-      # end
-      # 
-      # @dsl.instance_eval(&block) if block_given?
+         @types.register UserDefinedType.new(:name => :ip, :base_type => @types[:text].make_specific(:length => 15))
+
+         # @dsl.instance_eval do
+         #    define_type :symbol, :text, :length => 80, :check => lambda {|i| !!i.to_sym && i.to_sym.inspect !~ /"/}
+         # end
+         # 
+         # @dsl.instance_eval(&block) if block_given?
+      end
    end
    
    

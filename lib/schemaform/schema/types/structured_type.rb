@@ -32,7 +32,7 @@ class StructuredType < Type
    # no type value. Any type you return will be stored for future use, thereby bypassing future
    # calls to your routine.
    
-   def initialize( attrs, &lookup )
+   def initialize( attrs = {}, &lookup )
       super
       @members = {}
       @lookup  = lookup || attrs.fetch(:lookup, nil)

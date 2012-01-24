@@ -35,9 +35,7 @@ class CollectionType < Type
    
    def initialize( attrs = {} )
       @member_type = attrs.fetch(:member_type, nil) || schema.unknown_type
-      attrs[:context] = @member_type.schema unless attrs.member?(:context) || attrs.member?(:base_type)
       super(attrs)
-      
    end
    
    def generic?()
@@ -74,7 +72,7 @@ class CollectionType < Type
          if common_member_type.unknown_type? then
             return common_type
          else
-            return self.class.new(:member_type => common_member_type, :context => context())
+            return self.class.new(:member_type => common_member_type)
          end
       else
          return common_type

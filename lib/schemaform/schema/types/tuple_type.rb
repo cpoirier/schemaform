@@ -28,8 +28,9 @@ class TupleType < IndirectType
    alias tuple element
    
    def initialize( tuple, attrs = {} )
-      super 
       @tuple = tuple
+      attrs[:base_type] = StructuredType.new{|name| name.nil? ? @tuple.attributes.names : @tuple.attributes[name].type}
+      super 
    end
    
 

@@ -25,9 +25,9 @@ module Language
 class TupleDefinition
    include QualityAssurance
    
-   def self.build( context, name = nil, register = true, &block )
-      Schema::Tuple.new(context, name).tap do |tuple|
-         context.register_tuple(tuple) if register && context.responds_to?(:register_tuple)
+   def self.build( name = nil, register = true, &block )
+      Schema::Tuple.new(name).tap do |tuple|
+         Schema.current.register_tuple(tuple) if name && register
          TupleDefinition.process(tuple, &block)
       end      
    end
@@ -51,7 +51,7 @@ class TupleDefinition
    
    def import( tuple_name, &block )
       imported_tuple = @schema.tuples.find(tuple_name)
-      redefinitions  = block ? self.class.build(@tuple, nil, false, &block) : nil
+      redefinitions  = block ? self.class.build(nil, false, &block) : nil
       redefinitions  = nil if redefinitions && redefinitions.empty?
       
       imported_tuple.recreate_children_in(@tuple, redefinitions)
@@ -63,7 +63,7 @@ class TupleDefinition
    # block instead of a type.
 
    def required( name, type_name = nil, modifiers = {}, &block )
-      @tuple.attributes.register Schema::RequiredAttribute.new(name, @tuple, type_for(type_name, modifiers, name, &block))
+      @tuple.register Schema::RequiredAttribute.new(name, type_for(type_name, modifiers, name, &block))
    end
 
    
@@ -83,9 +83,9 @@ class TupleDefinition
    def optional( name, type_name = nil, modifiers = {}, &block )
       if type_name.is_a?(Proc) then
          assert(block.nil?, "please use the formal syntax for default if you are defining a subtuple")
-         @tuple.attributes.register Schema::OptionalAttribute.new(name, @tuple, nil, type_name)
+         @tuple.register Schema::OptionalAttribute.new(name, nil, type_name)
       else
-         @tuple.attributes.register Schema::OptionalAttribute.new(name, @tuple, type_for(type_name, modifiers, name, &block))
+         @tuple.register Schema::OptionalAttribute.new(name, type_for(type_name, modifiers, name, &block))
       end
    end
    
@@ -99,7 +99,7 @@ class TupleDefinition
       modifiers = args.first.is_a?(Hash) ? args.shift : {}
       proc      = block || args.shift
 
-      @tuple.attributes.register Schema::DerivedAttribute.new(name, @tuple, proc)
+      @tuple.register Schema::DerivedAttribute.new(name, proc)
    end   
    
 
@@ -116,7 +116,7 @@ class TupleDefinition
    
    def member_of( entity_name )
       type_check(:entity_name, entity_name, Symbol)
-      Schema::ReferenceType.new(entity_name, :context => @tuple)
+      Schema::EntityReferenceType.new(entity_name)
    end
    
    
@@ -124,7 +124,7 @@ class TupleDefinition
    # Creates a Set or Relation for use as an attribute definition.
    
    def set_of( type_name, modifiers = {} )
-      Schema::SetType.build(type_for(type_name, modifiers), :context => @tuple)
+      Schema::SetType.build(type_for(type_name, modifiers))
    end
 
    
@@ -132,7 +132,7 @@ class TupleDefinition
    # Creates an (ordered) list for use as an attribute definition.
    
    def list_of( type_name, modifiers = {} )
-      Schema::ListType.build(type_for(type_name, modifiers), :context => @tuple)
+      Schema::ListType.build(type_for(type_name, modifiers))
    end
    
    
@@ -141,9 +141,9 @@ class TupleDefinition
    
    def one_of( *values )
       if values.length == 1 && values[0].is_a?(Hash) then
-         Schema::CodedType.new(values[0], :context => @tuple)
+         Schema::CodedType.new(values[0])
       else
-         Schema::EnumeratedType.new(values, :context => @tuple)
+         Schema::EnumeratedType.new(values)
       end
    end
    
@@ -157,11 +157,11 @@ private
       return name if name.is_a?(Schema::Type)
       
       if block then
-         Schema::TupleType.new(TupleDefinition.build(@tuple, implied_name, &block), :context => @tuple)
+         Schema::TupleType.new(TupleDefinition.build(&block))
       elsif @schema.types.member?(name) then
          @schema.types.build(name, modifiers)
       elsif @schema.tuples.member?(name) then
-         Schema::TupleType.new(@schema.tuples.find(name), :context => @tuple)
+         Schema::TupleType.new(@schema.tuples.find(name))
       else
          member_of(name)
       end

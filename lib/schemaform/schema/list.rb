@@ -34,8 +34,6 @@ class List < Collection
    
    def initialize( member, owner = nil )
       super
-      @next     = @meta.register(OptionalAttribute.new(:next    , ReferenceType.new(self)))
-      @previous = @meta.register(OptionalAttribute.new(:previous, ReferenceType.new(self)))
    end
 
    attr_reader :next, :previous

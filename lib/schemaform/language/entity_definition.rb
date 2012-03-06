@@ -53,7 +53,7 @@ class EntityDefinition
       @schema.entities.register(@entity)
       
       @entity.heading.tap do |tuple|
-         assert( tuple.name.nil?, "expected unnamed tuple for TupleDefinition::each()")
+         assert( tuple.name.nil?, "expected unnamed tuple for EntityDefinition::each()")
          
          tuple.name = tuple_name
          @schema.tuples.register(tuple)

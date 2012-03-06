@@ -48,11 +48,11 @@ class Entity < Component
    end
    
    def id()
-      fail_obsolete
+      fail_obsolete "Entities no longer have IDs; tuples are now identified via their membership in a collection"
    end
    
    def identifier()
-      fail_obsolete
+      fail_obsolete "Entities no longer have IDs; tuples are now identified via their membership in a collection"
    end
    
    def heading()

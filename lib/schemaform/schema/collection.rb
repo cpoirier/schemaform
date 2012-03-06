@@ -35,16 +35,13 @@ class Collection < Element
    def initialize( member, owner = nil )
       super(self.class.type_class.build(member.type))
       @member = member.acquire_for(self)
-      @meta   = Tuple.new().acquire_for(self)
-      @id     = @meta.register(IDAttribute.new(self))
-      @owner  = @meta.register(OwnerAttribute.new(owner)) if owner
    end
    
    def add_typing_information( names )
-      @meta.register(TypeAttribute.new(names))
+      warn_todo("support for typing information")
    end
    
-   attr_reader :member, :meta, :id, :owner
+   attr_reader :member, :id, :owner
 
    def has_attributes?()
       @member.has_attributes?()
@@ -56,7 +53,6 @@ class Collection < Element
    
    def verify()
       @member.verify()
-      @meta.verify()
       super
    end
    
@@ -67,15 +63,9 @@ class Collection < Element
    end
    
    def print_body_to( printer )
-      printer.print("Meta")
-      printer.indent do
-         @meta.print_attributes_to(printer)
-      end
-      
       if @member.is_a?(Tuple) then
          @member.print_to(printer)
       else
-         printer.print("Value")
          printer.indent do
             @member.print_to(printer)
          end

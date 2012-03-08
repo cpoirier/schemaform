@@ -54,15 +54,22 @@ class Adapter
             @schema_maps[definition] = SchemaMap.new(self, definition).tap do |schema_map|
 
                #
-               # Create anchor tables and entity maps for each entity first. We need them in place for reference resolution.
+               # Create anchor tables and entity maps for each DefinedEntity first. We need them in place 
+               # for reference resolution.
 
-               definition.entities.each do |entity|
+               definition.defined_entities.each do |entity|
                   schema_map.map(entity, define_table(schema_name + entity.name)) do |entity_map, table|
+                     id_name = Name.build("", "id")  # entity.heading.name.to_s.identifier_case, 
+                     
                      if entity.base_entity.exists? then
-                        table.identifier = table.define_reference_field(entity.id, entity_map.base_map.anchor_table, build_primary_key_mark())
+                        base_map   = schema_map[entity.base_entity]
+                        base_table = base_map.anchor_table
+                        base_id    = base_table.identifier
+                        
+                        table.identifier = table.define_reference_field(id_name, entity_map.base_map.anchor_table, build_primary_key_mark())
                         entity_map.link_child_to_parent(table.identifier)
                      else
-                        table.identifier = table.define_identifier_field(entity.id || :id, build_primary_key_mark())
+                        table.identifier = table.define_identifier_field(id_name, build_primary_key_mark())
                      end
                   end
                end
@@ -70,11 +77,10 @@ class Adapter
                #
                # Now, fill them in with the basic data structure.
 
-               definition.entities.each do |entity|
+               definition.defined_entities.each do |entity|
                   builder = @overrides.fetch(:lay_out_builder_class, LayOutBuilder).new(self, schema_map.entity_maps[entity])
 
                   entity.heading.attributes.each do |attribute|
-                     next if attribute.name == entity.id
                      next if entity.base_entity.exists? && entity.base_entity.heading.attribute?(attribute.name)
 
                      dispatch(:lay_out, attribute, builder)
@@ -124,7 +130,6 @@ class Adapter
    end
 
    def lay_out_entity_reference_type( type, builder )
-      fail_todo "convert from old ReferenceType"
       warn_todo("reference field null/default handling")
       
       referenced_entity_map = builder[type.referenced_entity] or fail "couldn't resolve a reference to entity [#{type.entity_name}]"

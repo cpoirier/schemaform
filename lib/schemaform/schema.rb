@@ -143,6 +143,14 @@ class Schema
          @entities.each{|entity| entity.verify()}
       end
    end
+   
+   def defined_entities()
+      @entities.select{|e| e.is_a?(DefinedEntity)}
+   end
+   
+   def derived_entities()
+      @entities.select{|e| e.is_a?(DerivedEntity)}
+   end
 
 
 protected
@@ -152,13 +160,13 @@ protected
    # ==========================================================================================
 
    def initialize( name, version, &block )      
-      @name        = name
-      @version     = version
-      @tuples      = Registry.new("schema [#{@name}]", "a tuple"  )
-      @entities    = Registry.new("schema [#{@name}]", "an entity")
-      @types       = TypeRegistry.new("schema [#{@name}]")
-      @monitor     = Monitor.new()
-      @schema_id   = {}
+      @name      = name
+      @version   = version
+      @tuples    = Registry.new("schema [#{@name}]", "a tuple"         )
+      @entities  = Registry.new("schema [#{@name}]", "an entity"       )
+      @types     = TypeRegistry.new("schema [#{@name}]")
+      @monitor   = Monitor.new()
+      @schema_id = {}
          
       enter do
          @types.register  UnknownType.new(:name => :unknown)

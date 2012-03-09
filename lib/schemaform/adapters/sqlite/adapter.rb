@@ -53,7 +53,7 @@ class Adapter < GenericSQL::Adapter
       ::SQLite3::Database.quote(string)
    end
 
-   def render_sql_create_table( table )
+   def render_sql_create_table( table, name_width = 0, type_width = 0 )
       super.gsub("AUTOINCREMENT PRIMARY KEY", "PRIMARY KEY AUTOINCREMENT")
    end
 

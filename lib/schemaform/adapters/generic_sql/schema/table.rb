@@ -57,9 +57,16 @@ class Table
       end
    end
    
+   def name_width()
+      @fields.collect{|field| field.name_width}.max()
+   end
    
-   def to_sql_create()
-      @adapter.render_sql_create(self)
+   def type_width()
+      @fields.collect{|field| field.type_width}.max()
+   end
+   
+   def to_sql_create( name_width = 0, type_width = 0 )
+      @adapter.render_sql_create(self, name_width, type_width)
    end
    
    

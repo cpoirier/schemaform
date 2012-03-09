@@ -43,6 +43,7 @@ module GenericSQL
    class GeneratedMark  < FieldMark ; end
    class PrimaryKeyMark < FieldMark ; end
    class RequiredMark   < FieldMark ; end
+   class OptionalMark   < FieldMark ; end
    
    class ReferenceMark  < FieldMark
       

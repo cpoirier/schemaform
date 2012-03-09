@@ -36,23 +36,28 @@ class Adapter
    end
 
    def render_sql_create_schema( schema )
-      schema.tables.members.collect{|table| render_sql_create(table)}.join("\n\n")
+      name_width = schema.tables.members.collect{|table| table.fields.collect{|field| field.name.to_s.length}.max()}.max()
+      type_width = schema.tables.members.collect{|table| table.fields.collect{|field| field.type.sql.length }.max()}.max()
+      
+      schema.tables.members.collect{|table| render_sql_create(table, name_width, type_width)}.join("\n\n")
    end
 
-   def render_sql_create_table( table )
+   def render_sql_create_table( table, name_width = 0, type_width = 0 )
       warn_todo("add keys and indices to table create")
       
-      width   = table.fields.collect{|field| field.name.to_s.length}.max()
-      fields  = table.fields.collect{|field| render_sql_create(field, width)}
+      name_width ||= table.name_width()
+      type_width ||= table.type_width()
+      
+      fields  = table.fields.collect{|field| render_sql_create(field, name_width, type_width)}
       keys    = []
       clauses = fields + keys
       
       "CREATE TABLE #{quote_identifier(table.name)}\n(\n   #{clauses.join(",\n   ")}\n);"
    end
       
-   def render_sql_create_field( field, width )
+   def render_sql_create_field( field, name_width, type_width )
       modifiers = field.marks.collect{|mark| render_sql_create(mark)}
-      [quote_identifier(field.name).ljust(width+3), field.type.sql, *modifiers].join(" ")
+      [quote_identifier(field.name).ljust(name_width+3), field.type.sql.ljust(type_width+1), *modifiers].join(" ")
    end
    
    def render_sql_create_generated_mark( mark )
@@ -65,6 +70,10 @@ class Adapter
    
    def render_sql_create_required_mark( mark )
       "NOT NULL"
+   end
+   
+   def render_sql_create_optional_mark( mark )
+      "    NULL"
    end
    
    def render_sql_create_reference_mark( mark )

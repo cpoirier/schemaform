@@ -121,7 +121,7 @@ class Adapter
       printer.label("#{self.class.namespace_module.unqualified_name} Adapter for #{@address.url}") do
          printer.label("Tables") do
             @tables.each do |table|
-               printer.print(table.to_sql_create)
+               printer.print(table.to_sql_create(name_width, type_width))
             end
          end
       end
@@ -147,6 +147,15 @@ protected
 
    @@monitor  = Monitor.new()
    @@adapters = {}
+   
+   def name_width()
+      @name_width ||= @tables.collect{|table| table.name_width}.max()
+   end
+   
+   def type_width()
+      @type_width ||= @tables.collect{|table| table.type_width}.max()
+   end
+      
 
 
    if Schemaform.in_development? then

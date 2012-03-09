@@ -35,7 +35,8 @@ class Name
 
    def initialize( components )
       @components = components.compact.collect{|name| name.is_a?(Name) ? name.components : name.to_s.identifier_case}.flatten
-      @full_name  = @components.join("$")
+      @tail       = (@components.last == "?" ? @components.pop : "")
+      @full_name  = @components.join("$") + @tail
    end
    
    attr_reader :components
@@ -53,7 +54,12 @@ class Name
    end
    
    def to_s( separator = "$" )
-      separator == "$" ? @full_name : @components.join(separator)
+      if separator == "$" then
+         @full_name
+      else
+         tail = (@components.last == "?" ? @components.pop : "")
+         @components.join(separator) + tail
+      end
    end
 
    def hash()

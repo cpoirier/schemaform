@@ -35,6 +35,10 @@ class Field
       @type           = table.adapter.type_manager.scalar_type(type)
       @marks          = marks
       @reference_mark = @marks.select_first{|m| m.is_a?(ReferenceMark)}
+      
+      unless @marks.any?{|mark| mark.is_a?(RequiredMark) || mark.is_an?(OptionalMark)}
+         @marks.unshift(RequiredMark.new()) 
+      end
    end
    
    attr_reader :table, :name, :type, :marks, :reference_mark
@@ -47,6 +51,13 @@ class Field
       @reference_mark.table.identifier
    end
    
+   def name_width()
+      @name.to_s.length
+   end
+
+   def type_width()      
+      @type.sql.length
+   end
    
 end # Field
 end # GenericSQL

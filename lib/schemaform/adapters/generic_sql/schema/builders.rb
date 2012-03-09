@@ -59,7 +59,7 @@ class Adapter
 
                definition.defined_entities.each do |entity|
                   schema_map.map(entity, define_table(schema_name + entity.name)) do |entity_map, table|
-                     id_name = Name.build("", "id")  # entity.heading.name.to_s.identifier_case, 
+                     id_name = Name.build("", "id")
                      
                      if entity.base_entity.exists? then
                         base_map   = schema_map[entity.base_entity]
@@ -108,7 +108,7 @@ class Adapter
    
    def lay_out_optional_attribute( attribute, builder )
       lay_out_attribute(attribute, builder, true) do
-         builder.define_meta(Language::Productions::PresentCheck, "is_present", type_manager.boolean_type, build_required_mark())
+         builder.define_meta(Language::Productions::PresentCheck, "?", type_manager.boolean_type, build_required_mark())
       end
    end
    
@@ -133,11 +133,12 @@ class Adapter
       warn_todo("reference field null/default handling")
       
       referenced_entity_map = builder[type.referenced_entity] or fail "couldn't resolve a reference to entity [#{type.entity_name}]"
-      builder.define_scalar(type_manager.identifier_type, build_reference_mark(referenced_entity_map.anchor_table, true))
-   end
 
-   def lay_out_identifier_type( type, builder )
-      lay_out_reference_type(type, builder)
+      marks = []
+      marks << (builder.current_optionality ? OptionalMark.new() : RequiredMark.new())
+      marks << build_reference_mark(referenced_entity_map.anchor_table, true)
+      
+      builder.define_scalar(type_manager.identifier_type, *marks)
    end
 
    def lay_out_scalar_type( type, builder )
@@ -157,8 +158,8 @@ class Adapter
    end
    
 
-   def lay_out_collection_type( type, builder )
-      builder.define_child_table(true, "record") do
+   def lay_out_collection_type( type, builder, purpose = nil, default_name = "" )
+      builder.define_child_table(true, default_name, purpose) do
          yield if block_given?
       end
    end
@@ -174,7 +175,7 @@ class Adapter
    end
    
    def lay_out_set_type( type, builder )
-      lay_out_collection_type(type, builder) do
+      lay_out_collection_type(type, builder, "set") do
          lay_out_collection_type__member_type(type.member_type, builder)
       end
    end
@@ -183,7 +184,7 @@ class Adapter
       field_type       = type_manager.identifier_type
       member_reference = nil
 
-      lay_out_collection_type(type, builder) do
+      lay_out_collection_type(type, builder, "list") do
          member_reference = build_reference_mark(builder.current_table)
          lay_out_collection_type__member_type(type.member_type, builder)
 
@@ -208,7 +209,7 @@ class Adapter
    
    class LayOutBuilder
       include QualityAssurance
-      TableFrame     = Struct.new(:table, :default_name, :name_stack)
+      TableFrame     = Struct.new(:table, :default_name, :name_stack, :current_optionality)
       AttributeFrame = Struct.new(:attribute, :aspect)
       
       
@@ -216,7 +217,7 @@ class Adapter
          @adapter         = adapter
          @entity_map      = entity_map
          @schema_map      = entity_map.schema_map
-         @table_stack     = [TableFrame.new(entity_map.anchor_table, @adapter.build_name(), [])]
+         @table_stack     = [TableFrame.new(entity_map.anchor_table, @adapter.build_name(), [], false)]
          @attribute_stack = []
       end
       
@@ -228,8 +229,17 @@ class Adapter
          @table_stack.top.table
       end
       
+      def current_attribute()
+         @attribute_stack.top.attribute
+      end
+      
+      def current_optionality()
+         @table_stack.top.current_optionality
+      end
+      
       def with_attribute( attribute )
          @attribute_stack.push_and_pop(AttributeFrame.new(attribute, Language::Productions::ValueAccessor)) do
+            @table_stack.top.current_optionality = attribute.is_a?(Schema::OptionalAttribute)
             name_stack.push_and_pop((name_stack.top || @adapter.build_name()) + attribute.name) do
                yield
             end
@@ -264,27 +274,43 @@ class Adapter
          end
       end
       
-      def define_child_table( has_many, default_name = "record" )
+      #
+      # Creates a child table to the current table. Any block you pass will be processed with the
+      # new table on the top of the stack.
+      
+      def define_child_table( has_many, default_name = "", context = "owner" )
          parent_table = @table_stack.top.table
          default_name = @adapter.build_name(default_name)
          
          @adapter.define_table(parent_table.name + name_stack.top) do |table|
-            owner_field = table.define_reference_field(default_name + "owner", parent_table)
+            if has_many then
+               table.identifier = table.define_identifier_field(default_name + "id", @adapter.build_primary_key_mark())
+            end
+
+            #
+            # Link to the direct owner. For tuple-valued children, this will also be the primary key.
+            
+            owner_field = table.define_reference_field(default_name + "#{context}_id" , parent_table)
             @entity_map.link_child_to_parent(owner_field)
             @entity_map.link_field_to_source(owner_field, owner_field.referenced_field)
 
+            unless has_many
+               table.identifier = owner_field
+               owner_field.marks << @adapter.build_primary_key_mark()
+            end
+            
+            #
+            # Link to the root, if not directly linked. This can be used to quickly identify all
+            # children of a root-level object being retrieved/changed/deleted.
+            
             if parent_table != @entity_map.anchor_table then
-               context_field = table.define_reference_field(default_name + "context", @entity_map.anchor_table)
+               context_field = table.define_reference_field(default_name + "root", @entity_map.anchor_table)
                @entity_map.link_child_to_context(context_field)
                @entity_map.link_field_to_source(context_field, context_field.referenced_field)
             end
             
-            if has_many then
-               table.identifier = table.define_identifier_field(default_name + "id", @adapter.build_primary_key_mark())
-            else
-               table.identifier = owner_field
-               owner_field.marks << @adapter.build_primary_key_mark()
-            end
+            #
+            # Update the table stack.
             
             @table_stack.push_and_pop(TableFrame.new(table, default_name, [])) do
                yield

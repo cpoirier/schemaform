@@ -164,13 +164,13 @@ class Schema
       end
    end   
    
-   class Type < Component
+   class Type
       def placeholder( production = nil )
          Language::Placeholder.new(self, production)
       end      
    end
    
-   class UnknownType < Type
+   class UnknownType
       def capture_method( receiver, method_name, args = [], block = nil )
          case method_name
          when :+, :-, :*, :/, :%
@@ -183,7 +183,7 @@ class Schema
       end      
    end
    
-   class ScalarType < Type
+   class ScalarType
       def capture_method( receiver, method_name, args = [], block = nil )
          case method_name
          when :+, :-, :*, :/, :%
@@ -196,7 +196,7 @@ class Schema
       end      
    end
    
-   class BooleanType < ScalarType
+   class BooleanType
       def capture_method( receiver, method_name, args = [], block = nil )
          case method_name
          when :&
@@ -209,7 +209,7 @@ class Schema
       end
    end
    
-   class NumericType < ScalarType
+   class NumericType
       def capture_method( receiver, method_name, args = [], block = nil )
          case method_name
          when :floor, :ceil
@@ -221,7 +221,7 @@ class Schema
    end
    
    
-   class CollectionType < Type
+   class CollectionType
       def capture_method( receiver, method_name, args = [], block = nil )
          case method_name
          when :+, :-
@@ -265,7 +265,7 @@ class Schema
    end
    
    
-   class ListType < CollectionType
+   class ListType
       def capture_method( receiver, method_name, args = [], block = nil )
          case method_name
          when :join
@@ -277,7 +277,7 @@ class Schema
    end
    
 
-   class SetType < CollectionType
+   class SetType
       def capture_method( receiver, method_name, args = [], block = nil )
          case method_name
          when :order_by
@@ -314,7 +314,7 @@ class Schema
    
    
 
-   class EntityReferenceType < Type
+   class EntityReferenceType
       def capture_accessor( receiver, attribute_name )
          return nil unless attribute?(attribute_name)
          
@@ -324,7 +324,7 @@ class Schema
       end
    end
    
-   class TupleType < IndirectType
+   class TupleType
       def placeholder( production = nil )
          @tuple.placeholder(production)
       end
@@ -335,7 +335,7 @@ class Schema
    end
    
    
-   class Tuple < Element
+   class Tuple
       def capture_accessor( receiver, attribute_name )
          return nil unless attribute?(attribute_name)
          Language::Attribute.new(self[attribute_name], Language::Productions::Accessor.new(receiver, attribute_name))
@@ -349,7 +349,7 @@ class Schema
    
    
    
-   class Attribute < Component
+   class Attribute
       def placeholder( production = nil )
          Language::Attribute.new(self, production)
       end
@@ -390,19 +390,19 @@ class Schema
 
    end
    
-   class DerivedAttribute < Attribute
+   class DerivedAttribute
       def type()
          (@type ||= formula_type) || schema.unknown_type
       end
    end
    
-   class OptionalAttribute < Attribute
+   class OptionalAttribute
       def type()
          (@type ||= formula_type) || schema.unknown_type         
       end
    end
    
-   class Entity < Component
+   class Entity
       def placeholder( production = nil )
          Language::Entity.new(self, production)
       end
@@ -420,7 +420,7 @@ class Schema
       end
    end
 
-   class DerivedEntity < Entity
+   class DerivedEntity
       def type()
          (@type ||= formula_type) || schema.unknown_type
       end
@@ -457,7 +457,6 @@ class Schema
          return nil
       end
    end
-   
 
    class GeneratedAccessor
       def placeholder( production = nil )
@@ -479,7 +478,7 @@ class Schema
    class DefinedAccessor
       def placeholder( production = nil )
          block = @proc
-         
+
          schema.enter do
             context.placeholder(production).where do |tuple|
                Language::FormulaDefinition.module_exec(tuple, &block)
@@ -502,7 +501,7 @@ end # Schemaform
 module Schemaform
 class Schema
 
-   class Entity < Component
+   class Entity
 
       #
       # Recurses through the attributes, calling your block at each with the attribute
@@ -527,7 +526,7 @@ class Schema
    end
    
    
-   class Tuple < Element
+   class Tuple
       def search( path = nil, &block )
          unless @attributes.empty?
             path = root_tuple.placeholder() if path.nil?
@@ -544,7 +543,7 @@ class Schema
    end
    
    
-   class WritableAttribute < Attribute
+   class WritableAttribute
       def search( path = nil, &block )
          if evaluated_type.is_a?(TupleType) then
             return evaluated_type.tuple.search(path, &block)

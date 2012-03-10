@@ -60,6 +60,7 @@ class Component
    end
    
    def acquire_for( new_owner )
+      type_check("new_owner", new_owner, Component)
       self.context = new_owner
       self
    end

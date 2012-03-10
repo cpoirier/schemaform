@@ -26,18 +26,35 @@ class Printer
    attr_reader :stream
    attr_reader :indent
    
-   def self.run( stream = $stdout, indent = "" )
-      yield(new(stream, indent))
+   @@default_stream = $stdout
+   @@default_indent = ""
+   
+   def self.with_stream( stream, indent = "" )
+      old_stream = @@default_stream
+      old_indent = @@default_indent
+   
+      begin
+         @@default_stream = stream
+         @@default_indent = indent
+         yield
+      ensure 
+         @@default_stream = old_stream
+         @@default_indent = old_indent
+      end
    end
    
-   def self.print( object, indent = "DUMP: ", stream = $stdout )
-      Printer.run(stream, indent) do |printer|
+   def self.run( stream = nil, indent = nil )      
+      yield(new(stream || @@default_stream, indent || @@default_indent))
+   end
+   
+   def self.print( object, indent = nil, stream = nil )
+      Printer.run(stream || @@default_stream, indent || @@default_indent) do |printer|
          printer.print(object)
       end
    end
    
-   def initialize( stream = $stdout, indent = "" )
-      @stream     = stream
+   def initialize( stream = null, indent = "" )
+      @stream     = stream || @@default_stream
       @indent     = indent
       @at_bol     = true
       @properties = {}

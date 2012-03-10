@@ -29,8 +29,8 @@ class Schema
 class Accessor < Component
 
    def initialize( entity, name )
-      super(name)
-      acquire_for(@entity)
+      super(name, entity)
+      acquire_for(entity)
    end
    
    alias entity context

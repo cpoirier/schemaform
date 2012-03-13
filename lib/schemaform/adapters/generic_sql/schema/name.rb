@@ -24,19 +24,11 @@ module Adapters
 module GenericSQL
 class Name
    
-   def self.build( *components )
-      return components.first if components.length == 1 && components.first.is_a?(Name)
-      new(components)
-   end
-   
-   def self.empty()
-      @@empty ||= new([])
-   end
-
-   def initialize( components )
+   def initialize( components, separator )
+      @separator  = separator
       @components = components.compact.collect{|name| name.is_a?(Name) ? name.components : name.to_s.identifier_case}.flatten
       @tail       = (@components.last == "?" ? @components.pop : "")
-      @full_name  = @components.join("$") + @tail
+      @full_name  = @components.join(separator) + @tail
    end
    
    attr_reader :components
@@ -47,19 +39,14 @@ class Name
    
    def +( name )
       if name.is_a?(Name) then 
-         self.class.new( @components + name.components )
+         self.class.new( @components + name.components, @separator )
       else
-         self.class.new( @components + [name] )
+         self.class.new( @components + [name], @separator )
       end
    end
    
-   def to_s( separator = "$" )
-      if separator == "$" then
-         @full_name
-      else
-         tail = (@components.last == "?" ? @components.pop : "")
-         @components.join(separator) + tail
-      end
+   def to_s()
+      @full_name
    end
 
    def hash()

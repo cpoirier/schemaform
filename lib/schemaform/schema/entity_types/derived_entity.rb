@@ -42,6 +42,10 @@ class DerivedEntity < Entity
       type.member_type.tuple
    end
    
+   def heading()
+      structure.member
+   end
+   
    def print_to( printer )
       super do
          structure.print_to(printer)

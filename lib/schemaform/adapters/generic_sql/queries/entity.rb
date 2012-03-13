@@ -30,12 +30,12 @@ module GenericSQL
 module Queries
 class Entity < Query
 
-   def initialize( entity_map, prefix = Name.empty )
+   def initialize( entity_map, prefix = nil )
       warn_once("the source entity needs a projection list", "BUG")
       super(entity_map.adapter)
       
       @entity_map = entity_map 
-      @prefix     = prefix
+      @prefix     = prefix || entity_map.adapter.empty_name()
       @fields     = Registry.new()
       
       @entity_map.anchor_table.fields.each do |name, type|

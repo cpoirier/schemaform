@@ -53,7 +53,9 @@ class Adapter
       end
    end
    
-   def plan_query_structure( object, naming_context = NamingContext.new() )
+   def plan_query_structure( object, naming_context = nil )
+      naming_context ||= NamingContext.new(self)
+      
       case object
       when Language::Production
          dispatch(:plan, object, naming_context)
@@ -115,7 +117,7 @@ class Adapter
 
    class NamingContext
       attr_reader :current
-      def initialize() ; @current = Name.empty ; end
+      def initialize( adapter ) ; @current = adapter.empty_name() ; end
       def enter( name ) 
          old = @current
          begin

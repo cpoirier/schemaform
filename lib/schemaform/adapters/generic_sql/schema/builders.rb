@@ -50,7 +50,7 @@ class Adapter
    def lay_out( definition )
       @monitor.synchronize do
          unless @schema_maps.member?(definition)
-            schema_name = Name.build(*definition.path)
+            schema_name = build_name(definition.path)
             @schema_maps[definition] = SchemaMap.new(self, definition).tap do |schema_map|
 
                #
@@ -59,7 +59,7 @@ class Adapter
 
                definition.defined_entities.each do |entity|
                   schema_map.map(entity, define_table(schema_name + entity.name)) do |entity_map, table|
-                     id_name = Name.build("", "id")
+                     id_name = build_internal_name("id")
                      
                      if entity.base_entity.exists? then
                         base_map   = schema_map[entity.base_entity]
@@ -90,6 +90,29 @@ class Adapter
                      builder.build_key(key)
                   end
                end
+               
+               #
+               # Next, process the derived entities. Some (the more complex ones) will be mapped
+               # into tables. The others will be left as queries.
+               
+               definition.derived_entities.each do |entity|
+                  warn_todo("determining which derived entities can be left as queries")
+                  
+                  schema_map.map(entity, define_table(schema_name + entity.name)) do |entity_map, table|
+                     id_name = build_internal_name("id")
+                     table.identifier = table.define_identifier_field(id_name, build_primary_key_mark())
+
+                     builder = @overrides.fetch(:lay_out_builder_class, LayOutBuilder).new(self, schema_map.entity_maps[entity])
+                     entity.heading.attributes.each do |attribute|
+                        dispatch(:lay_out, attribute, builder)
+                     end
+                  end
+                  
+                  entity.keys.each do |key|
+                     builder.build_key(key)
+                  end
+               end
+                
             end
          end
       end
@@ -97,6 +120,9 @@ class Adapter
       @schema_maps[definition]
    end
 
+   def lay_out_entities( entities )
+      
+   end
 
    def lay_out_attribute( attribute, builder, before = true )
       builder.with_attribute(attribute) do
@@ -158,9 +184,10 @@ class Adapter
    end
    
 
-   def lay_out_collection_type( type, builder, purpose = nil, default_name = "" )
+   def lay_out_collection_type( type, builder, purpose = nil, default_name = nil )
+      default_name ||= build_internal_name()
       builder.define_child_table(true, default_name, purpose) do
-         yield if block_given?
+         yield(default_name) if block_given?
       end
    end
    
@@ -184,7 +211,7 @@ class Adapter
       field_type       = type_manager.identifier_type
       member_reference = nil
 
-      lay_out_collection_type(type, builder, "list") do
+      lay_out_collection_type(type, builder, "list") do |base_name|
          member_reference = build_reference_mark(builder.current_table)
          lay_out_collection_type__member_type(type.member_type, builder)
 
@@ -197,8 +224,6 @@ class Adapter
       # builder.define_meta(AttributeAspects::ListFirstMember, "first", field_type, member_reference)
       # builder.define_meta(AttributeAspects::ListLastMember , "last" , field_type, member_reference)
    end
-
-
 
 
 
@@ -240,7 +265,7 @@ class Adapter
       def with_attribute( attribute )
          @attribute_stack.push_and_pop(AttributeFrame.new(attribute, Language::Productions::ValueAccessor)) do
             @table_stack.top.current_optionality = attribute.is_a?(Schema::OptionalAttribute)
-            name_stack.push_and_pop((name_stack.top || @adapter.build_name()) + attribute.name) do
+            name_stack.push_and_pop((name_stack.top || @adapter.empty_name()) + attribute.name) do
                yield
             end
          end

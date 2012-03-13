@@ -105,8 +105,12 @@ class Adapter
       @address.url
    end
    
-   def build_name( *components )
-      Name.build(*components)
+   def build_name( *parts )      
+      Name.new(parts.flatten, @separator)
+   end
+   
+   def empty_name()
+      Name.new([], @separator)
    end
    
    
@@ -138,11 +142,13 @@ protected
       @monitor      = Monitor.new()
       @overrides    = overrides
 
-      @type_manager = overrides.fetch(:type_manager_class, TypeManager).new(self)
-      @table_class  = overrides.fetch(:table_class       , Table      )
-      @field_class  = overrides.fetch(:field_class       , Field      )
-      @index_class  = overrides.fetch(:index_class       , Index      )
-      @separator    = overrides.fetch(:separator         , "$"        )
+      @type_manager    = overrides.fetch(:type_manager_class, TypeManager).new(self)
+      @table_class     = overrides.fetch(:table_class       , Table      )
+      @field_class     = overrides.fetch(:field_class       , Field      )
+      @index_class     = overrides.fetch(:index_class       , Index      )
+      @separator       = overrides.fetch(:separator         , "__"       )
+      @internal_format = overrides.fetch(:internal_format   , "$%s"      )
+      @present_format  = overrides.fetch(:present_format    , "%s?"      )
    end
 
    @@monitor  = Monitor.new()
@@ -155,7 +161,18 @@ protected
    def type_width()
       @type_width ||= @tables.collect{|table| table.type_width}.max()
    end
-      
+   
+   def build_internal_name( *parts )
+      parts << sprintf(@internal_format, parts.pop)
+      build_name(parts)
+   end
+   
+   def build_present_name( *parts )
+      parts << sprinf(@present_format, parts.pop)
+      build_name(parts)
+   end
+   
+   
 
 
    if Schemaform.in_development? then

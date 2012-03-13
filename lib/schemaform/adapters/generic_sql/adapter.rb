@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby -KU
 # =============================================================================================
 # Schemaform
-# A high-level database construction and programming layer.
+# A DSL giving the power of spreadsheets in a relational setting.
 #
 # [Website]   http://schemaform.org
 # [Copyright] Copyright 2004-2012 Chris Poirier

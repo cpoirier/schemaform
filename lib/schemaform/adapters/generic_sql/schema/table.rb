@@ -38,7 +38,7 @@ class Table
    end
    
    def define_index( name, unique = false )
-      @indices.register(@adapter.index_class.new(self, name, unique)).tap do |index|
+      @indices.register(@adapter.index_class.new(self, name, unique)).use do |index|
          yield(index) if block_given?
       end
    end
@@ -106,7 +106,7 @@ protected
       when Hash
          @children.select{|field| names.member?(field.name)}
       when Array
-         [].tap do |fields|
+         [].use do |fields|
             @children.each do |name, field|
                fields << field if names.member?(field.name)
             end

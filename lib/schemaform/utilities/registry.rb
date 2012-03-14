@@ -168,7 +168,7 @@ class Registry
    # Creates a copy of this registry, possibly with renamed members (if you supply a block).
    
    def dup()
-      Registry.new().tap do |copy|
+      Registry.new().use do |copy|
          each do |name, value|
             name = yield(name, value) if block_given?
             copy.register(value, name)

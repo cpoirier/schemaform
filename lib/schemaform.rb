@@ -66,7 +66,7 @@ module Schemaform
       @@schemas.register(VersionSet.new(name)) unless @@schemas.member?(name)
       assert(!@@schemas[name].member?(version), "Schema #{name} version #{version} is already defined")
       
-      Schema.new(name, version).tap do |schema|
+      Schema.new(name, version).use do |schema|
          @@schemas[name][version] = schema
          Language::SchemaDefinition.process(schema, &block)         
       end

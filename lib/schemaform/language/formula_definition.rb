@@ -72,7 +72,7 @@ module FormulaDefinition
       fail_todo
       # 
       # boolean = FormulaCapture.resolve_type(:boolean)
-      # clause  = FormulaCapture.capture(clause).tap do |captured|
+      # clause  = FormulaCapture.capture(clause).use do |captured|
       #    assert(boolean.assignable_from?(captured.get_type), "expected boolean expression for logical not, found #{lhs.get_type.description}")
       # end
       # 

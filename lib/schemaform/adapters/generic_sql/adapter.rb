@@ -115,7 +115,7 @@ class Adapter
    
    
    def define_table( *name )
-      table_class.new(self, build_name(*name)).tap do |table|
+      table_class.new(self, build_name(*name)).use do |table|
          @tables.register(table)
          yield(table) if block_given?
       end

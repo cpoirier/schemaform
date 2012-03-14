@@ -139,14 +139,14 @@ private
       @control_tables[:versions] = VersionTable.new(@adapter, Schemaform::MasterIdentifier)
       
       # @adapter.instance_eval do
-      #    .tap do |control_schema|
+      #    .use do |control_schema|
       #       
-      #       # tables[:configuration] = control_schema.define_table(make_name(:configuration, Schemaform::MasterIdentifier)).tap do |table|               
+      #       # tables[:configuration] = control_schema.define_table(make_name(:configuration, Schemaform::MasterIdentifier)).use do |table|               
       #       #    table.add_field field_class.new(table, :name , nil, text_field_type(50) )
       #       #    table.add_field field_class.new(table, :value, nil, text_field_type(200))
       #       # end
       # 
-      #       # tables[:versions] = control_schema.define_table(make_name("versions", Schemaform::MasterIdentifier), "schema_id").tap do |table|
+      #       # tables[:versions] = control_schema.define_table(make_name("versions", Schemaform::MasterIdentifier), "schema_id").use do |table|
       #       #    table.add_field field_class.new(table, :name   , nil, text_field_type(60))
       #       #    table.add_field field_class.new(table, :version, nil, integer_field_type(1..1000000000))
       #       # end

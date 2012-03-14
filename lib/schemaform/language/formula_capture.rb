@@ -115,7 +115,7 @@ module FormulaCapture
 
    def self.capture_formula( formula_context, block, result_type = nil, join_compatible_only = true )
       formula_context.get_type.schema.enter do
-         Language::FormulaDefinition.module_exec(formula_context, &block).tap do |captured_formula|
+         Language::FormulaDefinition.module_exec(formula_context, &block).use do |captured_formula|
             type_check(:captured_formula, captured_formula, Language::Placeholder)
             if result_type then
                if join_compatible_only then
@@ -362,7 +362,7 @@ class Schema
                schema.enter do
                   begin
                      @analyzing = true  # Ensure any self-references don't retrigger analysis
-                     @formula   = Language::FormulaCapture.capture_formula(root_tuple.placeholder(), @proc).tap do |captured_formula|
+                     @formula   = Language::FormulaCapture.capture_formula(root_tuple.placeholder(), @proc).use do |captured_formula|
                         type_check(:captured_formula, captured_formula, Language::Placeholder)
                      end
                   ensure
@@ -432,7 +432,7 @@ class Schema
             schema.enter do
                begin
                   @analyzing = true  # Ensure any self-references don't retrigger analysis
-                  @formula   = Language::FormulaDefinition.module_exec(&@proc).tap do |captured_formula|
+                  @formula   = Language::FormulaDefinition.module_exec(&@proc).use do |captured_formula|
                      type_check(:captured_formula, captured_formula, Language::Placeholder)
                   end
                ensure

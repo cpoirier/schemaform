@@ -26,14 +26,14 @@ class TupleDefinition
    include QualityAssurance
    
    def self.build( name = nil, register = true, &block )
-      Schema::Tuple.new(name).tap do |tuple|
+      Schema::Tuple.new(name).use do |tuple|
          Schema.current.register_tuple(tuple) if name && register
          TupleDefinition.process(tuple, &block)
       end      
    end
    
    def self.process( tuple, &block )
-      tuple.tap do 
+      tuple.use do 
          dsl = new(tuple)
          dsl.instance_eval(&block)
       end

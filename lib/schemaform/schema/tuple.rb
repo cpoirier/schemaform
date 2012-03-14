@@ -88,7 +88,7 @@ class Tuple < Element
    
    def default()
       return @default unless @default.nil?
-      @default = {}.tap do |pairs|
+      @default = {}.use do |pairs|
          @attributes.each do |name, attribute|
             if attribute.writable? then
                pairs[attribute.name] = attribute.resolve.default
@@ -106,13 +106,13 @@ class Tuple < Element
    end   
    
    def recreate_in( new_context, changes = nil )
-      self.new().acquire_for(new_context).tap do |tuple|
+      self.new().acquire_for(new_context).use do |tuple|
          recreate_children_in(tuple, changes)
       end      
    end
    
    def project(*names)
-      Tuple.new(schema).tap do |projection|
+      Tuple.new(schema).use do |projection|
          names.each do |name|
             check{ assert(@attributes.member?(name), "no such attribute [#{name}]") }
             if @attributes.member?(name) then

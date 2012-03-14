@@ -52,7 +52,7 @@ class EntityDefinition
       @entity = Schema::DefinedEntity.new(@name, @parent)
       @schema.entities.register(@entity)
       
-      @entity.heading.tap do |tuple|
+      @entity.heading.use do |tuple|
          assert( tuple.name.nil?, "expected unnamed tuple for EntityDefinition::each()")
          
          tuple.name = tuple_name

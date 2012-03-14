@@ -50,6 +50,10 @@ class Table
    def define_identifier_field( name, *marks )
       define_field(name, @adapter.type_manager.identifier_type, @adapter.build_generated_mark(), *marks)
    end
+   
+   def field_names()
+      @fields.keys
+   end
 
    def install( connection )
       unless present?(connection)

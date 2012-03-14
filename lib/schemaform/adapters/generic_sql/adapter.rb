@@ -174,19 +174,22 @@ protected
    
    
 
+   # Not sure what this does any more. Breaks the run-time-settable debug mode, so hopefully it's vestigial.
+   #
+   # if Schemaform.debug_mode? then
+   #    def dispatch( method, determinant, *args, &block )
+   #       begin
+   #          send_specialized(method, determinant, *args, &block)
+   #       rescue Baseline::SpecializationFailure => e
+   #          Schemaform.log.dump(determinant, "DETERMINANT: ") if e.data[:determinant].object_id === determinant.object_id
+   #          raise
+   #       end
+   #    end
+   # else
+   #    alias dispatch send_specialized
+   # end
 
-   if Schemaform.in_development? then
-      def dispatch( method, determinant, *args, &block )
-         begin
-            send_specialized(method, determinant, *args, &block)
-         rescue Baseline::SpecializationFailure => e
-            Printer.print(determinant, "DETERMINANT: ") if e.data[:determinant].object_id === determinant.object_id
-            raise
-         end
-      end
-   else
-      alias dispatch send_specialized
-   end
+   alias dispatch send_specialized
    
 
 end # Adapter

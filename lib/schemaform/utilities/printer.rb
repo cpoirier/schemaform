@@ -26,35 +26,12 @@ class Printer
    attr_reader :stream
    attr_reader :indent
    
-   @@default_stream = $stdout
-   @@default_indent = ""
-   
-   def self.with_stream( stream, indent = "" )
-      old_stream = @@default_stream
-      old_indent = @@default_indent
-   
-      begin
-         @@default_stream = stream
-         @@default_indent = indent
-         yield
-      ensure 
-         @@default_stream = old_stream
-         @@default_indent = old_indent
-      end
-   end
-   
-   def self.run( stream = nil, indent = nil )      
-      yield(new(stream || @@default_stream, indent || @@default_indent))
-   end
-   
-   def self.print( object, indent = nil, stream = nil )
-      Printer.run(stream || @@default_stream, indent || @@default_indent) do |printer|
-         printer.print(object)
-      end
+   def self.run( stream = $stdout, indent = "" )      
+      yield(new(stream, indent))
    end
    
    def initialize( stream = null, indent = "" )
-      @stream     = stream || @@default_stream
+      @stream     = stream
       @indent     = indent
       @at_bol     = true
       @properties = {}
@@ -114,6 +91,7 @@ class Printer
    # under the label if not.
 
    def label( label, terminator = ":", separator = "#{terminator} " )
+      return if @stream.nil?
       return yield if label.nil? || label.empty?
       header = "#{label}#{separator}"
 
@@ -144,7 +122,7 @@ class Printer
    # to do your own string converstion and use << if you want direct control over line endings.
    
    def print( data, end_line = true )
-      return if data.nil?
+      return if data.nil? || @stream.nil?
 
       case data
       when NilClass
@@ -171,23 +149,35 @@ class Printer
       
       end_line() if end_line
    end
+   
+   
+   #
+   # Dumps an object to the stream with a custom indent.
+   
+   def dump( object, indent = "DUMP: " )
+      indent(indent) do
+         print(object)
+      end
+   end
 
 
    #
    # Writes some text to the stream.
    
    def <<( text )
-      if @at_bol then
-         @stream << @indent
-         @at_bol = false
-      end
+      unless @stream.nil?
+         if @at_bol then
+            @stream << @indent
+            @at_bol = false
+         end
       
-      if text[-1..-1] == "\n" then
-         @at_bol = true
-         @stream << text.slice(0..-2).gsub("\n", "\n#{@indent}")
-         @stream << "\n"
-      else
-         @stream << text.gsub("\n", "\n#{@indent}")
+         if text[-1..-1] == "\n" then
+            @at_bol = true
+            @stream << text.slice(0..-2).gsub("\n", "\n#{@indent}")
+            @stream << "\n"
+         else
+            @stream << text.gsub("\n", "\n#{@indent}")
+         end
       end
       
       self
@@ -218,6 +208,8 @@ class Printer
    # during your block will be written to the real stream. Returns the buffered text.
       
    def buffer( commit = true )
+      return self if @stream.nil?
+      
       state   = [@stream, @at_bol, @indent]
       @stream = buffer = ""
       @at_bol = false

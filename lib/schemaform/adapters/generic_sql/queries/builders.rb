@@ -33,6 +33,9 @@ class Adapter
    # Plans a query for use with this database.
    
    def plan_query( definition )
+      Schemaform.debug.dump(definition, "DUMP: ")
+      exit
+      
       unless @query_plans.member?(definition)
          
          #
@@ -48,8 +51,8 @@ class Adapter
          end
       end
       
-      @query_plans[definition].tap do |query_plan|
-         # Printer.print(render_sql_query(query_plan))
+      @query_plans[definition].use do |query_plan|
+         # Schemaform.debug.print(render_sql_query(query_plan))
       end
    end
    

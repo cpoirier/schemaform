@@ -40,7 +40,7 @@ module Schemaform
    MasterIdentifier = MasterName.identifier_case
    
 
-   @@locator = Baseline::ComponentLocator.new( __FILE__, 2 )
+   @@locator = Baseline::ComponentLocator.new(__FILE__, 2)
    
    #
    # Returns the named Schema definition.
@@ -80,10 +80,10 @@ module Schemaform
    def self.connect( address, &block )
       Runtime::Database.connect(address, &block)
    end
+   
+   
       
-   
-   
-   
+      
    
    # ==========================================================================================
    #                                    Environment Configuration
@@ -143,12 +143,65 @@ module Schemaform
    
    
    #
-   # Returns true if Schemaform seems to be running in a development environment.
+   # Returns true if Schemaform is running in debug mode.
    
-   def self.in_development?()
-      @@in_development ||= File.exists?(File.dirname(__FILE__) + "/../.git")
+   def self.debug_mode?()
+      @@debug.stream.exists?
    end
+   
+   
+   #
+   # Returns the debug Printer.
+   
+   def self.debug()
+      @@debug
+   end
+   
+   
+   #
+   # (Re-)Initializes the debug Printer to the supplied stream. Setting it to nil disables 
+   # debugging. If you pass a block, your block will be called with the new stream in place,
+   # and the old one will be restored on completion.
+   
+   def self.debug_to( stream )
+      old_stream = @@debug.stream
+      @@debug = Printer.new(stream)
+
+      if block_given? then
+         begin
+            yield
+         ensure
+            @@debug = Printer.new(old_stream)
+         end
+      end
+   end
+   
+
+   #
+   # Returns the log Printer.
+   
+   def self.log()
+      @@log
+   end
+   
+   
+   #
+   # (Re-)Initializes the log Printer to the supplied stream. If you pass a block, your blok will
+   # b called with the new stream in place, and the old one will be restored on completion.
+   
+   def self.log_to( stream )
+      old_stream = @@log.stream
+      @@log = Printer.new(stream)
       
+      if block_given? then
+         begin
+            yield
+         ensure
+            @@debug = Printer.new(old_stream)
+         end
+      end
+   end
+   
       
 private
    
@@ -161,7 +214,9 @@ private
    end
    
    @@schemas = Registry.new("Schemaform")
-   
+   @@log     = Printer.new(nil)
+   @@debug   = Printer.new(nil)
+
 
 end # Schemaform
 

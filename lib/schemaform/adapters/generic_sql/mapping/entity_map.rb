@@ -102,7 +102,7 @@ class EntityMap
    end
    
    def build_query( predicate, projection )
-      Printer.print(predicate)
+      Schemaform.debug.print(predicate)
       
       fail_todo
       

@@ -136,8 +136,8 @@ protected
    def initialize( address, overrides = {} )
       @address      = address
       @tables       = Registry.new()    # name => Table
-      @schema_maps  = {}                # Schemaform::Schema => SchemaMap
-      @entity_maps  = {}                # Schemaform::Schema::Entity => EntityMap      
+      @schema_maps  = {}                # Schemaform::Model::Schema => SchemaMap
+      @entity_maps  = {}                # Schemaform::Model::Entity => EntityMap      
       @query_plans  = {}                # Language::Placeholder => QueryPlan
       @monitor      = Monitor.new()
       @overrides    = overrides

@@ -51,7 +51,7 @@ class EntityTuple < Tuple
       else
          link_path = related_entity.search do |attribute, path|
             type = attribute.evaluated_type
-            next unless type.is_a?(Schema::EntityReferenceType)
+            next unless type.is_a?(Model::EntityReferenceType)
             next unless @names.member?(type.entity_name)
             attribute.placeholder(path)
          end
@@ -64,7 +64,7 @@ class EntityTuple < Tuple
       end
       
       reference_type = link_path.instance_variable_get(:@definition).singular_type.evaluated_type
-      if !reference_type.is_a?(Schema::EntityReferenceType) then
+      if !reference_type.is_a?(Model::EntityReferenceType) then
          fail "expected reference result from the link expression, found #{reference_type.class.name}"
       elsif !@names.member?(reference_type.entity_name) then
          fail "expected reference to #{@entity.full_name} as the result of the link expression"
@@ -72,7 +72,7 @@ class EntityTuple < Tuple
       
       warn_todo("if the link attribute for a related lookup is part of a key, the result should be a single (optional) record")
 
-      return Schema::SetType.build(related_entity.reference_type).placeholder(Productions::RelatedTuples.new(@entity, link_path))
+      return Model::SetType.build(related_entity.reference_type).placeholder(Productions::RelatedTuples.new(@entity, link_path))
    end
    
    def method_missing( symbol, *args, &block )

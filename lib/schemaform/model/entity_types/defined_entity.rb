@@ -24,7 +24,7 @@
 # An entity defined in terms of tuples and attributes and tuples, into which data can be written.
 
 module Schemaform
-class Schema
+module Model
 class DefinedEntity < Entity
       
    def initialize( name, base_entity = nil )
@@ -88,7 +88,7 @@ class DefinedEntity < Entity
    end
 
 end # DefinedEntity
-end # Schema
+end # Model
 end # Schemaform
 
 

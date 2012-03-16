@@ -40,11 +40,13 @@ end # Schemaform
 # =============================================================================================
 
 module Schemaform
-class Schema
+module Model
    
-   def build_maintainers()
-      @entities.each do |entity|
-         entity.build_maintainers()
+   class Schema   
+      def build_maintainers()
+         @entities.each do |entity|
+            entity.build_maintainers()
+         end
       end
    end
    
@@ -80,6 +82,6 @@ class Schema
       end
    end
    
-end # Schema
+end # Model
 end # Schemaform
 

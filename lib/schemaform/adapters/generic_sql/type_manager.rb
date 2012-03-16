@@ -75,22 +75,22 @@ class TypeManager
       case type
       when TypeInfo
          type
-      when Schemaform::Schema::StringType
+      when Schemaform::Model::StringType
          if type.typeof?(type.schema.text_type) then
             text_type(type.length)
          else
             binary_type(type.length)
          end
-      when Schemaform::Schema::BooleanType, :boolean
+      when Schemaform::Model::BooleanType, :boolean
          boolean_type()
-      when Schemaform::Schema::IntegerType, :integer
+      when Schemaform::Model::IntegerType, :integer
          integer_type(type.range)
-      when Schemaform::Schema::NumericType, :real
+      when Schemaform::Model::NumericType, :real
          real_type(type.range)
-      when Schemaform::Schema::DateTimeType
+      when Schemaform::Model::DateTimeType
          date_time_type()
-      when Schemaform::Schema::EnumeratedType
-         if type.evaluated_type.is_a?(Schemaform::Schema::StringType) then
+      when Schemaform::Model::EnumeratedType
+         if type.evaluated_type.is_a?(Schemaform::Model::StringType) then
             text_type(type.evaluated_type.length)
          else
             integer_type(type.evaluated_type.range)

@@ -23,7 +23,7 @@
 # Base class for scalar types.
 
 module Schemaform
-class Schema
+module Model
 class ScalarType < Type
    
    #
@@ -82,5 +82,5 @@ class ScalarType < Type
    
 
 end # ScalarType
-end # Schema
+end # Model
 end # Schemaform

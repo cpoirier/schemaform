@@ -21,7 +21,7 @@
 require Schemaform.locate("scalar_type.rb")
 
 module Schemaform
-class Schema
+module Model
 class BooleanType < ScalarType
 
    def initialize( attrs )
@@ -47,5 +47,5 @@ class BooleanType < ScalarType
    end
 
 end # BooleanType
-end # Schema
+end # Model
 end # Schemaform

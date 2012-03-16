@@ -23,7 +23,7 @@
 # A simple attribute = value accessor, generated from an attribute list.
 
 module Schemaform
-class Schema
+module Model
 class GeneratedAccessor < Accessor
 
    def initialize( entity, name, selector )
@@ -38,5 +38,5 @@ class GeneratedAccessor < Accessor
    
 
 end # GeneratedAccessor
-end # Schema
+end # Model
 end # Schemaform

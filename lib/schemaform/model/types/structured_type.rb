@@ -20,7 +20,7 @@
 
 
 module Schemaform
-class Schema
+module Model
 class StructuredType < Type
    
    #
@@ -89,5 +89,5 @@ class StructuredType < Type
    
 
 end # StructuredType
-end # Schema
+end # Model
 end # Schemaform

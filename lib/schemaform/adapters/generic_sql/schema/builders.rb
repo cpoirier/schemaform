@@ -271,7 +271,7 @@ class Adapter
       
       def with_attribute( attribute )
          @attribute_stack.push_and_pop(AttributeFrame.new(attribute, Language::Productions::ValueAccessor)) do
-            @table_stack.top.current_optionality = attribute.is_a?(Schema::OptionalAttribute)
+            @table_stack.top.current_optionality = attribute.is_a?(Model::OptionalAttribute)
             name_stack.push_and_pop((name_stack.top || @adapter.empty_name()) + attribute.name) do
                yield
             end

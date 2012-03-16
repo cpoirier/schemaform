@@ -27,7 +27,7 @@ require Schemaform.locate("type.rb")
 # A description of a single tuple (or "record") of data.  
 
 module Schemaform
-class Schema
+module Model
 class Tuple < Element
 
    def has_attributes?()
@@ -196,7 +196,7 @@ class Tuple < Element
    
 
 end # Tuple
-end # Schema
+end # Model
 end # Schemaform
 
 

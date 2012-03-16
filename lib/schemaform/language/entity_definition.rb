@@ -49,7 +49,7 @@ class EntityDefinition
    def each( tuple_name, &block )
       assert(@entity.nil?, "you can define the entity using one \"each\" or \"as\" clause only")
       
-      @entity = Schema::DefinedEntity.new(@name, @parent)
+      @entity = Model::DefinedEntity.new(@name, @parent)
       @schema.entities.register(@entity)
       
       @entity.heading.use do |tuple|
@@ -69,7 +69,7 @@ class EntityDefinition
       assert(@entity.nil?, "you can define the entity using one \"each\" or \"as\" clause only")
       assert(@parent.nil?, "derived entities cannot have a base entity"                        )
       
-      @entity = Schema::DerivedEntity.new(@name, block)
+      @entity = Model::DerivedEntity.new(@name, block)
       @schema.entities.register(@entity)
    end
    
@@ -113,9 +113,9 @@ class EntityDefinition
          where = hash.fetch(:where) || block
          fail_todo
       else         
-         key = Schema::Key.new(@entity, name, lambda{|entity| entity.project_attributes(attributes)})
+         key = Model::Key.new(@entity, name, lambda{|entity| entity.project_attributes(attributes)})
          @entity.keys.register key
-         @entity.accessors.register Schema::KeyAccessor.new(key)
+         @entity.accessors.register Model::KeyAccessor.new(key)
       end
    end
    
@@ -134,7 +134,7 @@ class EntityDefinition
    def projection( name, details, &block )
       assert(@entity.exists?, "you must define the entity using one \"each\" or \"as\" clause before defining any projections")
       attributes = details.fetch(:project) || block
-      @entity.projections.register Schema::Projection.new(@entity, name, lambda{|entity| entity.project_attributes(attributes)})
+      @entity.projections.register Model::Projection.new(@entity, name, lambda{|entity| entity.project_attributes(attributes)})
    end
    
    
@@ -157,9 +157,9 @@ class EntityDefinition
       name, hash = *args
       if hash.member?(:on) then
          attributes = hash[:on]
-         @entity.accessors.register Schema::GeneratedAccessor.new(@entity, name, lambda{|entity| entity.project_attributes(attributes)} )
+         @entity.accessors.register Model::GeneratedAccessor.new(@entity, name, lambda{|entity| entity.project_attributes(attributes)} )
       elsif hash.member?(:where) then
-         @entity.accessors.register Schema::DefinedAccessor.new(@entity, name, hash.fetch(:where) || block)
+         @entity.accessors.register Model::DefinedAccessor.new(@entity, name, hash.fetch(:where) || block)
       else
          fail
       end

@@ -60,13 +60,13 @@ module Schemaform
    
    
    #
-   # Creates a Schema and calls your block to fill it in (see Schema::DefinitionLanguage).
+   # Creates a Schema and calls your block to fill it in (see Language::SchemaDefinition).
 
    def self.define( name, version, &block )
       @@schemas.register(VersionSet.new(name)) unless @@schemas.member?(name)
       assert(!@@schemas[name].member?(version), "Schema #{name} version #{version} is already defined")
       
-      Schema.new(name, version).use do |schema|
+      Model::Schema.new(name, version).use do |schema|
          @@schemas[name][version] = schema
          Language::SchemaDefinition.process(schema, &block)         
       end
@@ -205,9 +205,7 @@ module Schemaform
       
 private
    
-   require locate("schemaform/schema.rb")
-   
-   ["utilities", "language", "productions", "plan", "adapters", "runtime", "migration"].each do |directory|
+   ["utilities", "model", "language", "productions", "plan", "adapters", "runtime", "migration"].each do |directory|
       Dir[Schemaform.locate("schemaform/#{directory}/*.rb")].each do |path|
          require path
       end

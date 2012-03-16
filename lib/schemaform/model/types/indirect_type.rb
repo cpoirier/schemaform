@@ -20,7 +20,7 @@
 
 
 module Schemaform
-class Schema
+module Model
 class IndirectType < Type
 
    def initialize( element, attrs = {} )
@@ -71,5 +71,5 @@ class IndirectType < Type
    
 
 end # IndirectType
-end # Schema
+end # Model
 end # Schemaform

@@ -25,7 +25,7 @@ require Schemaform.locate("scalar_type.rb")
 # The base class for types that implement a string of data (text and binary).
 
 module Schemaform
-class Schema
+module Model
 class StringType < ScalarType
 
    def initialize( attrs )
@@ -52,5 +52,5 @@ class StringType < ScalarType
    
 
 end # StringType
-end # Schema
+end # Model
 end # Schemaform

@@ -23,6 +23,7 @@
 # comment
 
 module Schemaform
+module Model
 class Schema
 
    #
@@ -39,4 +40,5 @@ class Schema
    end
 
 end # Schema
+end # Model
 end # Schemaform

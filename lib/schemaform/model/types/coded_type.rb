@@ -25,7 +25,7 @@ require Schemaform.locate("enumerated_type.rb")
 # numeric, but you can specify the values with symbols that will be translated for you.
 
 module Schemaform
-class Schema
+module Model
 class CodedType < EnumeratedType
 
    def initialize( map, attrs = {} )
@@ -35,5 +35,5 @@ class CodedType < EnumeratedType
    end
 
 end # CodedType
-end # Schema
+end # Model
 end # Schemaform

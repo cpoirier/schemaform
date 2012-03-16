@@ -60,7 +60,7 @@ class Workspace
       
    
    #
-   # Returns the Schema::Entity for the specified name vector:
+   # Returns the Model::Entity for the specified name vector:
    #    * entity_name
    #    * schema_name, entity_name
    #    * schema_name, schema_version, entity_name
@@ -69,7 +69,7 @@ class Workspace
       entity = case address.length
       when 1         
          case address.first
-         when Schema::Entity
+         when Model::Entity
             entity = address.shift
             @version_lookup.fetch(entity.schema.version).fetch(entity.schema.name).fetch(entity.name)
          else

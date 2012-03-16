@@ -25,7 +25,7 @@ require Schemaform.locate("scalar_type.rb")
 # Base class for numeric types. Handles the :range modifier to limit value.
 
 module Schemaform
-class Schema
+module Model
 class NumericType < ScalarType
 
    def initialize( attrs )
@@ -50,5 +50,5 @@ class NumericType < ScalarType
    end
    
 end # NumericType
-end # Schema
+end # Model
 end # Schemaform

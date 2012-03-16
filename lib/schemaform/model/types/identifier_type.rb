@@ -23,7 +23,7 @@
 # referenced.
 
 module Schemaform
-class Schema
+module Model
 class IdentifierType < Type
 
    def initialize( collection, attrs = {} )
@@ -49,5 +49,5 @@ class IdentifierType < Type
    
 
 end # IdentifierType
-end # Schema
+end # Model
 end # Schemaform

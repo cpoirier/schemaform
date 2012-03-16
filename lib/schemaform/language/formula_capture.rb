@@ -18,7 +18,7 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("schemaform/schema.rb")
+require Schemaform.locate("schemaform/model/schema.rb")
 
 module Schemaform
 module Language
@@ -36,8 +36,8 @@ module FormulaCapture
    end
    
    def self.resolve_type( name )
-      return name if name.is_a?(Schema::Type)
-      Schema.current do |schema|
+      return name if name.is_a?(Model::Type)
+      Model::Schema.current do |schema|
          schema.types.member?(name) ? schema.types[name] : schema.send((name.to_s + "_type").intern)      
       end
    end
@@ -51,7 +51,7 @@ module FormulaCapture
       case value
       when Placeholder, NilClass
          return value
-      when Schema::Type
+      when Model::Type
          return value.placeholder(production)
       when Array
          return LiteralList.new(*value.collect{|e| capture(e)})
@@ -141,7 +141,7 @@ end # Schemaform
 # =============================================================================================
 
 module Schemaform
-class Schema
+module Model
    
    class Component
       def placeholder( production = nil )
@@ -298,7 +298,7 @@ class Schema
                   end
                end
 
-               Schema::ListType.build(member_type, :order => order_attributes).placeholder(Language::Productions::OrderBy.new(receiver, *order_attributes))
+               Model::ListType.build(member_type, :order => order_attributes).placeholder(Language::Productions::OrderBy.new(receiver, *order_attributes))
             else
                super
             end
@@ -488,7 +488,7 @@ class Schema
    end
    
 
-end # Schema
+end # Model
 end # Schemaform
 
 
@@ -499,7 +499,7 @@ end # Schemaform
 # =============================================================================================
 
 module Schemaform
-class Schema
+module Model
 
    class Entity
 
@@ -560,7 +560,7 @@ class Schema
       end
    end
    
-end # Schema
+end # Model
 end # Schemaform
 
 

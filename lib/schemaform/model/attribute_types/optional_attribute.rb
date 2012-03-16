@@ -24,7 +24,7 @@
 # An optional attribute -- one that will show a default value if not specifically set.
 
 module Schemaform
-class Schema
+module Model
 class OptionalAttribute < Attribute
 
    def initialize( name, type, proc = nil )
@@ -46,5 +46,5 @@ class OptionalAttribute < Attribute
    
    
 end # OptionalAttribute
-end # Schema
+end # Model
 end # Schemaform

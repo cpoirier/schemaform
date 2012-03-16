@@ -23,7 +23,7 @@
 # The Void type is a dead-end. 
 
 module Schemaform
-class Schema
+module Model
 class VoidType < Type
 
    def initialize( attrs )
@@ -40,5 +40,5 @@ class VoidType < Type
 
 
 end # VoidType
-end # Schema
+end # Model
 end # Schemaform

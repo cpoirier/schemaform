@@ -31,7 +31,7 @@ class Tuple
    
    
    def initialize( definition )
-      type_check(:definition, definition, Schema::Tuple)
+      type_check(:definition, definition, Model::Tuple)
       @definition = definition
    end
    

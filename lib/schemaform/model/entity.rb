@@ -25,7 +25,7 @@ require Schemaform.locate("component.rb")
 # Base class for named entities (which are either defined or derived).
 
 module Schemaform
-class Schema
+module Model
 class Entity < Component
 
    def initialize( name )
@@ -127,7 +127,7 @@ class Entity < Component
    
    
 end # Entity
-end # Schema
+end # Model
 end # Schemaform
 
 

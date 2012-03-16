@@ -25,7 +25,7 @@ require Schemaform.locate("component.rb")
 # Captures a named Projection for the Entity.
 
 module Schemaform
-class Schema
+module Model
 class Projection < Component
 
    def initialize( entity, name, proc )
@@ -44,5 +44,5 @@ class Projection < Component
    end
 
 end # Projection
-end # Schema
+end # Model
 end # Schemaform

@@ -24,7 +24,7 @@
 # defined type have a name.
 
 module Schemaform
-class Schema
+module Model
 class UserDefinedType < Type
    
    def initialize( attrs )
@@ -37,5 +37,5 @@ class UserDefinedType < Type
    
 
 end # UserDefinedType
-end # Schema
+end # Model
 end # Schemaform

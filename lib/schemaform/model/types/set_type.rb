@@ -25,7 +25,7 @@ require Schemaform.locate("collection_type.rb")
 # A container type that can hold no duplicates and has no inherent ordering.
 
 module Schemaform
-class Schema
+module Model
 class SetType < CollectionType
    
    #
@@ -37,5 +37,5 @@ class SetType < CollectionType
 
    
 end # SetType
-end # Schema
+end # Model
 end # Schemaform

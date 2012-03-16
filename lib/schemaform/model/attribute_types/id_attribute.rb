@@ -25,7 +25,7 @@
 # by the schema designer.
 
 module Schemaform
-class Schema
+module Model
 class IDAttribute < Attribute
    
    def initialize( collection, name = :id, type = nil )
@@ -42,5 +42,5 @@ class IDAttribute < Attribute
    end
    
 end # IDAttribute
-end # Schema
+end # Model
 end # Schemaform

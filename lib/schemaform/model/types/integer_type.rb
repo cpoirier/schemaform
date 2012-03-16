@@ -25,7 +25,7 @@ require Schemaform.locate("numeric_type.rb")
 # Represents an integer.
 
 module Schemaform
-class Schema
+module Model
 class IntegerType < NumericType
 
    def initialize( attrs )
@@ -34,5 +34,5 @@ class IntegerType < NumericType
    end
    
 end # IntegerType
-end # Schema
+end # Model
 end # Schemaform

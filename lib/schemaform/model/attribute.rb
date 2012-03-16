@@ -26,7 +26,7 @@ require Schemaform.locate("component.rb")
 # If you need to copy an Attribute into another Tuple, use +duplicate()+.
 
 module Schemaform
-class Schema
+module Model
 class Attribute < Component
    
    def initialize( name, type = nil )
@@ -84,7 +84,7 @@ class Attribute < Component
       
    
 end # Attribute
-end # Schema
+end # Model
 end # Schemaform
 
 

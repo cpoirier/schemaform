@@ -25,7 +25,7 @@ require Schemaform.locate("collection.rb")
 # A set or relation (Tuple member) datum.
 
 module Schemaform
-class Schema
+module Model
 class Set < Collection
    
    def self.type_class()
@@ -34,6 +34,6 @@ class Set < Collection
    
    
 end # Set
-end # Schema
+end # Model
 end # Schemaform
 

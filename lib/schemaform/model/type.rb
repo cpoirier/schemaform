@@ -30,7 +30,7 @@ require Schemaform.locate("component.rb")
 # to determine type compatibility of expressions.
 
 module Schemaform
-class Schema
+module Model
 class Type < Component
    
    #
@@ -317,7 +317,7 @@ class Type < Component
    
 
 end # Type
-end # Schema
+end # Model
 end # Schemaform
 
 

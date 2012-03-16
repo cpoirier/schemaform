@@ -24,7 +24,7 @@ require Schemaform.locate("collection_type.rb")
 # A container type that holds an ordered list of something.
 
 module Schemaform
-class Schema
+module Model
 class ListType < CollectionType
 
    #
@@ -36,5 +36,5 @@ class ListType < CollectionType
 
    
 end # ListType
-end # Schema
+end # Model
 end # Schemaform

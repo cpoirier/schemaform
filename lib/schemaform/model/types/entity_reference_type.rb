@@ -20,7 +20,7 @@
 
 
 module Schemaform
-class Schema
+module Model
 class EntityReferenceType < Type
 
    def initialize( entity_name, attrs = {} )
@@ -71,5 +71,5 @@ class EntityReferenceType < Type
    end
 
 end # EntityReferenceType
-end # Schema
+end # Model
 end # Schemaform

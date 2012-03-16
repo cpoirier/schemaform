@@ -21,7 +21,7 @@
 require Schemaform.locate("projection.rb")
 
 module Schemaform
-class Schema
+module Model
 class Key < Projection
       
    def initialize(entity, name, proc)
@@ -29,6 +29,6 @@ class Key < Projection
    end   
    
 end # Key
-end # Schema
+end # Model
 end # Schemaform
 

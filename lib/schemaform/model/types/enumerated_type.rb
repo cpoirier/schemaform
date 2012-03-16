@@ -27,7 +27,7 @@ require Schemaform.locate("string_type.rb" )
 # Base class for enumerated types.
 
 module Schemaform
-class Schema
+module Model
 class EnumeratedType < ScalarType
 
    def initialize( values, attrs = {} )
@@ -62,5 +62,5 @@ class EnumeratedType < ScalarType
    
    
 end # EnumeratedType
-end # Schema
+end # Model
 end # Schemaform

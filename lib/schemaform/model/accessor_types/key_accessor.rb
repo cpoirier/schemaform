@@ -25,7 +25,7 @@ require Schemaform.locate("generated_accessor.rb")
 # A simple attribute = value accessor.
 
 module Schemaform
-class Schema
+module Model
 class KeyAccessor < GeneratedAccessor
 
    def initialize( key )
@@ -34,5 +34,5 @@ class KeyAccessor < GeneratedAccessor
    end
 
 end # KeyAccessor
-end # Schema
+end # Model
 end # Schemaform

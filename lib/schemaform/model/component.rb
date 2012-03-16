@@ -23,7 +23,7 @@
 # The base class for objects that make up the Schema.
 
 module Schemaform
-class Schema
+module Model
 class Component
    include QualityAssurance
    extend QualityAssurance
@@ -133,5 +133,5 @@ class Component
    
 
 end # Component
-end # Schema
+end # Model
 end # Schemaform

@@ -25,7 +25,7 @@ require Schemaform.locate("collection.rb")
 # A list or tabulation (Tuple member) datum.
 
 module Schemaform
-class Schema
+module Model
 class List < Collection
    
    def self.type_class()
@@ -41,6 +41,6 @@ class List < Collection
    
    
 end # List
-end # Schema
+end # Model
 end # Schemaform
 

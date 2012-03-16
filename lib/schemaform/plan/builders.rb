@@ -18,14 +18,16 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("schemaform/schema.rb")
+require Schemaform.locate("schemaform/model/schema.rb")
 
 
 module Schemaform
-class Schema
+module Model
    
-   def plan()
-      @plan ||= Plan::Schema.new(self)
+   class Schema
+      def plan()
+         @plan ||= Plan::Schema.new(self)
+      end
    end
    
    
@@ -50,6 +52,6 @@ class Schema
    end
 
 
-end # Schema
+end # Model
 end # Schemaform
 

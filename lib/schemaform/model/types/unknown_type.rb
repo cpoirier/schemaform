@@ -23,7 +23,7 @@
 # An internal type that can stand in for any type, include void.
 
 module Schemaform
-class Schema
+module Model
 class UnknownType < Type
 
    def initialize( attrs )

@@ -24,7 +24,7 @@
 # A required attribute -- one that must be present within its context TupleType.
 
 module Schemaform
-class Schema
+module Model
 class RequiredAttribute < Attribute
 
    def initialize( name, type )
@@ -39,5 +39,5 @@ class RequiredAttribute < Attribute
    
 
 end # RequiredAttribute
-end # Schema
+end # Model
 end # Schemaform

@@ -25,7 +25,7 @@ require Schemaform.locate("component.rb")
 # An element in the structure of an Entity.
 
 module Schemaform
-class Schema
+module Model
 class Element < Component
    
    def initialize( type, name = nil )
@@ -63,6 +63,6 @@ class Element < Component
    end
    
 end # Element
-end # Schema
+end # Model
 end # Schemaform
 

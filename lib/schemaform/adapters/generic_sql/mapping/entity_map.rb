@@ -20,7 +20,7 @@
 
 
 #
-# Captures informtion about how a Schema::Entity is mapped into Tables and Fields.
+# Captures informtion about how a Model::Entity is mapped into Tables and Fields.
 
 module Schemaform
 module Adapters
@@ -39,7 +39,7 @@ class EntityMap
       @base_map       = base_map || (entity.base_entity.exists? ? @schema_map[entity.base_entity] : nil)
       @parent_links   = {}                                  # child Table => Link
       @all_links      = Hash.new(){|h, k| h[k] = {}}        # descendent Table => { ancestor Table => Link }
-      @mappings       = Hash.new(){|h, k| h[k] = {}}        # Schema::Attribute => { aspect => Field }
+      @mappings       = Hash.new(){|h, k| h[k] = {}}        # Model::Attribute => { aspect => Field }
       @sources        = {}                                  # Field => source Field
       @copies         = Hash.new(){|h, k| h[k] = []}        # source Field => [all copies]
       @schema_map.register_table(anchor_table)

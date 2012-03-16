@@ -25,7 +25,7 @@ require Schemaform.locate("schemaform/utilities/registry.rb")
 # Provides Type management service to the Schema.
 
 module Schemaform
-class Schema
+module Model
 class TypeRegistry < Registry
 
    def initialize( owner_description, member_description = "a type" )
@@ -55,5 +55,5 @@ class TypeRegistry < Registry
 
 
 end # TypeRegistry
-end # Schema
+end # Model
 end # Schemaform

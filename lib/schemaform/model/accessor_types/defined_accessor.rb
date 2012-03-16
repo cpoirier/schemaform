@@ -23,7 +23,7 @@
 # An accesor in which the definer provides the entire where clause.
 
 module Schemaform
-class Schema
+module Model
 class DefinedAccessor < Accessor
 
    def initialize( entity, name, proc )
@@ -33,5 +33,5 @@ class DefinedAccessor < Accessor
    
 
 end # DefinedAccessor
-end # Schema
+end # Model
 end # Schemaform

@@ -25,6 +25,7 @@ require 'monitor'
 # Provides a naming context and a unit of storage within the Schemaform system.
 
 module Schemaform
+module Model
 class Schema
    extend  QualityAssurance
    include QualityAssurance
@@ -194,6 +195,7 @@ protected
    
    
 end # Schema
+end # Model
 end # Schemaform
 
 

@@ -18,7 +18,7 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("schemaform/schema.rb")
+require Schemaform.locate("schemaform/model/schema.rb")
 
 module Schemaform
 module Language
@@ -26,8 +26,8 @@ class TupleDefinition
    include QualityAssurance
    
    def self.build( name = nil, register = true, &block )
-      Schema::Tuple.new(name).use do |tuple|
-         Schema.current.register_tuple(tuple) if name && register
+      Model::Tuple.new(name).use do |tuple|
+         Model::Schema.current.register_tuple(tuple) if name && register
          TupleDefinition.process(tuple, &block)
       end      
    end
@@ -63,7 +63,7 @@ class TupleDefinition
    # block instead of a type.
 
    def required( name, type_name = nil, modifiers = {}, &block )
-      @tuple.register Schema::RequiredAttribute.new(name, type_for(type_name, modifiers, name, &block))
+      @tuple.register Model::RequiredAttribute.new(name, type_for(type_name, modifiers, name, &block))
    end
 
    
@@ -83,9 +83,9 @@ class TupleDefinition
    def optional( name, type_name = nil, modifiers = {}, &block )
       if type_name.is_a?(Proc) then
          assert(block.nil?, "please use the formal syntax for default if you are defining a subtuple")
-         @tuple.register Schema::OptionalAttribute.new(name, nil, type_name)
+         @tuple.register Model::OptionalAttribute.new(name, nil, type_name)
       else
-         @tuple.register Schema::OptionalAttribute.new(name, type_for(type_name, modifiers, name, &block))
+         @tuple.register Model::OptionalAttribute.new(name, type_for(type_name, modifiers, name, &block))
       end
    end
    
@@ -99,7 +99,7 @@ class TupleDefinition
       modifiers = args.first.is_a?(Hash) ? args.shift : {}
       proc      = block || args.shift
 
-      @tuple.register Schema::DerivedAttribute.new(name, proc)
+      @tuple.register Model::DerivedAttribute.new(name, proc)
    end   
    
 
@@ -116,7 +116,7 @@ class TupleDefinition
    
    def member_of( entity_name )
       type_check(:entity_name, entity_name, Symbol)
-      Schema::EntityReferenceType.new(entity_name)
+      Model::EntityReferenceType.new(entity_name)
    end
    
    
@@ -124,7 +124,7 @@ class TupleDefinition
    # Creates a Set or Relation for use as an attribute definition.
    
    def set_of( type_name, modifiers = {} )
-      Schema::SetType.build(type_for(type_name, modifiers))
+      Model::SetType.build(type_for(type_name, modifiers))
    end
 
    
@@ -132,7 +132,7 @@ class TupleDefinition
    # Creates an (ordered) list for use as an attribute definition.
    
    def list_of( type_name, modifiers = {} )
-      Schema::ListType.build(type_for(type_name, modifiers))
+      Model::ListType.build(type_for(type_name, modifiers))
    end
    
    
@@ -141,9 +141,9 @@ class TupleDefinition
    
    def one_of( *values )
       if values.length == 1 && values[0].is_a?(Hash) then
-         Schema::CodedType.new(values[0])
+         Model::CodedType.new(values[0])
       else
-         Schema::EnumeratedType.new(values)
+         Model::EnumeratedType.new(values)
       end
    end
    
@@ -154,14 +154,14 @@ private
    # Retrieves or builds a definition for the given name.
    
    def type_for( name, modifiers, implied_name = nil, &block )
-      return name if name.is_a?(Schema::Type)
+      return name if name.is_a?(Model::Type)
       
       if block then
-         Schema::TupleType.new(TupleDefinition.build(&block))
+         Model::TupleType.new(TupleDefinition.build(&block))
       elsif @schema.types.member?(name) then
          @schema.types.build(name, modifiers)
       elsif @schema.tuples.member?(name) then
-         Schema::TupleType.new(@schema.tuples.find(name))
+         Model::TupleType.new(@schema.tuples.find(name))
       else
          member_of(name)
       end

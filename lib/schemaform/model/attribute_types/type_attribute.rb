@@ -25,7 +25,7 @@
 # never be created by the schema designer.
 
 module Schemaform
-class Schema
+module Model
 class TypeAttribute < Attribute
    
    def initialize( type_ids, name = :type_id, type = nil )
@@ -41,5 +41,5 @@ class TypeAttribute < Attribute
    end
    
 end # TypeAttribute
-end # Schema
+end # Model
 end # Schemaform

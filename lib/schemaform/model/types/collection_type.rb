@@ -23,7 +23,7 @@
 # Base class for container types.
 
 module Schemaform
-class Schema
+module Model
 class CollectionType < Type
 
    attr_reader :member_type
@@ -91,5 +91,5 @@ class CollectionType < Type
    
 
 end # CollectionType
-end # Schema
+end # Model
 end # Schemaform

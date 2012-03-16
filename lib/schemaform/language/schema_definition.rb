@@ -44,7 +44,7 @@ class SchemaDefinition
    # Defines an entity within the Schema.
 
    def define_entity( name, parent = nil, &block )
-      if parent && !parent.is_an?(Schema::Entity) then
+      if parent && !parent.is_an?(Model::Entity) then
          parent = @schema.entities.find(parent, checks_enabled?)
       end
 

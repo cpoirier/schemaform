@@ -25,7 +25,7 @@ require Schemaform.locate("element.rb")
 # Base class for collection elements.
 
 module Schemaform
-class Schema
+module Model
 class Collection < Element
    
    def self.type_class()
@@ -74,6 +74,6 @@ class Collection < Element
 
 
 end # Collection
-end # Schema
+end # Model
 end # Schemaform
 

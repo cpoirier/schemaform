@@ -22,7 +22,7 @@ require Schemaform.locate("indirect_type.rb")
 
 
 module Schemaform
-class Schema
+module Model
 class TupleType < IndirectType
 
    alias tuple element
@@ -35,5 +35,5 @@ class TupleType < IndirectType
    
 
 end # TupleType
-end # Schema
+end # Model
 end # Schemaform

@@ -24,7 +24,7 @@
 # An entity derived by formula from other entities (and which can't be written to).
 
 module Schemaform
-class Schema
+module Model
 class DerivedEntity < Entity
       
    def initialize( name, proc = nil )
@@ -54,6 +54,6 @@ class DerivedEntity < Entity
    
 
 end # DerivedEntity
-end # Schema
+end # Model
 end # Schemaform
 

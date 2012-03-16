@@ -21,7 +21,7 @@
 
 
 module Schemaform
-class Schema
+module Model
 class DerivedAttribute < Attribute
 
    def initialize( name, proc )
@@ -35,6 +35,6 @@ class DerivedAttribute < Attribute
    
    
 end # DerivedAttribute
-end # Schema
+end # Model
 end # Schemaform
 

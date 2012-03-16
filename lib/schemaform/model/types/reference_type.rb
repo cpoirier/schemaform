@@ -20,7 +20,7 @@
 
 
 module Schemaform
-class Schema
+module Model
 class ReferenceType < Type
 
    def initialize( collection, attrs = {} )
@@ -53,5 +53,5 @@ class ReferenceType < Type
    end
 
 end # ReferenceType
-end # Schema
+end # Model
 end # Schemaform

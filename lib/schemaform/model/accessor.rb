@@ -25,7 +25,7 @@ require Schemaform.locate("component.rb")
 # Base class for an accessor on a Relation.
 
 module Schemaform
-class Schema
+module Model
 class Accessor < Component
 
    def initialize( entity, name )
@@ -36,7 +36,7 @@ class Accessor < Component
    alias entity context
    
 end # Accessor
-end # Schema
+end # Model
 end # Schemaform
 
 Dir[Schemaform.locate("accessor_types/*.rb")].each {|path| require path}

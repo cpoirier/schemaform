@@ -51,7 +51,7 @@ class Adapter
       @monitor.synchronize do
          unless @schema_maps.member?(definition)
             schema_name = build_name(definition.path)
-            @schema_maps[definition] = SchemaMap.new(self, definition).tap do |schema_map|
+            @schema_maps[definition] = SchemaMap.new(self, definition).use do |schema_map|
 
                #
                # Create anchor tables and entity maps for each DefinedEntity first. We need them in place 
@@ -95,27 +95,33 @@ class Adapter
                # Next, process the derived entities. Some (the more complex ones) will be mapped
                # into tables. The others will be left as queries.
                
-               definition.derived_entities.each do |entity|
-                  warn_todo("determining which derived entities can be left as queries")
-                  
-                  schema_map.map(entity, define_table(schema_name + entity.name)) do |entity_map, table|
-                     id_name = build_internal_name("id")
-                     table.identifier = table.define_identifier_field(id_name, build_primary_key_mark())
-
-                     builder = @overrides.fetch(:lay_out_builder_class, LayOutBuilder).new(self, schema_map.entity_maps[entity])
-                     entity.heading.attributes.each do |attribute|
-                        dispatch(:lay_out, attribute, builder)
-                     end
-                  end
-                  
-                  entity.keys.each do |key|
-                     builder.build_key(key)
-                  end
-               end
+               # definition.derived_entities.each do |entity|
+               #    warn_todo("determining which derived entities can be left as queries")
+               #    
+               #    Schemaform.debug.dump(entity.formula)
+               #    exit
+               #    
+               #    schema_map.map(entity, define_table(schema_name + entity.name)) do |entity_map, table|
+               #       id_name = build_internal_name("id")
+               #       table.identifier = table.define_identifier_field(id_name, build_primary_key_mark())
+               # 
+               #       builder = @overrides.fetch(:lay_out_builder_class, LayOutBuilder).new(self, schema_map.entity_maps[entity])
+               #       entity.heading.attributes.each do |attribute|
+               #          dispatch(:lay_out, attribute, builder)
+               #       end
+               #    end
+               #    
+               #    entity.keys.each do |key|
+               #       builder.build_key(key)
+               #    end
+               # end
                 
             end
          end
       end
+      
+      Schemaform.debug.dump(self)
+      exit
       
       @schema_maps[definition]
    end
@@ -138,12 +144,13 @@ class Adapter
       end
    end
    
-   def lay_out_volatile_attribute( attribute, builder )
-      warn_todo("what do we do about mapping volatile attributes?")
+   def lay_out_derived_attribute( attribute, builder )
+      lay_out_attribute(attribute, builder) do
+         Schemaform.debug.dump(builder.instance_eval{@attribute_stack})
+      end
    end
    
-   
-   
+
    def lay_out_tuple( tuple, builder )
       tuple.attributes.each do |attribute|
          dispatch(:lay_out, attribute, builder)
@@ -286,7 +293,7 @@ class Adapter
       end
 
       def define_scalar( type_info, *field_marks )
-         @table_stack.top.table.define_field(name_stack.top, type_info, *field_marks).tap do |field|
+         @table_stack.top.table.define_field(name_stack.top, type_info, *field_marks).use do |field|
             frame = @attribute_stack.top
             @entity_map.link_field_to_attribute(field, frame.attribute, frame.aspect)
             @entity_map.link_field_to_source(field, field.referenced_field) if field.reference?
@@ -361,7 +368,7 @@ class Adapter
                   parent_table = @table_stack.top.table
                   @adapter.define_table(parent_table.name + name_stack.top) do |table|
                      table.define_index("owner") do |owner_index| 
-                        table.define_reference_field(default_name + "owner", parent_table).tap do |owner_field|
+                        table.define_reference_field(default_name + "owner", parent_table).use do |owner_field|
                            owner_index.add_field(owner_field)
                            @entity_map.link_child_to_parent(owner_field)
                            @entity_map.link_field_to_source(owner_field, owner_field.referenced_field)
@@ -370,7 +377,7 @@ class Adapter
 
                      table.define_index("pk", true) do |primary_key|
                         fields.each do |field|
-                           table.define_field(field.table.name + field.name, field.type, field.marks.collect{|mark| mark.dup}).tap do |copy|
+                           table.define_field(field.table.name + field.name, field.type, field.marks.collect{|mark| mark.dup}).use do |copy|
                               primary_key.add_field(copy)
                               @entity_map.link_field_to_source(copy, field)
                            end

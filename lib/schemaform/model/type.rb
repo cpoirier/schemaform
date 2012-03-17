@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby -KU
+#!/usr/bin/env ruby
 # =============================================================================================
 # Schemaform
 # A DSL giving the power of spreadsheets in a relational setting.

@@ -18,6 +18,8 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("../connection.rb")
+
 
 #
 # The base class for DBMS-specific connection interfaces.
@@ -25,61 +27,7 @@
 module Schemaform
 module Adapters
 module GenericSQL
-class Connection
-   include QualityAssurance
-   extend  QualityAssurance
-   
-   
-   def initialize( adapter )
-      @adapter = adapter      
-   end
-   
-   attr_reader :adapter
-   
-   def close()
-   end
-
-   def transact()
-      fail_unless_overridden
-   end
-   
-   def retrieve( sql, *parameters )
-      fail_unless_overridden
-   end
-
-   def insert( sql, *parameters )
-      fail_unless_overridden
-   end
-
-   def update( sql, *parameters )
-      fail_unless_overridden
-   end
-   
-   def execute( sql )
-      fail_unless_overridden
-   end
-   
-   def escape_string( string )        ; @adapter.escape_string(string)        ; end
-   def quote_string( string )         ; @adapter.quote_string(string)         ; end
-   def quote_identifier( identifier ) ; @adapter.quote_identifier(identifier) ; end
-   
-   def retrieve_value( field, default, sql, *parameters )
-      value = default
-      retrieve(sql, *parameters) do |row|
-         value = row[field]
-         break
-      end
-      
-      value
-   end
-      
-   def retrieve_row( sql, *parameters )
-      retrieve(sql, *parameters) do |row|
-         return row
-      end
-      nil
-   end   
-
+class Connection < Adapters::Connection
 
 end # Connection
 end # GenericSQL

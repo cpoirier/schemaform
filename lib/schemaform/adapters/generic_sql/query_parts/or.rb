@@ -18,17 +18,47 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("boolean_expression.rb")
+
 
 #
-# Wrapper for exceptions from this adapter.
+# Base class for things that help make up a Query.
 
 module Schemaform
 module Adapters
-module SQLite
-class Error < Adapters::Error
+module GenericSQL
+module QueryParts
+class Or < BooleanExpression
 
+   def initialize( type_info, *clauses )
+      super(type_info)
+      @clauses = []
+      
+      clauses.each do |clause|
+         if clause.is_an?(Or) then
+            @clauses.concat(clause.clauses)
+         else
+            @clauses << clause
+         end
+      end      
+   end
+   
+   attr_reader :clauses
+   
+   def print_to( printer )
+      first = true
+      if @clauses.empty? then
+         printer << "1 = 1"
+      else
+         @clauses.each do |clause|
+            first or printer << " OR " and first = false
+            clause.print_to(printer)
+         end
+      end
+   end   
 
-end # Error
-end # SQLite
+end # Or
+end # QueryParts
+end # GenericSQL
 end # Adapters
 end # Schemaform

@@ -30,7 +30,7 @@ class Printer
       yield(new(stream, indent))
    end
    
-   def initialize( stream = null, indent = "" )
+   def initialize( stream = [], indent = "" )
       @stream     = stream
       @indent     = indent
       @at_bol     = true
@@ -38,6 +38,10 @@ class Printer
    end
    
    attr_reader :stream
+   
+   def to_s()
+      @stream.join("")
+   end
    
    
    #
@@ -142,6 +146,8 @@ class Printer
             data.print_to(self)
          elsif data.responds_to?(:to_s) then
             print(data.to_s)
+         elsif data.responds_to?(:to_str) then
+            print(data.to_str)
          else
             print(data.inspect)
          end

@@ -30,7 +30,7 @@ class Adapter < GenericSQL::Adapter
    
    def self.address( coordinates )
       if path = File.expand_path(coordinates.fetch(:path, nil)) then
-         GenericSQL::Address.new("sqlite:#{path}", coordinates.update(:path => path))
+         Adapters::Address.new("sqlite:#{path}", coordinates.update(:path => path))
       end
    end
    

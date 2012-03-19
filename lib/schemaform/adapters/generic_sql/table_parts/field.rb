@@ -20,15 +20,49 @@
 
 
 #
-# Wrapper for exceptions from this adapter.
+# A field within a table.
 
 module Schemaform
 module Adapters
-module SQLite
-class Error < Adapters::Error
+module GenericSQL
+module TableParts
+class Field
+   include QualityAssurance
+   extend  QualityAssurance
+      
+   def initialize( table, name, type_info, *marks )
+      @table          = table
+      @name           = name
+      @quoted_name    = @table.adapter.quote_identifier(@name)
+      @type_info      = table.adapter.type_manager.scalar_type(type_info)
+      @marks          = marks
+      @reference_mark = @marks.select_first{|m| m.is_a?(ReferenceMark)}
+      
+      unless @marks.any?{|mark| mark.is_a?(RequiredMark) || mark.is_an?(OptionalMark)}
+         @marks.unshift(RequiredMark.new()) 
+      end
+   end
+   
+   attr_reader :table, :name, :quoted_name, :type_info, :marks, :reference_mark
+   
+   def reference?()
+      !!@reference_mark
+   end
+   
+   def referenced_field()
+      @reference_mark.table.identifier
+   end
+   
+   def name_width()
+      @quoted_name.length
+   end
 
-
-end # Error
-end # SQLite
+   def type_width()      
+      @type.sql.length
+   end
+   
+end # Field
+end # TableParts
+end # GenericSQL
 end # Adapters
 end # Schemaform

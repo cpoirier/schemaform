@@ -18,17 +18,31 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("source.rb")
+
 
 #
-# Wrapper for exceptions from this adapter.
+# Base class for things that help make up a Query.
 
 module Schemaform
 module Adapters
-module SQLite
-class Error < Adapters::Error
+module GenericSQL
+module QueryParts
+class Join < Source
 
+   def initialize(query, relation, condition, type = nil)
+      super(query, [type, "JOIN"].compact.join(" ").upcase, relation)
+      @condition = condition
+   end
+   
+   def print_to( printer )
+      super
+      printer.end_line
+      printer.indent { @condition.print_to(printer) }
+   end
 
-end # Error
-end # SQLite
+end # Join
+end # QueryParts
+end # GenericSQL
 end # Adapters
 end # Schemaform

@@ -49,6 +49,11 @@ class Registry
       @order.count
    end
    
+   
+   def filter( pairs )
+      pairs.select{|k| @registry.member?(k)}
+   end
+   
 
    #
    # Checks if the named object exists.

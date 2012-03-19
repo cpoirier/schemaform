@@ -20,15 +20,28 @@
 
 
 #
-# Wrapper for exceptions from this adapter.
+# The base class for Adapter-level relations.
 
 module Schemaform
 module Adapters
-module SQLite
-class Error < Adapters::Error
+module GenericSQL
+class Relation
+   include QualityAssurance
+   extend  QualityAssurance
+   
+   def initialize( adapter )
+      type_check(:adapter, adapter, Adapter)
+      @adapter = adapter
+   end
+   
+   attr_reader :adapter
+   
+   def quote_identifier( identifier )
+      @adapter.quote_identifier(identifier)
+   end
+   
 
-
-end # Error
-end # SQLite
+end # Relation
+end # GenericSQL
 end # Adapters
 end # Schemaform

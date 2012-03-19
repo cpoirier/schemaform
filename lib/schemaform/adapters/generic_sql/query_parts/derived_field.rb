@@ -18,17 +18,31 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("field.rb")
+
 
 #
-# Wrapper for exceptions from this adapter.
+# Base class for things that help make up a Query.
 
 module Schemaform
 module Adapters
-module SQLite
-class Error < Adapters::Error
+module GenericSQL
+module QueryParts
+class DerivedField < Field
 
+   def initialize( type_info, expression )
+      super(type_info)
+      @expression = expression
+   end
 
-end # Error
-end # SQLite
+   attr_reader :expression
+
+   def print_to( printer )
+      expression.print_to(printer)
+   end
+
+end # DerivedField
+end # QueryParts
+end # GenericSQL
 end # Adapters
 end # Schemaform

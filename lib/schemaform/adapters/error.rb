@@ -20,15 +20,22 @@
 
 
 #
-# Wrapper for exceptions from this adapter.
+# Base class for Adapter exceptions. Individual adapters can just raise one of these if the
+# underlying database library doesn't provide a hierarchy of exceptions. If they do, you should
+# wrap them in subclasses of this.
 
 module Schemaform
 module Adapters
-module SQLite
-class Error < Adapters::Error
+class Error < ::Exception
 
+   def initialize( message, underlying_exception )
+      super(message || underlying_exception.message)
+      @underlying_exception = underlying_exception
+   end
+   
+   attr_reader :underlying_exception
+   
 
 end # Error
-end # SQLite
 end # Adapters
 end # Schemaform

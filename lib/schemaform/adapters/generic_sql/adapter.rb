@@ -26,103 +26,13 @@
 module Schemaform
 module Adapters
 module GenericSQL
-class Adapter
-   include QualityAssurance
-   extend  QualityAssurance
-   
-   
-   #
-   # Builds or retrieves an Adapter for the specified coordinates and returns it.
-   
-   def self.build( coordinates )
-      if address = address(coordinates) then
-         @@monitor.synchronize do
-            unless @@adapters.member?(address.url)
-               @@adapters[address.url] = new(address)
-            end
-         end
-         
-         return @@adapters[address.url]
-      end
-   end
+class Adapter < Adapters::Adapter
 
-
-   #
-   # Creates an Address for the coordinates.
+   attr_reader :type_manager
    
-   def self.address( coordinates )
-      fail_unless_overridden
-   end
-   
-   #
-   # Returns a connection to the underlying database, or calls your block with the connection. 
-   # Individual adapters may implement connection pooling, at their option.
-   
-   def connect()
-      fail_unless_overridden
-   end
-   
-   
-   #
-   # Similar to connect(), but wraps your block in a transaction.
-   
-   def transact()
-      connect do |connection|
-         connection.transact do
-            yield(connection)
-         end
-      end
-   end
-
-   
-   #
-   # Escapes special characters in a string for inclusion in a query.
-   
-   def escape_string( string )
-      fail_unless_overridden
-   end
-   
-   
-   #
-   # Quotes a string for inclusion in a query.
-   
-   def quote_string( string )
-      "'#{escape_string(string)}'"
-   end
-   
-   
-   #
-   # Quotes an identifier for inclusion in a query.
-   
-   def quote_identifier( identifier )
-      "\"#{identifier}\""
-   end
-   
-
-   attr_reader :address, :type_manager, :schema_class, :table_class, :field_class, :index_class, :separator, :schema_maps, :entity_maps
-   
-   def url()
-      @address.url
-   end
-   
-   def build_name( *parts )      
-      Name.new(parts.flatten, @separator)
-   end
-   
-   def empty_name()
-      Name.new([], @separator)
-   end
-   
-   
-   def define_table( *name )
-      table_class.new(self, build_name(*name)).use do |table|
-         @tables.register(table)
-         yield(table) if block_given?
-      end
-   end
    
    def print_to( printer )
-      printer.label("#{self.class.namespace_module.unqualified_name} Adapter for #{@address.url}") do
+      super do
          printer.label("Tables") do
             @tables.each do |table|
                printer.print(table.to_sql_create(name_width, type_width))
@@ -131,35 +41,91 @@ class Adapter
       end
    end
    
+   
+   #
+   # Called by the Runtime system to install/upgrade schemas into the database.
+   
+   def install( schema )
+      schema_name = schema.name.to_s.identifier_case
+      
+      transact do |connection|
+         connection.execute(@schemas_table.render_sql_create(0, 0, true))
+      end
+      
+      transact do |connection|
+         installed_version = connection.retrieve_value("version", 0, @version_query, schema_name)
+         if installed_version == 0 then            
+            map(schema)
+            
+            fail_todo()
+            
+            
+            @adapter.lay_out(schema).tables.each do |table|
+               table.install(connection)
+            end
+            @versions[schema.name] = self.versions_table[schema_name, connection] = 1
+         elsif installed_version < schema.version then
+            fail "no version upgrade support yet"
+         else
+            fail_todo()
+            
+            @adapter.lay_out(schema)
+         end
+      end
+   end
+   
 
-protected
-   def initialize( address, overrides = {} )
-      @address      = address
-      @tables       = Registry.new()    # name => Table
-      @schema_maps  = {}                # Schemaform::Model::Schema => SchemaMap
-      @entity_maps  = {}                # Schemaform::Model::Entity => EntityMap      
-      @query_plans  = {}                # Language::Placeholder => QueryPlan
-      @monitor      = Monitor.new()
-      @overrides    = overrides
+   #
+   # Builds an appropriate Map::Node on the specified Model object. Override this if you customize
+   # the base Map classes.
+   
+   def map( model )
+      case model
+      when Model::Schema
+         Map::Schema.new(self, model)
+      when Model::Entity
+         Map::Entity.new(self, model)
+      end
+   end
+   
 
-      @type_manager    = overrides.fetch(:type_manager_class, TypeManager).new(self)
-      @table_class     = overrides.fetch(:table_class       , Table      )
-      @field_class     = overrides.fetch(:field_class       , Field      )
-      @index_class     = overrides.fetch(:index_class       , Index      )
-      @separator       = overrides.fetch(:separator         , "__"       )
-      @internal_format = overrides.fetch(:internal_format   , "$%s"      )
-      @present_format  = overrides.fetch(:present_format    , "%s?"      )
+   #
+   # Defines a new table and calls your block to fill it in.
+   
+   def define_table( name, or_return_existing = false )
+      name_string = name.to_s
+
+      @monitor.synchronize do 
+         if @tables.member?(name_string) then
+            assert(or_return_existing, "cannot create duplicate table [#{name_s}]")
+         else
+            build_table(name).use do |table|
+               yield(table)
+               @tables.register(table, name_string)
+            end
+         end
+      end
+      
+      @tables[name_string]
+   end   
+   
+   
+   
+   
+   # =======================================================================================
+   #                                   Object Instantiation
+   # =======================================================================================
+   
+   def build_query( relation )
+      Query.new(relation)
    end
 
-   @@monitor  = Monitor.new()
-   @@adapters = {}
-   
-   def name_width()
-      @name_width ||= @tables.collect{|table| table.name_width}.max()
+   def build_table( name )
+      Table.new(self, name)
    end
    
-   def type_width()
-      @type_width ||= @tables.collect{|table| table.type_width}.max()
+   def build_name( *parts )
+      Name.new(parts, @separator)
    end
    
    def build_internal_name( *parts )
@@ -171,6 +137,31 @@ protected
       parts << sprinf(@present_format, parts.pop)
       build_name(parts)
    end
+   
+   
+
+
+protected
+   def initialize( address, configuration = {} )
+      super(address)
+
+      @type_manager = TypeManager.new(self)
+      @tables       = TableRegistry.new()    # name => Table
+      @schema_maps  = {}                     # Schemaform::Model::Schema => SchemaMap
+      @entity_maps  = {}                     # Schemaform::Model::Entity => EntityMap      
+      @query_plans  = {}                     # Language::Placeholder => QueryPlan
+      
+      @schemas_table = define_table("schemas", true) do |table|
+         table.define_field(:name   , type_manager().text_type(60) , table.build_primary_key_mark())
+         table.define_field(:version, type_manager().integer_type())
+      end
+      
+      @version_query   = @schemas_table.as_query.where(:name => []).select(:version)
+      @separator       = configuration.fetch(:separator      , "__" )
+      @internal_format = configuration.fetch(:internal_format, "$%s")
+      @present_format  = configuration.fetch(:present_format , "%s?")
+   end
+   
    
    
 
@@ -190,14 +181,25 @@ protected
    # end
 
    alias dispatch send_specialized
-   
+
+
+   class TableRegistry < Registry
+      
+      def name_width()
+         members.collect{|table| table.fields.name_width}.max()
+      end
+      
+      def type_width()
+         members.collect{|table| table.fields.type_width}.max()
+      end
+   end
 
 end # Adapter
 end # GenericSQL
 end # Adapters
 end # Schemaform
 
-["schema", "mapping", "queries"].each do |subdir|
+["query_parts", "map"].each do |subdir|
    Dir[Schemaform.locate("#{subdir}/*.rb")].each{|path| require path}
 end
 

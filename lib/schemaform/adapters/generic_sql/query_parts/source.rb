@@ -18,17 +18,53 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("part.rb")
+
 
 #
-# Wrapper for exceptions from this adapter.
+# Base class for things that help make up a Query.
 
 module Schemaform
 module Adapters
-module SQLite
-class Error < Adapters::Error
+module GenericSQL
+module QueryParts
+class Source < Part
 
+   def initialize( query, op, relation )
+      @query    = query
+      @op       = op
+      @relation = relation
+      @alias    = nil
+   end
+   
+   attr_accessor :alias
+   
+   def fields()
+      @relation.fields
+   end
+   
+   def adapter()
+      @query.adapter
+   end
+   
+   def print_to( printer )
+      printer << "#{@op} "
+      
+      case @relation
+      when Query
+         printer.end_line
+         printer << "(\n"
+         printer.indent { printer.print @relation.to_s }
+         printer << ") #{@alias}"
+      when Table
+         printer << "#{@relation.quoted_name} #{@alias}"
+      else 
+         fail
+      end
+   end
 
-end # Error
-end # SQLite
+end # Source
+end # QueryParts
+end # GenericSQL
 end # Adapters
 end # Schemaform

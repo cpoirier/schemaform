@@ -20,15 +20,27 @@
 
 
 #
-# Wrapper for exceptions from this adapter.
+# Base class for things that help make up a Query.
 
 module Schemaform
 module Adapters
-module SQLite
-class Error < Adapters::Error
+module GenericSQL
+module QueryParts
+class Part
+   include QualityAssurance
+   extend  QualityAssurance
 
+   def initialize()
+   end
+   
+   attr_reader :adapter
+   
+   def print_to( printer )
+      fail_unless_overridden
+   end
 
-end # Error
-end # SQLite
+end # Part
+end # QueryParts
+end # GenericSQL
 end # Adapters
 end # Schemaform

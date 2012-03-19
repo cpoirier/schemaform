@@ -20,15 +20,23 @@
 
 
 #
-# Wrapper for exceptions from this adapter.
+# The base class for things that map Model elements into the adapter.
 
 module Schemaform
 module Adapters
-module SQLite
-class Error < Adapters::Error
+module GenericSQL
+module Map
+class Node
 
+   def initialize( adapter, model )
+      @adapter = adapter
+      @model   = model
+   end
+   
+   attr_reader :adapter, :model
 
-end # Error
-end # SQLite
+end # Node
+end # Map
+end # GenericSQL
 end # Adapters
 end # Schemaform

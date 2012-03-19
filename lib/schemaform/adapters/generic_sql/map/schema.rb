@@ -18,17 +18,30 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("node.rb")
+
 
 #
-# Wrapper for exceptions from this adapter.
+# Imports the Model::Schema into the adapter for processing.
 
 module Schemaform
 module Adapters
-module SQLite
-class Error < Adapters::Error
+module GenericSQL
+module Map
+class Schema < Node
 
+   def initialize( adapter, model )
+      super
+      
+      @entity_maps = {}      
+      model.entities.each do |entity|
+         @entity_maps[entity.name] = adapter.map(entity)
+      end
+   end
+   
 
-end # Error
-end # SQLite
+end # Schema
+end # Map
+end # GenericSQL
 end # Adapters
 end # Schemaform

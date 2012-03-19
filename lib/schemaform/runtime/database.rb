@@ -66,11 +66,6 @@ class Database
    
 protected
 
-   def versions_table()
-      @control_tables[:versions]
-   end
-
-
    def build_workspace( schemas )
       if schemas.length == 1 and schemas[0].is_a?(Workspace) then
          assert(schemas[0].database == self, "you can only pass a Workspace if it is from this Database" )
@@ -81,7 +76,7 @@ protected
 
       unless @workspaces.member?(workspace_name)
          schemas.each do |schema|
-            upgrade_schema(schema)
+            @adapter.install(schema)
          end
       end
       
@@ -90,37 +85,9 @@ protected
 
    
    def upgrade_schema( schema )
+      warn_once("this should probably move to the adapter")
       return if @versions.fetch(schema.name, 0) >= schema.version
-      @adapter.transact do |connection|
-         schema_name = schema.name.to_s.identifier_case
-         installed_version = self.versions_table[schema_name, connection]
-         if installed_version == 0 then
-            @adapter.lay_out(schema).tables.each do |table|
-               table.install(connection)
-            end
-            @versions[schema.name] = self.versions_table[schema_name, connection] = 1
-         elsif installed_version < schema.version then
-            fail "no version upgrade support yet"
-         else
-            @adapter.lay_out(schema)
-         end
-      end
-   end
-   
-   
-   def upgrade_system()
-      @adapter.connect do |connection|         
-         @control_tables.each do |name, table|
-            table.definition.install(connection)
-         end
-         
-         version = self.versions_table[Schemaform::MasterIdentifier, connection]
-         if version == 0 then
-            self.versions_table[Schemaform::MasterIdentifier, connection] = 1
-         elsif version > 1 then
-            fail "database #{@adaptor.url} has been managed with a more recent version of Schemaform (#{version})"
-         end
-      end
+      @adapter.upgrade(schema)
    end
    
    
@@ -130,76 +97,11 @@ private
       @adapter    = adapter
       @monitor    = Monitor.new()
       @workspaces = {}
-      @versions   = {}
-
-      #
-      # Define the control tables.
-      
-      @control_tables = {}
-      @control_tables[:versions] = VersionTable.new(@adapter, Schemaform::MasterIdentifier)
-      
-      # @adapter.instance_eval do
-      #    .use do |control_schema|
-      #       
-      #       # tables[:configuration] = control_schema.define_table(make_name(:configuration, Schemaform::MasterIdentifier)).use do |table|               
-      #       #    table.add_field field_class.new(table, :name , nil, text_field_type(50) )
-      #       #    table.add_field field_class.new(table, :value, nil, text_field_type(200))
-      #       # end
-      # 
-      #       # tables[:versions] = control_schema.define_table(make_name("versions", Schemaform::MasterIdentifier), "schema_id").use do |table|
-      #       #    table.add_field field_class.new(table, :name   , nil, text_field_type(60))
-      #       #    table.add_field field_class.new(table, :version, nil, integer_field_type(1..1000000000))
-      #       # end
-      #    end
-      # end
-      
-      upgrade_system()
    end
 
    @@monitor   = Monitor.new()
    @@databases = {} 
    
-   
-   class VersionTable
-      include QualityAssurance
-      
-      def initialize(adapter, table_prefix = nil)
-         @adapter = adapter
-         @table = adapter.define_table(table_prefix, "versions") do |table|
-            table.define_field(:name   , adapter.type_manager.text_type(60) )
-            table.define_field(:version, adapter.type_manager.integer_type())
-            
-            warn_once("not setting primary key on VersionTable")
-            # table.define_key(:name)
-         end
-         
-         warn_once("using hardcoded queries until query builders are done")
-         @getter   = "SELECT version FROM schemaform$versions WHERE name = ?"
-         @updater  = "UPDATE schemaform$versions set version = ? WHERE name = ?"
-         @inserter = "INSERT INTO schemaform$versions (name, version) VALUES (?, ?)"
-      end
-      
-      def definition()
-         @table
-      end
-      
-      def []( name, connection = nil, default = 0 )      
-         return @adapter.connect{|connection| value = self[name, connection]} if connection.nil?
-         connection.retrieve_value(0, default, @getter, name).to_i
-      end
-
-      def []=( name, connection = nil, value = nil )
-         value, connection = connection, value if value.nil?
-         return @adapter.connect{|connection| self[name, connection, value]} if connection.nil?
-
-         if connection.update(@updater, value, name) == 0 then
-            connection.insert(@inserter, name, value)
-         end
-
-         value
-      end
-      
-   end
    
 end # Database
 end # Runtime

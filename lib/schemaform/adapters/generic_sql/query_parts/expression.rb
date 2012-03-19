@@ -18,17 +18,31 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("part.rb")
+
 
 #
-# Wrapper for exceptions from this adapter.
+# Base class for things that help make up a Query.
 
 module Schemaform
 module Adapters
-module SQLite
-class Error < Adapters::Error
+module GenericSQL
+module QueryParts
+class Expression < Part
 
+   def initialize( type_info )
+      @type_info = type_info
+   end
+   
+   attr_reader :type_info
+   
+   def adapter()
+      @type_info.adapter
+   end
+   
 
-end # Error
-end # SQLite
+end # Expression
+end # QueryParts
+end # GenericSQL
 end # Adapters
 end # Schemaform

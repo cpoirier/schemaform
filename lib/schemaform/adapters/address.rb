@@ -20,15 +20,38 @@
 
 
 #
-# Wrapper for exceptions from this adapter.
+# Base class for things that locate a database for connection.
 
 module Schemaform
 module Adapters
-module SQLite
-class Error < Adapters::Error
+class Address
 
+   def initialize( url, coordinates = {} )
+      @url         = url
+      @coordinates = coordinates
+   end
+   
+   attr_reader :url
+   
+   def []( name )
+      @coordinates[name]
+   end
+   
+   def fetch( name, default = nil )
+      warn_todo("correct Address::fetch() default handling")
+      @coordinates.fetch(name, default)
+   end
+   
+   def method_missing( symbol, *args, &block )
+      return super unless args.empty? && block.nil?
+      return super unless @coordinates.member?(symbol)
+      self[symbol]
+   end
+   
+   def respond_to?(symbol)
+      @coordinates.member?(symbol) || super
+   end
 
-end # Error
-end # SQLite
+end # Address
 end # Adapters
 end # Schemaform

@@ -20,15 +20,52 @@
 
 
 #
-# Wrapper for exceptions from this adapter.
+# Base class for things that mark up fields.
 
 module Schemaform
 module Adapters
-module SQLite
-class Error < Adapters::Error
+module GenericSQL
+module TableParts
 
+   #
+   # Base class for things that configure a Field in some way. Override Mark::build() if you need
+   # parameters.
 
-end # Error
-end # SQLite
+   class FieldMark
+      include QualityAssurance
+      extend  QualityAssurance
+   
+      def self.build()
+         @@instances[self] ||= new()
+      end
+   
+      @@instances = {}
+      
+   end # FieldMark
+   
+   
+   class GeneratedMark  < FieldMark ; end
+   class PrimaryKeyMark < FieldMark ; end
+   class RequiredMark   < FieldMark ; end
+   class OptionalMark   < FieldMark ; end
+   
+   class ReferenceMark  < FieldMark
+      
+      def self.build( table, deferrable = false )
+         new(table, deferrable)
+      end
+      
+      def initialize( table, deferrable = false )
+         type_check(:table, table, Table)
+         @table      = table
+         @deferrable = deferrable
+      end
+
+      def table()       ; @table      ; end
+      def deferrable?() ; @deferrable ; end
+   end
+
+end # TableParts
+end # GenericSQL
 end # Adapters
 end # Schemaform

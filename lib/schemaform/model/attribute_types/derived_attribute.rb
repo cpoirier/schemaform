@@ -33,6 +33,9 @@ class DerivedAttribute < Attribute
       self.class.new(@name, @proc).acquire_for(new_context)
    end
    
+   def derived?()
+      true
+   end
    
 end # DerivedAttribute
 end # Model

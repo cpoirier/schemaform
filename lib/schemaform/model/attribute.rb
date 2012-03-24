@@ -81,7 +81,10 @@ class Attribute < Component
    def required?()
       writable?()
    end
-      
+   
+   def derived?()
+      false
+   end
    
 end # Attribute
 end # Model

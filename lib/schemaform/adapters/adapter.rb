@@ -136,6 +136,13 @@ class Adapter
    end
    
    
+   def synchronize()
+      @monitor.synchronize do
+         yield
+      end
+   end
+   
+   
    
 
 protected

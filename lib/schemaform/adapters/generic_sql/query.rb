@@ -42,7 +42,7 @@ class Query < Relation
       @limit            = 0
       @has_aggregates   = false
 
-      add_source!(build_from(relation))
+      add_source!(create_from(relation))
    end
    
    attr_reader :fields, :sources, :where_condition, :group_by_fields, :having_condition, :order_by_fields, :offset, :limit
@@ -106,10 +106,10 @@ class Query < Relation
 
             comparisons = expression.collect do |k, v|
                field = @fields[k.to_s]
-               build_comparison(field, build_literal(field.type_info, v))
+               create_comparison(field, create_literal(field.type_info, v))
             end
 
-            result.and_where!(build_and(comparisons))
+            result.and_where!(create_and(comparisons))
          else
             result.and_where!(expression)
          end
@@ -210,39 +210,39 @@ class Query < Relation
    # =======================================================================================
 
 
-   def build_field_reference( source, name, type_info )
+   def create_field_reference( source, name, type_info )
       QueryParts::FieldReference.new(type_info, source, name)
    end
    
-   def build_derived_field( type_info, expression )
+   def create_derived_field( type_info, expression )
       QueryParts::DerivedField.new(type_info, expression)
    end
    
-   def build_and( *clauses )
+   def create_and( *clauses )
       QueryParts::And.new(@adapter.type_manager.boolean_type, *clauses)
    end
    
-   def build_or( *clauses )
+   def create_or( *clauses )
       QueryParts::Or.new(@adapter.type_manager.boolean_type, *clauses)
    end
    
-   def build_not( expression )
+   def create_not( expression )
       QueryParts::Not.new(@adapter.type_manager.boolean_type, expression)
    end
       
-   def build_comparison( lhs, rhs, op = "=" )
+   def create_comparison( lhs, rhs, op = "=" )
       QueryParts::Comparison.new(@adapter.type_manager.boolean_type, op, lhs, rhs)
    end
    
-   def build_literal( type_info, value )
+   def create_literal( type_info, value )
       QueryParts::Literal.new(type_info, value)
    end
    
-   def build_from( relation )
+   def create_from( relation )
       QueryParts::From.new(self, relation)
    end
    
-   def build_join( relation, condition, type = nil )
+   def create_join( relation, condition, type = nil )
       QueryParts::Join.new(self, relation, condition, type)
    end
 
@@ -263,7 +263,7 @@ protected
          source.fields.each do |name, field|
             name = name.to_s
             unless @fields.member?(name)
-               @fields[name] = build_field_reference(source, name, field.type_info)
+               @fields[name] = create_field_reference(source, name, field.type_info)
             end
          end
       end
@@ -273,7 +273,7 @@ protected
    
    def and_where!( expression )
       if @where_condition then
-         @where_condition = build_and(@where_condition, expression)
+         @where_condition = create_and(@where_condition, expression)
       else
          @where_condition = expression
       end

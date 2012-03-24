@@ -28,7 +28,7 @@ module Adapters
 module GenericSQL
 class Adapter < Adapters::Adapter
 
-   attr_reader :type_manager
+   attr_reader :wrappers, :type_manager
    
    
    def print_to( printer )
@@ -55,7 +55,11 @@ class Adapter < Adapters::Adapter
       transact do |connection|
          installed_version = connection.retrieve_value("version", 0, @version_query, schema_name)
          if installed_version == 0 then            
-            map(schema)
+            @schema_maps[schema] = schema_map = create_schema_map(schema, create_name())
+            schema_map.build()
+            @tables.each do |table|
+               Schemaform.debug.dump(table.render_sql_create())
+            end
             
             fail_todo()
             
@@ -76,20 +80,6 @@ class Adapter < Adapters::Adapter
    
 
    #
-   # Builds an appropriate Map::Node on the specified Model object. Override this if you customize
-   # the base Map classes.
-   
-   def map( model )
-      case model
-      when Model::Schema
-         Map::Schema.new(self, model)
-      when Model::Entity
-         Map::Entity.new(self, model)
-      end
-   end
-   
-
-   #
    # Defines a new table and calls your block to fill it in.
    
    def define_table( name, or_return_existing = false )
@@ -97,9 +87,9 @@ class Adapter < Adapters::Adapter
 
       @monitor.synchronize do 
          if @tables.member?(name_string) then
-            assert(or_return_existing, "cannot create duplicate table [#{name_s}]")
+            assert(or_return_existing, "cannot create duplicate table [#{name_string}]")
          else
-            build_table(name).use do |table|
+            create_table(name).use do |table|
                yield(table)
                @tables.register(table, name_string)
             end
@@ -110,34 +100,90 @@ class Adapter < Adapters::Adapter
    end   
    
    
+   #
+   # Defines a new table and gives it an identifier, optionally by linking it to a master table's
+   # identifier.
+   
+   def define_linkable_table( name, base_table = nil )
+      define_table(name) do |table|
+         id_name = create_internal_name("id")
+         
+         if base_table.exists? then
+            base_id = base_table.identifier
+            table.identifier = table.define_reference_field(id_name, base_table, table.create_primary_key_mark())
+         else
+            table.identifier = table.define_identifier_field(id_name, table.create_primary_key_mark())
+         end
+         
+         yield(table)
+      end
+   end
+
+   
+   
    
    
    # =======================================================================================
    #                                   Object Instantiation
    # =======================================================================================
    
-   def build_query( relation )
+   def create_query( relation )
       Query.new(relation)
    end
 
-   def build_table( name )
+   def create_table( name )
       Table.new(self, name)
    end
    
-   def build_name( *parts )
+   def create_name( *parts )
       Name.new(parts, @separator)
    end
    
-   def build_internal_name( *parts )
+   def create_internal_name( *parts )
       parts << sprintf(@internal_format, parts.pop)
-      build_name(parts)
+      create_name(parts)
    end
    
-   def build_present_name( *parts )
+   def create_present_name( *parts )
       parts << sprinf(@present_format, parts.pop)
-      build_name(parts)
+      create_name(parts)
    end
    
+   def create_schema_map( model, base_name )
+      SchemaMap.new(self, model, base_name)      
+   end
+   
+   def create_entity_map(schema_map, model, base_name)
+      EntityMap.new(schema_map, model, base_name)
+   end
+   
+   def create_tuple_map(context_map, model, base_name)
+      TupleMap.new(context_map, model, base_name)
+   end
+   
+   def create_attribute_map(tuple_map, model, base_name)
+      AttributeMap.new(tuple_map, model, base_name)
+   end
+
+   def create_relation_map(context_map, model, base_name)
+      RelationMap.new(context_map, model, base_name)
+   end
+   
+   def create_enumeration_map(context_map, model, base_name)
+      EnumerationMap.new(context_map, model, base_name)
+   end
+   
+   def create_set_map(context_map, model, base_name)
+      SetMap.new(context_map, model, base_name)
+   end
+   
+   def create_list_map(context_map, model, base_name)
+      ListMap.new(context_map, model, base_name)
+   end
+   
+   def create_scalar_map(context_map, type)
+      ScalarMap.new(context_map, type)
+   end
    
 
 
@@ -145,6 +191,7 @@ protected
    def initialize( address, configuration = {} )
       super(address)
 
+      @wrappers     = {}
       @type_manager = TypeManager.new(self)
       @tables       = TableRegistry.new()    # name => Table
       @schema_maps  = {}                     # Schemaform::Model::Schema => SchemaMap
@@ -152,7 +199,7 @@ protected
       @query_plans  = {}                     # Language::Placeholder => QueryPlan
       
       @schemas_table = define_table("schemas", true) do |table|
-         table.define_field(:name   , type_manager().text_type(60) , table.build_primary_key_mark())
+         table.define_field(:name   , type_manager().text_type(60) , table.create_primary_key_mark())
          table.define_field(:version, type_manager().integer_type())
       end
       
@@ -199,7 +246,7 @@ end # GenericSQL
 end # Adapters
 end # Schemaform
 
-["query_parts", "map"].each do |subdir|
+["query_parts"].each do |subdir|
    Dir[Schemaform.locate("#{subdir}/*.rb")].each{|path| require path}
 end
 

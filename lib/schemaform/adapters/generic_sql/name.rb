@@ -18,30 +18,50 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("node.rb")
-
-
-#
-# Imports the Model::Schema into the adapter for processing.
 
 module Schemaform
 module Adapters
 module GenericSQL
-module Map
-class Schema < Node
-
-   def initialize( adapter, model )
-      super
-      
-      @entity_maps = {}      
-      model.entities.each do |entity|
-         @entity_maps[entity.name] = adapter.map(entity)
+class Name
+   
+   def initialize( components, separator )
+      @separator  = separator
+      @components = components.compact.collect{|name| name.is_a?(Name) ? name.components : name.to_s.identifier_case}.flatten
+      @tail       = (@components.last == "?" ? @components.pop : "")
+      @full_name  = @components.join(separator) + @tail
+   end
+   
+   attr_reader :components
+   
+   def last()
+      @components.last
+   end
+   
+   def +( name )
+      case name
+      when Name
+         self.class.new(@components + name.components, @separator)
+      when Array
+         self.class.new(@components + name, @separator) 
+      else
+         self.class.new(@components + [name], @separator)
       end
    end
    
+   def to_s()
+      @full_name
+   end
 
-end # Schema
-end # Map
+   def hash()
+      to_s.hash()
+   end
+   
+   def ==( rhs )
+      to_s == rhs.to_s
+   end
+   
+   
+end # Name
 end # GenericSQL
 end # Adapters
 end # Schemaform

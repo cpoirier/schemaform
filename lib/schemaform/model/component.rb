@@ -130,6 +130,14 @@ class Component
    end
    
    
+   #
+   # Wraps this object in a wrapper of the same class from another module.
+   
+   def wrap( target_module, *parameters )
+      target_module.wrap(self, *parameters)
+   end
+   
+   
    
 
 end # Component

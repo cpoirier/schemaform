@@ -42,6 +42,10 @@ class CollectionType < Type
       @member_type == schema.unknown_type()
    end
    
+   def ordered_type?
+      false
+   end
+   
    def naming_type?
       @member_type.naming_type?
    end

@@ -33,7 +33,7 @@ class Table < Relation
    attr_accessor :identifier
 
    def define_field( name, type, *marks )
-      @fields.register(build_field(name, type, *marks))
+      @fields.register(create_field(name, type, *marks))
    end
    
    # def define_index( name, unique = false )
@@ -43,11 +43,11 @@ class Table < Relation
    # end
    
    def define_reference_field( name, target_table, *marks )
-      define_field(name, @adapter.type_manager.identifier_type, @adapter.build_reference_mark(target_table), *marks)
+      define_field(name, @adapter.type_manager.identifier_type, create_reference_mark(target_table), *marks)
    end
    
    def define_identifier_field( name, *marks )
-      define_field(name, @adapter.type_manager.identifier_type, @adapter.build_generated_mark(), *marks)
+      define_field(name, @adapter.type_manager.identifier_type, create_generated_mark(), *marks)
    end
    
    def install( connection )
@@ -64,7 +64,7 @@ class Table < Relation
    # =======================================================================================
    
    def as_query()
-      @query ||= @adapter.build_query(self)
+      @query ||= @adapter.create_query(self)
    end
 
    def render_sql_update( set_fields, key_fields )
@@ -129,27 +129,27 @@ class Table < Relation
    #                                   Object Instantiation
    # =======================================================================================
    
-   def build_field( name, type, *marks )
+   def create_field( name, type, *marks )
       TableParts::Field.new(self, name, type, *marks)
    end
    
-   def build_index( name, unique = false )
+   def create_index( name, unique = false )
       TableParts::Index.new(self, name, unique)
    end
 
-   def build_generated_mark()
+   def create_generated_mark()
       TableParts::GeneratedMark.build()
    end
    
-   def build_primary_key_mark()
+   def create_primary_key_mark()
       TableParts::PrimaryKeyMark.build()
    end
    
-   def build_required_mark()
+   def create_required_mark()
       TableParts::RequiredMark.build()
    end
    
-   def build_reference_mark( table, deferrable = false )
+   def create_reference_mark( table, deferrable = false )
       TableParts::ReferenceMark.build(table, deferrable)
    end
    

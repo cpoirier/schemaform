@@ -153,12 +153,6 @@ class Schema
       @entities.select{|e| e.is_a?(DerivedEntity)}
    end
 
-   #
-   # Returns the wrapper for this object in another module.
-   
-   def wrapper( target, *parameters )
-      target.wrap(self, *parameters)
-   end
    
 
 

@@ -55,7 +55,12 @@ class Adapter < Adapters::Adapter
       transact do |connection|
          installed_version = connection.retrieve_value("version", 0, @version_query, schema_name)
          if installed_version == 0 then        
-            wrapper = wrap(schema)
+            schema.entities.each do |entity|
+               wrapper = wrap(entity)
+               wrapper.build
+               entity.
+            end
+            
             p wrapper
             exit
             

@@ -49,15 +49,6 @@ class Wrappers
          end
          
          attr_reader :model, :adapter
-         
-         def method_missing( symbol, *args, &block )
-            @model.send(symbol, *args, &block)
-         end
-
-         def respond_to?(symbol)
-            super || @model.respond_to?(symbol)
-         end
-
       end
    end
    

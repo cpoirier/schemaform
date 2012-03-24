@@ -130,15 +130,6 @@ class Component
    end
    
    
-   #
-   # Returns the wrapper for this object in another module.
-   
-   def wrapper( target, *parameters )
-      target.wrap(self, *parameters)
-   end
-   
-   
-
 end # Component
 end # Model
 end # Schemaform

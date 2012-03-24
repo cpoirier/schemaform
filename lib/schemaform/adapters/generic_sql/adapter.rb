@@ -54,19 +54,8 @@ class Adapter < Adapters::Adapter
       
       transact do |connection|
          installed_version = connection.retrieve_value("version", 0, @version_query, schema_name)
-         if installed_version == 0 then        
-            schema.entities.each do |entity|
-               wrapper = wrap(entity)
-               wrapper.build
-               entity.
-            end
-            
-            p wrapper
-            exit
-            
-                
-            @schema_maps[schema] = schema_map = create_schema_map(schema, create_name())
-            schema_map.build()
+         if installed_version == 0 then
+            wrap_model(schema).lay_out()
             @tables.each do |table|
                Schemaform.debug.dump(table.render_sql_create())
             end
@@ -131,13 +120,12 @@ class Adapter < Adapters::Adapter
    
    
    #
-   # Called by Model::*.wrapper(adapter) to retrieve the corresponding wrapper object from
-   # this adapter. Uses the namespace returned by wrappers_module() to find the appropriate
-   # wrapper class.
+   # Retrieves the corresponding Model wrapper object from this adapter. Uses the namespace 
+   # returned by model_wrappers_module() to find the appropriate wrapper class.
    
-   def wrap( model_object )
+   def wrap_model( model_object )
       @wrappers.fetch!(model_object) do
-         wrappers_module.const_get(model_object.class.unqualified_name).new(model_object, self)
+         model_wrappers_module.const_get(model_object.class.unqualified_name).new(model_object, self)
       end
    end
    
@@ -172,11 +160,14 @@ class Adapter < Adapters::Adapter
       create_name(parts)
    end
    
-   def wrappers_module()
-      Wrappers
+   def model_wrappers_module()
+      Wrappers::Model
    end
    
-   
+   def production_wrappers_module()
+      Wrappers::Productions
+   end
+
 
 
 protected
@@ -238,7 +229,4 @@ end # GenericSQL
 end # Adapters
 end # Schemaform
 
-["query_parts"].each do |subdir|
-   Dir[Schemaform.locate("#{subdir}/*.rb")].each{|path| require path}
-end
 

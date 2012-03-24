@@ -131,12 +131,11 @@ class Component
    
    
    #
-   # Wraps this object in a wrapper of the same class from another module.
+   # Returns the wrapper for this object in another module.
    
-   def wrap( target_module, *parameters )
-      target_module.wrap(self, *parameters)
+   def wrapper( target, *parameters )
+      target.wrap(self, *parameters)
    end
-   
    
    
 

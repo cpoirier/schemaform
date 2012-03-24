@@ -54,7 +54,12 @@ class Adapter < Adapters::Adapter
       
       transact do |connection|
          installed_version = connection.retrieve_value("version", 0, @version_query, schema_name)
-         if installed_version == 0 then            
+         if installed_version == 0 then        
+            wrapper = wrap(schema)
+            p wrapper
+            exit
+            
+                
             @schema_maps[schema] = schema_map = create_schema_map(schema, create_name())
             schema_map.build()
             @tables.each do |table|
@@ -118,6 +123,19 @@ class Adapter < Adapters::Adapter
          yield(table)
       end
    end
+   
+   
+   #
+   # Called by Model::*.wrapper(adapter) to retrieve the corresponding wrapper object from
+   # this adapter. Uses the namespace returned by wrappers_module() to find the appropriate
+   # wrapper class.
+   
+   def wrap( model_object )
+      @wrappers.fetch!(model_object) do
+         wrappers_module.const_get(model_object.class.unqualified_name).new(model_object, self)
+      end
+   end
+   
 
    
    
@@ -149,41 +167,10 @@ class Adapter < Adapters::Adapter
       create_name(parts)
    end
    
-   def create_schema_map( model, base_name )
-      SchemaMap.new(self, model, base_name)      
+   def wrappers_module()
+      Wrappers
    end
    
-   def create_entity_map(schema_map, model, base_name)
-      EntityMap.new(schema_map, model, base_name)
-   end
-   
-   def create_tuple_map(context_map, model, base_name)
-      TupleMap.new(context_map, model, base_name)
-   end
-   
-   def create_attribute_map(tuple_map, model, base_name)
-      AttributeMap.new(tuple_map, model, base_name)
-   end
-
-   def create_relation_map(context_map, model, base_name)
-      RelationMap.new(context_map, model, base_name)
-   end
-   
-   def create_enumeration_map(context_map, model, base_name)
-      EnumerationMap.new(context_map, model, base_name)
-   end
-   
-   def create_set_map(context_map, model, base_name)
-      SetMap.new(context_map, model, base_name)
-   end
-   
-   def create_list_map(context_map, model, base_name)
-      ListMap.new(context_map, model, base_name)
-   end
-   
-   def create_scalar_map(context_map, type)
-      ScalarMap.new(context_map, type)
-   end
    
 
 

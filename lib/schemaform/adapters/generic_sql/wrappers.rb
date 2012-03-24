@@ -25,20 +25,6 @@ module Adapters
 module GenericSQL
 class Wrappers
       
-   #
-   # Called by Model::*.wrap(adapter) to retrieve the corresponding wrapper object from
-   # the adapter. You can subclass Wrappers in your specific Adapter, create subclasses of 
-   # individual wrapper classes, and this routine will continue to work (as long as the
-   # names stay the same).
-   
-   def self.wrap( model_object, adapter )
-      adapter.wrappers.fetch!(model_object) do
-         self.const_get(model_object.class.unqualified_name).new(model_object, adapter)
-      end
-   end
-
-
-
 
    # =======================================================================================
    #                                   Model Class Wrappers

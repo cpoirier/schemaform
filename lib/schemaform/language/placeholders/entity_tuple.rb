@@ -37,7 +37,6 @@ class EntityTuple < Tuple
    end
    
    def get_related( entity_name, link_attribute = nil, &link_expression )
-      p @entity.path
       related_entity = @entity.schema.entities.find(entity_name)
       link_path      = nil
 

@@ -39,10 +39,6 @@ class Entity < Component
    
    attr_reader :keys, :accessors, :operations, :projections
 
-   def structure()
-      fail_unless_overridden
-   end
-
    def base_entity()
       nil
    end
@@ -55,18 +51,12 @@ class Entity < Component
       fail_obsolete "Entities no longer have IDs; tuples are now identified via their membership in a collection"
    end
    
-   def heading()
-      type.member_type.tuple
-   end
-   
    def type()
       fail_unless_overridden
    end
    
    def verify()
-      assert(type.verify()     , "unable to verify type for #{full_name}"     )
-      assert(structure.exists? , "unable to build structure for #{full_name}" )
-      assert(structure.verify(), "unable to verify structure for #{full_name}")
+      assert(type.verify(), "unable to verify type for #{full_name}")
    end
    
    def description()

@@ -135,7 +135,7 @@ class Tuple < Element
       
       @attributes.each do |attribute|
          printer.print("#{attribute.class.unqualified_name.to_s.ljust(class_width)} #{attribute.name.to_s.ljust(name_width)} ", false)
-         attribute.structure.print_to(printer)
+         attribute.type.print_to(printer)
       end
    end
    

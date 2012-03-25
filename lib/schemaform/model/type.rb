@@ -177,14 +177,6 @@ class Type < Component
    
    
    #
-   # Returns an Element wrapper on this type.
-   
-   def to_element( context_collection = nil )
-      Element.new(self)
-   end
-
-
-   #
    # Returns true if this and the other type can be joined.
    
    def join_compatible?( with )

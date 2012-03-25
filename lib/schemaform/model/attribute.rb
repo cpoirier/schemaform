@@ -35,14 +35,8 @@ class Attribute < Component
       @type.acquire_for(self) if @type
    end
    
-   def structure()
-      @structure ||= type.to_element(context.context_collection()).acquire_for(self)
-   end
-
    def verify()
       type.verify()
-      assert(structure.exists?, "unable to build structure for #{full_name}")
-      structure.verify()
    end
    
    def type()
@@ -70,8 +64,7 @@ class Attribute < Component
    end
 
    def print_to( printer, width = nil )
-      printer.print("#{self.class.unqualified_name.to_s} #{@name.to_s.ljust(width)} ", false)
-      structure.print_to(printer)
+      super
    end
    
    def writable?()

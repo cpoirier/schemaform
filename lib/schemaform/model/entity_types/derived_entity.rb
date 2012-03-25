@@ -34,21 +34,14 @@ class DerivedEntity < Entity
    
    attr_accessor :proc
    
-   def structure()
-      @structure ||= type.to_element().acquire_for(self)
-   end
-   
    def root_tuple()
       type.member_type.tuple
    end
    
-   def heading()
-      structure.member
-   end
-   
    def print_to( printer )
       super do
-         structure.print_to(printer)
+         printer.label("Formula") { formula.print_to(printer) }
+         printer.label("Result" ) { type.print_to(printer)    }
       end
    end
    

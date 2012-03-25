@@ -27,13 +27,6 @@ module Schemaform
 module Model
 class ListType < CollectionType
 
-   #
-   # Returns an Element wrapper on this type.
-   
-   def to_element( context_collection = nil )
-      List.new(@member_type.to_element(context), context_collection)
-   end
-   
    def ordered_type?()
       true
    end

@@ -29,10 +29,10 @@ class DefinedEntity < Entity
       
    def initialize( name, base_entity = nil )
       super(name)
-      @structure   = Set.new(Tuple.new(), base_entity ? base_entity.structure : nil).acquire_for(self)
-      @heading     = @structure.member
+      @heading     = Tuple.new().acquire_for(self)
       @base_entity = base_entity
       @pedigree    = base_entity ? base_entity.pedigree + [self] : [self]
+      @type        = SetType.new(:member_type => @heading.type)
       
       @synonyms = []
       add_synonym(name)
@@ -43,19 +43,10 @@ class DefinedEntity < Entity
       @base_entity.add_synonym(name) if @base_entity
    end
    
-   attr_reader :heading, :structure, :pedigree, :base_entity, :names
+   attr_reader :heading, :type, :pedigree, :base_entity, :names
    
    def writable?()
       true
-   end
-   
-   def type()
-      unless @type
-         @structure.add_typing_information(@synonyms) if @synonyms.length > 1
-         @type = @structure.type
-      end
-
-      @type
    end
    
    def root_tuple()
@@ -81,9 +72,8 @@ class DefinedEntity < Entity
    end
    
    def print_to( printer )
-      type()
       super do
-         @structure.print_to(printer)
+         @heading.print_to(printer)
       end
    end
 

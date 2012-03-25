@@ -33,10 +33,6 @@ class IndirectType < Type
       super
    end
    
-   def to_element( context_collection = nil )
-      @element
-   end
-   
    attr_reader :element
    
    def naming_type?

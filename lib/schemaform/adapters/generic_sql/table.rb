@@ -41,15 +41,7 @@ class Table < Relation
    #       yield(index) if block_given?
    #    end
    # end
-   
-   def define_reference_field( name, target_table, *marks )
-      define_field(name, @adapter.type_manager.identifier_type, create_reference_mark(target_table), *marks)
-   end
-   
-   def define_identifier_field( name, *marks )
-      define_field(name, @adapter.type_manager.identifier_type, create_generated_mark(), *marks)
-   end
-   
+      
    def install( connection )
       unless present?(connection)
          connection.execute(render_sql_create())
@@ -158,6 +150,10 @@ class Table < Relation
    
    def create_required_mark()
       TableParts::RequiredMark.build()
+   end
+   
+   def create_optional_mark()
+      TableParts::OptionalMark.build()
    end
    
    def create_reference_mark( table, deferrable = false )

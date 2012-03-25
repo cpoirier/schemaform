@@ -57,8 +57,8 @@ class Adapter < Adapters::Adapter
          if installed_version == 0 then
             wrap_model(schema).lay_out()
             
-            name_width = @tables.collect{|t| t.name_width}.max()
-            type_width = @tables.collect{|t| t.type_width}.max()
+            name_width = @tables.name_width
+            type_width = @tables.type_width
             
             @tables.each do |table|
                Schemaform.debug.dump(table.render_sql_create(name_width, type_width))
@@ -110,13 +110,12 @@ class Adapter < Adapters::Adapter
    def define_linkable_table( name, base_table = nil )
       define_table(name) do |table|
          id_name = create_internal_name("id")
+
+         marks = []
+         marks << (base_table.exists? ? table.create_reference_mark(base_table) : table.create_generated_mark())
+         marks << table.create_primary_key_mark()
          
-         if base_table.exists? then
-            base_id = base_table.identifier
-            table.identifier = table.define_reference_field(id_name, base_table, table.create_primary_key_mark())
-         else
-            table.identifier = table.define_identifier_field(id_name, table.create_primary_key_mark())
-         end
+         table.identifier = table.define_field(name, identifier_type, *marks)
          
          yield(table) if block_given?
       end
@@ -170,6 +169,10 @@ class Adapter < Adapters::Adapter
    
    def production_wrappers_module()
       Wrappers::Productions
+   end
+   
+   def identifier_type()
+      @type_manager.identifier_type
    end
 
 

@@ -63,13 +63,11 @@ module Wrappers
       class DefinedEntity
          def lay_out()
             table()
-            @model.heading.attributes.each do |attribute|
-               wrap(attribute).lay_out()
-            end
+            wrap(@model.heading).lay_out()
          end
          
          def table()
-            @table ||= @adapter.define_linkable_table(@adapter.create_name(@model.name), @model.base_entity.nil? ? nil : wrap(@model.base_entity).table)
+            @table ||= @adapter.define_linkable_table(@adapter.create_name(@model.path), @model.base_entity.nil? ? nil : wrap(@model.base_entity).table)
          end
          
          def name()
@@ -78,6 +76,11 @@ module Wrappers
       end
       
       class Tuple
+         def lay_out()
+            @model.attributes.each do |attribute|
+               wrap(attribute).lay_out()
+            end
+         end
       end
       
       class Attribute
@@ -89,36 +92,52 @@ module Wrappers
             @name ||= context.name + @model.name
          end
       end
+            
+      class DerivedAttribute
+         def lay_out()
+            Schemaform.debug.dump("skipping derived attribute #{name}")
+         end
+      end
+      
+      
       
       class Type
-         def lay_out( table, name )
+         def lay_out( table, name, other = {} )
             Schemaform.debug.dump(self.class.name)
          end
       end
       
       class ScalarType
-         def lay_out( table, name )
+         def lay_out( table, name, other = {} )
             table.define_field(name, @adapter.type_manager.scalar_type(@model))
          end
       end
       
       class UserDefinedType
-         def lay_out( table, name )
+         def lay_out( table, name, other = {} )
             wrap(@model.evaluated_type).lay_out(table, name)
          end
       end
       
+      class EntityReferenceType
+         def lay_out( table, name, other = {} )
+            warn_todo("reference field null/default handling")
+
+            marks = []
+            marks << (other.fetch(:optional, false) ? table.create_optional_mark : table.create_required_mark)
+            marks << table.create_reference_mark(wrap(@model.referenced_entity).table, true)
+            
+            table.define_field(name, @adapter.type_manager.identifier_type, *marks)
+         end
+      end
+      
       class TupleType
-         def lay_out( table, name )
+         def lay_out( table, name, other = {} )
             wrap(@model.tuple).lay_out()
          end
       end
       
-      class SetType
-         def lay_out( table, name )
-            
-         end
-         
+      class CollectionType
          def table()
             @table ||= @adapter.define_linkable_table(context.table.name + name, context.table)
          end
@@ -127,6 +146,19 @@ module Wrappers
             @name ||= @adapter.create_name()
          end
       end
+      
+      class SetType
+         def lay_out( table, name, other = {} )
+            Schemaform.debug.dump("skipping set of #{@model.member_type.description}")            
+         end
+      end
+
+      class ListType
+         def lay_out( table, name, other = {} )
+            Schemaform.debug.dump("skipping list of #{@model.member_type.description}")            
+         end
+      end
+      
       
       
 

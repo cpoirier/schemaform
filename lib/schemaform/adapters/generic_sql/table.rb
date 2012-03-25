@@ -85,8 +85,8 @@ class Table < Relation
    def render_sql_create( name_width = 0, type_width = 0, if_not_exists = false )
       warn_todo("add keys and indices to table create")
       
-      name_width ||= @fields.name_width()
-      type_width ||= @fields.type_width()
+      name_width > 0 or name_width = name_width()
+      type_width > 0 or type_width = type_width()
       
       fields  = @fields.collect{|field| render_sql_create_field(field, name_width, type_width)}
       keys    = []
@@ -122,6 +122,17 @@ class Table < Relation
       clauses << "DEFERRABLE INITIALLY DEFERRED" if mark.deferrable?
       clauses.join(" ")
    end
+   
+   
+   def name_width()
+      @fields.name_width()
+   end
+   
+   def type_width()
+      @fields.type_width()
+   end
+   
+   
    
    
    
@@ -180,9 +191,6 @@ protected
    def quote_pair( name, value )
       "#{quote_identifier(name)} = #{@fields[name].quote_literal(value)}"
    end
-   
-   
-   
    
 
 

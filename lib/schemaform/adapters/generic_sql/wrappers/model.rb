@@ -30,6 +30,9 @@ module Wrappers
 class Model
    
    class Wrapper < Wrapper
+      def wrap( model )
+         @adapter.wrap_model(model)
+      end
    end
 
    

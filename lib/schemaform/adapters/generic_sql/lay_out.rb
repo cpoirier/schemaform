@@ -37,7 +37,7 @@ module Wrappers
          def lay_out()
             @entities = {}
             @model.defined_entities.each do |entity|
-               @entities[entity.name] = @adapter.wrap_model(entity)
+               @entities[entity.name] = wrap(entity)
             end
             
             @entities.each do |name, wrapper|
@@ -48,20 +48,28 @@ module Wrappers
       
       class Component
          def context()
-            @context ||= @adapter.wrap_model(@model.context)
+            @context ||= wrap(@model.context)
          end
+         
+         def table()
+            @table ||= context.table
+         end
+         
+         def name()
+            @name ||= context.name
+         end         
       end
       
       class DefinedEntity
          def lay_out()
             table()
             @model.heading.attributes.each do |attribute|
-               @adapter.wrap_model(attribute).lay_out()
+               wrap(attribute).lay_out()
             end
          end
          
          def table()
-            @table ||= @adapter.define_linkable_table(@model.name, @model.base_entity.nil? ? nil : @adapter.wrap_model(@model.base_entity).table)
+            @table ||= @adapter.define_linkable_table(@adapter.create_name(@model.name), @model.base_entity.nil? ? nil : wrap(@model.base_entity).table)
          end
          
          def name()
@@ -70,22 +78,11 @@ module Wrappers
       end
       
       class Tuple
-         def table()
-            @table ||= context.table
-         end
-         
-         def name()
-            @name ||= context.name
-         end
       end
       
       class Attribute
          def lay_out()
-            @adapter.wrap_model(@model.type).lay_out(table, name)
-         end
-         
-         def table()
-            @table ||= context.table
+            wrap(@model.type).lay_out(table, name)
          end
          
          def name()
@@ -93,20 +90,41 @@ module Wrappers
          end
       end
       
-      class Set
-         def table()
-            p context.model.name
-            @table ||= context.is_an?(DefinedEntity) ? context.table : @adapter.define_linkable_table(context.table.name + name, context.table)
-         end
-         
-         def name()
-            @name ||= @adapter.create_name()
+      class Type
+         def lay_out( table, name )
+            Schemaform.debug.dump(self.class.name)
          end
       end
       
       class ScalarType
          def lay_out( table, name )
             table.define_field(name, @adapter.type_manager.scalar_type(@model))
+         end
+      end
+      
+      class UserDefinedType
+         def lay_out( table, name )
+            wrap(@model.evaluated_type).lay_out(table, name)
+         end
+      end
+      
+      class TupleType
+         def lay_out( table, name )
+            wrap(@model.tuple).lay_out()
+         end
+      end
+      
+      class SetType
+         def lay_out( table, name )
+            
+         end
+         
+         def table()
+            @table ||= @adapter.define_linkable_table(context.table.name + name, context.table)
+         end
+         
+         def name()
+            @name ||= @adapter.create_name()
          end
       end
       

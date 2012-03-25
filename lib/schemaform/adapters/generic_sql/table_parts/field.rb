@@ -58,7 +58,11 @@ class Field
    end
 
    def type_width()      
-      @type.sql.length
+      @type_info.sql.length
+   end
+   
+   def type()
+      fail_obsolete
    end
    
 end # Field

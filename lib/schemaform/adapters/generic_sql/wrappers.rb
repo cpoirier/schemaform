@@ -29,6 +29,9 @@ module GenericSQL
 module Wrappers
 
    class Wrapper
+      include QualityAssurance
+      extend  QualityAssurance
+      
       def initialize( model, adapter )
          @model   = model
          @adapter = adapter
@@ -39,15 +42,13 @@ module Wrappers
 
    module Common
       def create_wrapper_class( model_class )
-         super_class = if model_class.superclass === Object then
-            self.const_defined?(:Wrapper) ? self.const_get(:Wrapper) : Wrappers::Wrapper
-         elsif self.const_defined?(model_class.superclass.unqualified_name) then
-            self.const_get(model_class.superclass.unqualified_name)
+         if model_class === Object then
+            self.const_defined?(:Wrapper) ? self.const_get(:Wrapper) : Schemaform::Adapters::GenericSQL::Wrappers::Wrapper
+         elsif self.const_defined?(model_class.unqualified_name) then
+            self.const_get(model_class.unqualified_name)
          else
-            self.create_wrapper_class(model_class.superclass)
+            self.create_wrapper_class(model_class.superclass).define_subclass(model_class.unqualified_name, self)
          end
-
-         super_class.define_subclass(model_class.unqualified_name, self)
       end      
    end
 

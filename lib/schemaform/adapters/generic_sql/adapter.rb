@@ -56,8 +56,12 @@ class Adapter < Adapters::Adapter
          installed_version = connection.retrieve_value("version", 0, @version_query, schema_name)
          if installed_version == 0 then
             wrap_model(schema).lay_out()
+            
+            name_width = @tables.collect{|t| t.name_width}.max()
+            type_width = @tables.collect{|t| t.type_width}.max()
+            
             @tables.each do |table|
-               Schemaform.debug.dump(table.render_sql_create())
+               Schemaform.debug.dump(table.render_sql_create(name_width, type_width))
             end
             
             fail_todo()

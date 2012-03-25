@@ -26,7 +26,7 @@ class Name
    
    def initialize( components, separator )
       @separator  = separator
-      @components = components.compact.collect{|name| name.is_a?(Name) ? name.components : name.to_s.identifier_case}.flatten
+      @components = components.flatten.compact.collect{|name| name.is_a?(Name) ? name.components : name.to_s.identifier_case}.flatten
       @tail       = (@components.last == "?" ? @components.pop : "")
       @full_name  = @components.join(separator) + @tail
    end

@@ -118,7 +118,7 @@ class Table < Relation
    
    def render_sql_create_reference_mark( mark )
       clauses = []
-      clauses << "REFERENCES #{mark.table.quoted_name}(#{mark.table.identifier.quoted_name})"
+      clauses << "REFERENCES #{mark.table.quoted_name} (#{mark.table.identifier.quoted_name})"
       clauses << "DEFERRABLE INITIALLY DEFERRED" if mark.deferrable?
       clauses.join(" ")
    end

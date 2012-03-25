@@ -20,46 +20,43 @@
 
 require Schemaform.locate("schemaform/model/schema.rb")
 
+#
+# Defines wrappers for the Model classes.
+
 module Schemaform
 module Adapters
 module GenericSQL
-class Wrappers
-      
+module Wrappers
 
-   # =======================================================================================
-   #                                   Model Class Wrappers
-   # =======================================================================================
-
-   #
-   # Creates a single (empty) class that corresponds in hierarchy to a class from the Model.
-   
-   def self.create_wrapper_class( model_class )
-      super_class = if model_class.superclass === Object then
-         Object
-      elsif self.const_defined?(model_class.superclass.unqualified_name) then
-         self.const_get(model_class.superclass.unqualified_name)
-      else
-         self.create_wrapper_class(model_class.superclass)
+   class Wrapper
+      def initialize( model, adapter )
+         @model   = model
+         @adapter = adapter
       end
       
-      super_class.define_subclass(model_class.unqualified_name, self) do 
-         def initialize( model, adapter )
-            @model   = model
-            @adapter = adapter
-         end
-         
-         attr_reader :model, :adapter
-      end
+      attr_reader :model, :adapter
    end
-   
-   #
-   # Create wrapper classes for all Model classes.
-   
-   Model.constants(false).each do |constant|
-      create_wrapper_class(Model.const_get(constant))
+
+   module Common
+      def create_wrapper_class( model_class )
+         super_class = if model_class.superclass === Object then
+            self.const_defined?(:Wrapper) ? self.const_get(:Wrapper) : Wrappers::Wrapper
+         elsif self.const_defined?(model_class.superclass.unqualified_name) then
+            self.const_get(model_class.superclass.unqualified_name)
+         else
+            self.create_wrapper_class(model_class.superclass)
+         end
+
+         super_class.define_subclass(model_class.unqualified_name, self)
+      end      
    end
 
 end # Wrappers
 end # GenericSQL
 end # Adapters
 end # Schemaform
+
+["wrappers"].each do |subdir|
+   Dir[Schemaform.locate("#{subdir}/*.rb")].each{|path| require path}
+end
+

@@ -106,7 +106,7 @@ class Tuple < Element
    end   
    
    def recreate_in( new_context, changes = nil )
-      self.new().acquire_for(new_context).use do |tuple|
+      self.class.new(@name).acquire_for(new_context).use do |tuple|
          recreate_children_in(tuple, changes)
       end      
    end

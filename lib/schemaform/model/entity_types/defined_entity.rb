@@ -29,8 +29,8 @@ class DefinedEntity < Entity
       
    def initialize( name, base_entity = nil )
       super(name)
-      @heading     = Tuple.new()
-      @structure   = Set.new(@heading, base_entity ? base_entity.structure : nil).acquire_for(self)
+      @structure   = Set.new(Tuple.new(), base_entity ? base_entity.structure : nil).acquire_for(self)
+      @heading     = @structure.member
       @base_entity = base_entity
       @pedigree    = base_entity ? base_entity.pedigree + [self] : [self]
       

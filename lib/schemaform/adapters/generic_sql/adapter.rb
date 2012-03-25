@@ -114,7 +114,7 @@ class Adapter < Adapters::Adapter
             table.identifier = table.define_identifier_field(id_name, table.create_primary_key_mark())
          end
          
-         yield(table)
+         yield(table) if block_given?
       end
    end
    

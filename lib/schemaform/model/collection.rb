@@ -33,8 +33,8 @@ class Collection < Element
    end
    
    def initialize( member, owner = nil )
-      super(self.class.type_class.build(member.type))
-      @member = member.acquire_for(self)
+      @member = member.context.exists? ? member.recreate_in(self) : member.acquire_for(self)
+      super(self.class.type_class.build(@member.type))
    end
    
    def add_typing_information( names )

@@ -141,7 +141,10 @@ class Model
       
       def lay_out()
          table()
-         @heading.lay_out()
+         @heading.attributes.each do |model, wrapper|
+            next if @model.base_entity.exists? && @model.base_entity.heading.attribute?(model.name)
+            wrapper.lay_out()
+         end
       end
 
       def table()

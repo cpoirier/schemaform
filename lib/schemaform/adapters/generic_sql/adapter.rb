@@ -55,7 +55,7 @@ class Adapter < Adapters::Adapter
       transact do |connection|
          installed_version = connection.retrieve_value("version", 0, @version_query, schema_name)
          if installed_version == 0 then
-            wrap_model(schema).lay_out()
+            wrap(schema).lay_out()
             
             name_width = @tables.name_width
             type_width = @tables.type_width
@@ -79,6 +79,17 @@ class Adapter < Adapters::Adapter
             @adapter.lay_out(schema)
          end
       end
+   end
+   
+   
+   def wrap( schema )
+      @monitor.synchronize do
+         unless @wrappers.member?(schema)
+            @wrappers[schema] = model_wrappers_module::Schema.new(self, schema)
+         end
+      end
+      
+      @wrappers[schema]
    end
    
 
@@ -115,24 +126,13 @@ class Adapter < Adapters::Adapter
          marks << (base_table.exists? ? table.create_reference_mark(base_table) : table.create_generated_mark())
          marks << table.create_primary_key_mark()
          
-         table.identifier = table.define_field(name, identifier_type, *marks)
+         table.identifier = table.define_field(id_name, identifier_type, *marks)
          
          yield(table) if block_given?
       end
    end
    
    
-   #
-   # Retrieves the corresponding Model wrapper object from this adapter. Uses the namespace 
-   # returned by model_wrappers_module() to find the appropriate wrapper class.
-   
-   def wrap_model( model_object )
-      @wrappers.fetch!(model_object) do
-         model_wrappers_module.const_get(model_object.class.unqualified_name).new(model_object, self)
-      end
-   end
-   
-
    
    
    
@@ -181,11 +181,9 @@ protected
    def initialize( address, configuration = {} )
       super(address)
 
-      @wrappers     = {}
+      @wrappers     = {}                     # Model::Schema => Wrappers::Model::Schema
       @type_manager = TypeManager.new(self)
       @tables       = TableRegistry.new()    # name => Table
-      @schema_maps  = {}                     # Schemaform::Model::Schema => SchemaMap
-      @entity_maps  = {}                     # Schemaform::Model::Entity => EntityMap      
       @query_plans  = {}                     # Language::Placeholder => QueryPlan
       
       @schemas_table = define_table("schemas", true) do |table|

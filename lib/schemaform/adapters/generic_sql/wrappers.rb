@@ -32,12 +32,12 @@ module Wrappers
       include QualityAssurance
       extend  QualityAssurance
       
-      def initialize( model, adapter )
+      def initialize( adapter, model )
          @model   = model
          @adapter = adapter
       end
       
-      attr_reader :model, :adapter
+      attr_reader :model, :adapter      
    end
 
    module Common

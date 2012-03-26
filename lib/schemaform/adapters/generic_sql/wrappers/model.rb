@@ -283,19 +283,24 @@ class Model
    
    
    class CollectionType
+      def initialize( context, model )
+         super(context, model)
+         @member_type = wrap(@model.member_type)
+      end
+      
       def table()
          @table ||= @adapter.define_linkable_table(context.table.name + context.name, context.table)
       end
 
-      def name()
-         @name ||= @adapter.create_name()
+      def name()         
+         @name ||= @model.naming_type? ? @adapter.create_name() : @adapter.create_internal_name("value")
       end
    end
 
 
    class SetType
       def lay_out()
-         Schemaform.debug.dump("skipping set of #{@model.member_type.description} #{@model.path} #{table.name}.#{name}")
+         @member_type.lay_out()
       end
    end
 

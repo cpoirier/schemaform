@@ -307,7 +307,17 @@ class Model
 
    class ListType
       def lay_out()
-         Schemaform.debug.dump("skipping list of #{@model.member_type.description} #{table.name}.#{name}")
+         @context.table.use do |outer|
+            outer.define_field(@adapter.create_internal_name(@context.name, "first"), @adapter.type_manager.identifier_type, table.create_optional_mark, outer.create_reference_mark(table, true))
+            outer.define_field(@adapter.create_internal_name(@context.name, "last" ), @adapter.type_manager.identifier_type, table.create_optional_mark, outer.create_reference_mark(table, true))
+         end
+         
+         @member_type.lay_out()
+         
+         table.use do |inner|
+            inner.define_field(@adapter.create_internal_name(name, "next"    ), @adapter.type_manager.identifier_type, inner.create_optional_mark, inner.create_reference_mark(inner, true))
+            inner.define_field(@adapter.create_internal_name(name, "previous"), @adapter.type_manager.identifier_type, inner.create_optional_mark, inner.create_reference_mark(inner, true))
+         end
       end
    end
 

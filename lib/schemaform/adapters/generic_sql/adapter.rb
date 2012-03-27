@@ -159,7 +159,7 @@ class Adapter < Adapters::Adapter
    end
    
    def create_present_name( *parts )
-      parts << sprinf(@present_format, parts.pop)
+      parts << sprintf(@present_format, parts.pop)
       create_name(parts)
    end
    

@@ -205,6 +205,18 @@ class Model
          @name ||= context.name + @model.name
       end
    end
+   
+   
+   class OptionalAttribute
+      def lay_out()
+         super
+         table.define_field(present_flag_name, @adapter.type_manager.boolean_type)
+      end
+      
+      def present_flag_name()
+         @present_flag_name ||= @adapter.create_present_name(name)
+      end
+   end
 
 
    class DerivedAttribute

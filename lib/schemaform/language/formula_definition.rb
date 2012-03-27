@@ -36,7 +36,6 @@ module FormulaDefinition
    end
    
    def self.all( entity_name )
-      p entity_name
       Model::Schema.current do |schema|
          assert(schema.entities.member?(entity_name), "unable to find entity [#{entity_name}] in resolution scope")
          schema.entities[entity_name].placeholder 

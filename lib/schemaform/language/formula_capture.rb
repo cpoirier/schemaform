@@ -506,14 +506,14 @@ module Model
       #
       # Recurses through the attributes, calling your block at each with the attribute
       # and an expression indicating how it arrived there. When you find what you are 
-      # looking for, you can build the final Marker around the path and return (or return 
-      # whatever else you want -- we won't judge).
+      # looking for, you can build the final Placeholder around the path and return (or 
+      # return whatever else you want -- we won't judge).
 
       def search( path = nil, &block )
          unless @heading.attributes.empty?
-            path = root_tuple.placeholder() if path.nil?
+            path = Language::Productions::Path.new(root_tuple.placeholder()) if path.nil?
             @heading.attributes.each do |attribute|
-               attribute_path = attribute.placeholder(path)
+               attribute_path = Language::Productions::Path.new(attribute.placeholder(path))
                if result = yield(attribute, attribute_path) || attribute.search(attribute_path, &block) then
                   return result
                end
@@ -529,9 +529,9 @@ module Model
    class Tuple
       def search( path = nil, &block )
          unless @attributes.empty?
-            path = root_tuple.placeholder() if path.nil?
+            path = Language::Productions::Path.new(root_tuple.placeholder()) if path.nil?
             @attributes.each do |attribute|
-               attribute_path = attribute.placeholder(path)
+               attribute_path = Language::Productions::Path.new(attribute.placeholder(path))
                if result = yield(attribute, attribute_path) || attribute.search(attribute_path, &block) then
                   return result
                end

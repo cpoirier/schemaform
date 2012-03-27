@@ -29,6 +29,8 @@ class Placeholder
    extend  QualityAssurance
 
    def initialize( type, production = nil )
+      type_check(:type      , type      , Model::Type)
+      type_check(:production, production, Production, true)
       @type       = type
       @production = production
    end
@@ -66,7 +68,7 @@ class Placeholder
    def print_to( printer )
       if @production then
          printer.label( "#{get_description} resulting from #{@production.description}" ) do
-            @production.print_to(printer, false)
+            @production.print_to(printer)
          end
       else
          printer.print("#{get_description}")
@@ -74,7 +76,7 @@ class Placeholder
    end
    
    def get_description()
-      "#{get_type.description}"
+      get_type.description
    end
    
 end # Placeholder

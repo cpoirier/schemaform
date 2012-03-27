@@ -210,6 +210,7 @@ class Model
    class DerivedAttribute
       def lay_out()
          Schemaform.debug.dump("skipping derived attribute #{name}")
+         Schemaform.debug.print(@model.formula)
       end
    end
 

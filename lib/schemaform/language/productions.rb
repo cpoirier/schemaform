@@ -44,6 +44,7 @@ module Language
       Application     = Production.define( :method, :subject, :parameters          )
       Each            = Production.define( :operation                              )
       EachTuple       = Production.define( :relation                               )
+      Path            = Production.define( :step                                   )
 
       # ==========================================================================================
       # Logic

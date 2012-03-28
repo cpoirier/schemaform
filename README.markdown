@@ -1,4 +1,4 @@
-Schemaform is a high-level database programming DSL for Ruby, intended to greatly reduce the work needed to produce a performant back-end from a complex, normalized design. With Schemaform, you can:
+Schemaform is a high-level database programming DSL for Ruby, intended to greatly reduce the work needed to produce a performant back-end from a complex, normalized design. In simple terms, it provides the power of spreadsheets in a relational context. With Schemaform, you can:
 
 * capture even your most complex structures, relationships, and processing quickly and concisely
 * leave all the denormalization and performance-related tuning to the system

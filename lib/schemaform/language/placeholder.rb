@@ -68,7 +68,7 @@ class Placeholder
    def print_to( printer )
       if @production then
          printer.label( "#{get_description} resulting from #{@production.description}" ) do
-            @production.print_to(printer)
+            @production.print_to(printer, false)
          end
       else
          printer.print("#{get_description}")

@@ -18,6 +18,8 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("placeholder.rb")
+
 
 #
 # Provides access to a Entity-examplar Tuple and its attributes. This is the Marker passed
@@ -25,6 +27,7 @@
 
 module Schemaform
 module Language
+module Placeholders
 class Tuple < Placeholder
 
    def initialize( tuple, production = nil )
@@ -46,5 +49,6 @@ class Tuple < Placeholder
    
 
 end # Tuple
+end # Placeholders
 end # Language
 end # Schemaform

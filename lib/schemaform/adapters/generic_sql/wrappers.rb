@@ -32,13 +32,44 @@ module Wrappers
       include QualityAssurance
       extend  QualityAssurance
       
-      def initialize( adapter, model )
-         @model   = model
-         @adapter = adapter
+      def initialize( context, model )
+         @model = model
+         if context.is_an?(Adapter) then
+            @context = nil
+            @adapter = context
+         else
+            @context = context
+            @adapter = context.adapter
+         end
       end
       
-      attr_reader :model, :adapter      
+      attr_reader :model, :adapter, :context
+      
+      def each_context()
+         result  = nil
+         current = @context
+         while current
+            result  = yield(current)
+            current = current.context
+         end      
+         result
+      end
+
+      def find_context( first = true, default = nil )
+         match = default
+         each_context do |current|
+            if yield(current) then
+               match = current
+               break if first
+            end
+         end
+         match
+      end
+      
+      def lay_out()
+      end      
    end
+
 
    module Common
       def create_wrapper_class( model_class )

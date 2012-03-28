@@ -18,12 +18,15 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("placeholder.rb")
+
 
 #
 # Provides access to a Tuple and its attributes.
 
 module Schemaform
 module Language
+module Placeholders
 class Attribute < Placeholder
 
    def initialize( definition, production = nil )
@@ -72,6 +75,7 @@ class Attribute < Placeholder
    
    
 end # Attribute
+end # Placeholders
 end # Language
 end # Schemaform
 

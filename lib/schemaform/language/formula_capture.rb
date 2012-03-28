@@ -49,22 +49,22 @@ module FormulaCapture
    
    def self.capture( value, production = nil )
       case value
-      when Placeholder, NilClass
+      when Placeholders::Placeholder, NilClass
          return value
       when Model::Type
          return value.placeholder(production)
       when Array
-         return LiteralList.new(*value.collect{|e| capture(e)})
+         return Language::Placeholders::LiteralList.new(*value.collect{|e| capture(e)})
       when Set
-         return LiteralSet.new(*value.collect{|e| capture(e)})
+         return Language::Placeholders::LiteralSet.new(*value.collect{|e| capture(e)})
       when FalseClass, TrueClass
-         return LiteralScalar.new(value, resolve_type(:boolean))
+         return Language::Placeholders::LiteralScalar.new(value, resolve_type(:boolean))
       when Integer
-         return LiteralScalar.new(value, resolve_type(:integer))
+         return Language::Placeholders::LiteralScalar.new(value, resolve_type(:integer))
       when Float
-         return LiteralScalar.new(value, resolve_type(:real))
+         return Language::Placeholders::LiteralScalar.new(value, resolve_type(:real))
       when String
-         return LiteralScalar.new(value, resolve_type(:text).make_specific(:length => value.length))
+         return Language::Placeholders::LiteralScalar.new(value, resolve_type(:text).make_specific(:length => value.length))
       else
          fail "FormulaCapture.capture() does not currently handle objects of type #{value.class.name}"
       end
@@ -116,7 +116,7 @@ module FormulaCapture
    def self.capture_formula( formula_context, block, result_type = nil, join_compatible_only = true )
       formula_context.get_type.schema.enter do
          Language::FormulaDefinition.module_exec(formula_context, &block).use do |captured_formula|
-            type_check(:captured_formula, captured_formula, Language::Placeholder)
+            type_check(:captured_formula, captured_formula, Language::Placeholders::Placeholder)
             if result_type then
                if join_compatible_only then
                   assert(result_type.join_compatible?(captured_formula.get_type), "expected expression result to be join compatible with #{result_type.description}, found #{captured_formula.get_type.description} instead")
@@ -166,7 +166,7 @@ module Model
    
    class Type
       def placeholder( production = nil )
-         Language::Placeholder.new(self, production)
+         Language::Placeholders::Placeholder.new(self, production)
       end      
    end
    
@@ -320,7 +320,7 @@ module Model
          
          entity = referenced_entity()
          tuple  = entity.root_tuple.placeholder(Language::Productions::FollowReference.new(receiver))
-         Language::Attribute.new(entity.heading[attribute_name], Language::Productions::Accessor.new(tuple, attribute_name))
+         Language::Placeholders::Attribute.new(entity.heading[attribute_name], Language::Productions::Accessor.new(tuple, attribute_name))
       end
    end
    
@@ -338,11 +338,11 @@ module Model
    class Tuple
       def capture_accessor( receiver, attribute_name )
          return nil unless attribute?(attribute_name)
-         Language::Attribute.new(self[attribute_name], Language::Productions::Accessor.new(receiver, attribute_name))
+         Language::Placeholders::Attribute.new(self[attribute_name], Language::Productions::Accessor.new(receiver, attribute_name))
       end
       
       def placeholder( production = nil )
-         root_tuple === self ? Language::EntityTuple.new(context_entity, production) : Language::Tuple.new(self, production)
+         root_tuple === self ? Language::Placeholders::EntityTuple.new(context_entity, production) : Language::Placeholders::Tuple.new(self, production)
       end
    end
    
@@ -351,7 +351,7 @@ module Model
    
    class Attribute
       def placeholder( production = nil )
-         Language::Attribute.new(self, production)
+         Language::Placeholders::Attribute.new(self, production)
       end
       
       def formula()
@@ -363,7 +363,7 @@ module Model
                   begin
                      @analyzing = true  # Ensure any self-references don't retrigger analysis
                      @formula   = Language::FormulaCapture.capture_formula(root_tuple.placeholder(), @proc).use do |captured_formula|
-                        type_check(:captured_formula, captured_formula, Language::Placeholder)
+                        type_check(:captured_formula, captured_formula, Language::Placeholders::Placeholder)
                      end
                   ensure
                      @analyzing = false
@@ -404,7 +404,7 @@ module Model
    
    class Entity
       def placeholder( production = nil )
-         Language::Entity.new(self, production)
+         Language::Placeholders::Entity.new(self, production)
       end
       
       def project_attributes( specification )
@@ -433,7 +433,7 @@ module Model
                begin
                   @analyzing = true  # Ensure any self-references don't retrigger analysis
                   @formula   = Language::FormulaDefinition.module_exec(&@proc).use do |captured_formula|
-                     type_check(:captured_formula, captured_formula, Language::Placeholder)
+                     type_check(:captured_formula, captured_formula, Language::Placeholders::Placeholder)
                   end
                ensure
                   @analyzing = false

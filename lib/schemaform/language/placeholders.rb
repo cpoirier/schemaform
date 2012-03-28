@@ -18,34 +18,4 @@
 #             limitations under the License.
 # =============================================================================================
 
-require Schemaform.locate("placeholder.rb")
-
-
-module Schemaform
-module Language
-module Placeholders
-class Parameter < Placeholder
-
-   def initialize( number, type = nil )
-      super(type || FormulaCapture.unknown_type)
-      @number = number
-   end
-   
-   def method_missing( symbol, *args, &block )
-      super
-   end
-   
-   def get_number()
-      @number
-   end
-   
-   def get_description()
-      "Parameter #{@number}"
-   end
-   
-   
-end # Parameter
-end # Placeholders
-end # Language
-end # Schemaform
-
+Dir[Schemaform.locate("placeholders/*.rb")].each{|path| require path}

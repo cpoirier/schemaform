@@ -42,6 +42,16 @@ class Productions
    end
 
 
+   
+   class OrderBy
+      def initialize(context, model)
+         super(context, model)
+         
+      end
+   end
+   
+   
+
 end # Productions
 end # Wrappers
 end # GenericSQL

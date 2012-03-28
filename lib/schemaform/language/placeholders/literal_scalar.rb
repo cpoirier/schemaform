@@ -18,9 +18,12 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("placeholder.rb")
+
 
 module Schemaform
 module Language
+module Placeholders
 class LiteralScalar < Placeholder
 
    def initialize( value, type = nil )
@@ -34,6 +37,7 @@ class LiteralScalar < Placeholder
    
    
 end # LiteralScalar
+end # Placeholders
 end # Language
 end # Schemaform
 

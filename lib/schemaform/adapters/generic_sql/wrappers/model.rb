@@ -30,17 +30,6 @@ module Wrappers
 class Model
    
    class Wrapper < Wrapper
-      def initialize( context, model )
-         if context.is_an?(Adapter) then
-            super(context, model)
-            @context = nil
-         else
-            super(context.adapter, model)
-            @context = context
-         end
-      end
-      
-      attr_reader :context
             
       def wrap( model )
          if model.is_a?(Schemaform::Model::Component) then
@@ -50,29 +39,14 @@ class Model
          end
       end
       
-      def each_context()
-         result  = nil
-         current = @context
-         while current
-            result  = yield(current)
-            current = current.context
-         end      
-         result
-      end
-
-      def find_context( first = true, default = nil )
-         match = default
-         each_context do |current|
-            if yield(current) then
-               match = current
-               break if first
-            end
+      def wrap_production( production )
+         if model.is_a?(Schemaform::Language::Production) then
+            @adapter.production_wrappers_module.const_get(production.class.unqualified_name).new(self, model)
+         else
+            nil
          end
-         match
       end
       
-      def lay_out()
-      end
    end
 
    
@@ -223,6 +197,8 @@ class Model
       def lay_out()
          Schemaform.debug.dump("skipping derived attribute #{name}")
          Schemaform.debug.print(@model.formula)
+         exit
+         
       end
    end
 
@@ -323,6 +299,7 @@ class Model
          @context.table.use do |outer|
             outer.define_field(@adapter.create_internal_name(@context.name, "first"), @adapter.type_manager.identifier_type, table.create_optional_mark, outer.create_reference_mark(table, true))
             outer.define_field(@adapter.create_internal_name(@context.name, "last" ), @adapter.type_manager.identifier_type, table.create_optional_mark, outer.create_reference_mark(table, true))
+            outer.define_field(@adapter.create_internal_name(@context.name, "index"), @adapter.type_manager.text_type)
          end
          
          @member_type.lay_out()

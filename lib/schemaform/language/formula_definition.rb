@@ -43,7 +43,7 @@ module FormulaDefinition
    end
    
    def self.parameter( number )
-      Parameter.new(number)
+      Language::Placeholders::Parameter.new(number)
    end
    
    def self.and!( *clauses )

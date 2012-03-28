@@ -18,10 +18,12 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("placeholder.rb")
 
 
 module Schemaform
 module Language
+module Placeholders
 class LiteralList < Placeholder
    
    def initialize( *members )
@@ -41,6 +43,7 @@ class LiteralList < Placeholder
    
    
 end # LiteralList
+end # Placeholders
 end # Language
 end # Schemaform
 

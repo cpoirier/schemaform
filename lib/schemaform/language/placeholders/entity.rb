@@ -18,12 +18,15 @@
 #             limitations under the License.
 # =============================================================================================
 
+require Schemaform.locate("placeholder.rb")
+
 
 #
 # Provides access to a whole Entity. 
 
 module Schemaform
 module Language
+module Placeholders
 class Entity < Placeholder
 
    def initialize( entity, production = nil )
@@ -45,5 +48,6 @@ class Entity < Placeholder
    
 
 end # Entity
+end # Placeholders
 end # Language
 end # Schemaform

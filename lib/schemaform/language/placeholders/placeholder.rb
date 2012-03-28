@@ -24,6 +24,7 @@
 
 module Schemaform
 module Language
+module Placeholders
 class Placeholder
    include QualityAssurance
    extend  QualityAssurance
@@ -80,8 +81,6 @@ class Placeholder
    end
    
 end # Placeholder
+end # Placeholders
 end # Language
 end # Schemaform
-
-
-Dir[Schemaform.locate("placeholders/*.rb")].each{|path| require path}

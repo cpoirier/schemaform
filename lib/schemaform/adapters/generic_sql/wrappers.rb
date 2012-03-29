@@ -45,6 +45,23 @@ module Wrappers
       
       attr_reader :model, :adapter, :context
       
+      def wrap( model )
+         case model
+         when Schemaform::Model::Component
+            if @model.is_a?(Schemaform::Model::Component) || @model.is_a?(Schemaform::Model::Schema) then
+               @adapter.model_wrappers_module.const_get(model.class.unqualified_name).new(self, model)
+            else
+               model
+            end
+         when Schemaform::Language::Productions::Production
+            @adapter.production_wrappers_module.const_get(model.class.unqualified_name).new(self, model)
+         when Schemaform::Language::Placeholders::Placeholder
+            @adapter.placeholder_wrappers_module.const_get(model.class.unqualified_name).new(self, model)
+         else
+            model
+         end
+      end
+      
       def each_context()
          result  = nil
          current = @context

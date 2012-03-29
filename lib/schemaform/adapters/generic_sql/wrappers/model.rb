@@ -29,24 +29,7 @@ module GenericSQL
 module Wrappers
 class Model
    
-   class Wrapper < Wrapper
-            
-      def wrap( model )
-         if model.is_a?(Schemaform::Model::Component) then
-            @adapter.model_wrappers_module.const_get(model.class.unqualified_name).new(self, model)
-         else
-            nil
-         end
-      end
-      
-      def wrap_production( production )
-         if model.is_a?(Schemaform::Language::Production) then
-            @adapter.production_wrappers_module.const_get(production.class.unqualified_name).new(self, model)
-         else
-            nil
-         end
-      end
-      
+   class Wrapper < Wrapper      
    end
 
    
@@ -154,7 +137,8 @@ class Model
    class Attribute
       def initialize( context, model )
          super(context, model)
-         @type = wrap(model.type)
+         @type    = wrap(model.type)
+         @formula = wrap(model.instance_eval{@formula})       # We go direct because we don't want to trigger any new processing
       end
       
       attr_reader :type
@@ -195,10 +179,7 @@ class Model
 
    class DerivedAttribute
       def lay_out()
-         Schemaform.debug.dump("skipping derived attribute #{name}")
-         Schemaform.debug.print(@model.formula)
-         exit
-         
+         @formula.lay_out()
       end
    end
 

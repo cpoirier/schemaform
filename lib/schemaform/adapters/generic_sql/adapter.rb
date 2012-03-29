@@ -171,6 +171,10 @@ class Adapter < Adapters::Adapter
       Wrappers::Productions
    end
    
+   def placeholder_wrappers_module()
+      Wrappers::Placeholders
+   end
+   
    def identifier_type()
       @type_manager.identifier_type
    end

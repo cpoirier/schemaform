@@ -24,14 +24,14 @@ require Schemaform.locate("schemaform/utilities/printable_struct.rb")
 module Schemaform
 module Language
    
-   #
-   # Base class for productions -- things that describe who a Placeholder was calculated.
-
-   class Production < PrintableStruct
-   end # Production
-   
 
    module Productions
+
+      #
+      # Base class for productions -- things that describe who a Placeholder was calculated.
+
+      class Production < PrintableStruct
+      end # Production
 
       # ==========================================================================================
       # Basic

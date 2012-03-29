@@ -86,6 +86,6 @@ class EntityTuple < Tuple
 
 
 end # EntityTuple
-end # Placeholders
+end # Placeholder
 end # Language
 end # Schemaform

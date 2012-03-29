@@ -21,47 +21,43 @@
 require Schemaform.locate("schemaform/model/schema.rb")
 
 #
-# Defines wrappers for the Language::Productions classes.
+# Defines wrappers for the Language::Placeholders classes.
 
 module Schemaform
 module Adapters
 module GenericSQL
 module Wrappers
-class Productions
+class Placeholders
       
    class Wrapper < Wrapper
-      def initialize( context, model )
-         super(context, model)
-         model.each do |name, value|
-            instance_variable_set("@#{name}", wrap(value))
-         end
-      end
-      
-      def lay_out()
-         fail_todo self.class.name
-      end
    end
 
    
    #
-   # Create wrapper classes for all Productions classes.
+   # Create wrapper classes for all Placeholder classes.
    
    extend Common
-   Schemaform::Language::Productions.constants(false).each do |constant|
-      create_wrapper_class(Schemaform::Language::Productions.const_get(constant))
+   Schemaform::Language::Placeholders.constants(false).each do |constant|
+      create_wrapper_class(Schemaform::Language::Placeholders.const_get(constant))
    end
 
 
-   class OrderBy
+   class Placeholder
+      def initialize( context, model )
+         super(context, model)
+         @production = wrap(model.get_production)
+      end
+      
       def lay_out()
-         @relation.lay_out()
+         @production.lay_out() if @production
       end
    end
 
    
    
+   
 
-end # Productions
+end # Placeholders
 end # Wrappers
 end # GenericSQL
 end # Adapters

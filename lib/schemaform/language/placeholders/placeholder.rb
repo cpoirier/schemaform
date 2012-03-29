@@ -31,7 +31,7 @@ class Placeholder
 
    def initialize( type, production = nil )
       type_check(:type      , type      , Model::Type)
-      type_check(:production, production, Production, true)
+      type_check(:production, production, Productions::Production, true)
       @type       = type
       @production = production
    end

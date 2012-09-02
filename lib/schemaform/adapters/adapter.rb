@@ -72,6 +72,53 @@ class Adapter
          end
       end
    end
+   
+   
+   #
+   # Convenience wrapper on Connection::retrieve().
+   
+   def retrieve( sql, *parameters, &block )
+      transact do |t|
+         return t.retrieve(sql, *parameters, &block)
+      end
+      
+      nil
+   end
+   
+   
+   #
+   # Convenience wrapper on Connection::retrieve_value().
+   
+   def retrieve_value( field, default, sql, *parameters )
+      transact do |t|
+         return t.retrieve_value(field, default, sql, *parameters) 
+      end
+      
+      default
+   end
+
+   #
+   # Convenience wrapper on Connection::retrieve_row().
+      
+   def retrieve_row( sql, *parameters )
+      transact do |t|
+         return t.retrieve_row(sql, *parameters) 
+      end
+      
+      nil
+   end   
+
+   #
+   # Convenience wrapper on Connection::retrieve_exists?().
+   
+   def retrieve_exists?( sql, *parameters )
+      transact do |t|
+         return t.retrieve_exists?(sql, *parameters)
+      end
+      
+      nil
+   end
+   
 
    
    #

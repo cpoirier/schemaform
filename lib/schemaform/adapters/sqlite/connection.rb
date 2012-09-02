@@ -29,6 +29,7 @@ class Connection < GenericSQL::Connection
    def initialize( adapter )
       @adapter = adapter
       @api     = ::SQLite3::Database.new(@adapter.path)
+      @api.results_as_hash = true
    end
    
    
@@ -39,24 +40,29 @@ class Connection < GenericSQL::Connection
    
    def transact()
       if @api.transaction_active? then
-         yield
+         yield self
       else
+         value = nil
          @api.transaction do
-            yield
+            value = yield self
          end
+         value
       end
    end
    
-   
    def retrieve( sql, *parameters )
-      count = 0
+      results = []
       isolate(sql) do
          @api.execute(sql, *parameters) do |row|
-            count += 1
-            yield(row) if block_given?
+            if block_given? then
+              result = yield(row)
+              results << result unless result.nil?
+            else
+              results << row
+            end
          end      
       end
-      return count
+      return results
    end
 
 
@@ -74,16 +80,23 @@ class Connection < GenericSQL::Connection
       end
    end
    
-   def execute( sql )
+   def execute( sql, *parameters )
       isolate(sql) do
-         @api.execute(sql)
+         @api.execute(sql, *parameters)
       end
    end
    
    
+   def prepare( sql )
+      isolate(sql) do
+         @api.prepare(sql)
+      end
+   end
+   
    
    def isolate(sql)
       begin
+         assert(@api.transaction_active?, "no transaction scope present")
          debug(sql)
          yield
       rescue ::SQLite3::SQLException => e

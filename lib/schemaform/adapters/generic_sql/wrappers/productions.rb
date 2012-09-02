@@ -38,7 +38,7 @@ class Productions
       end
       
       def lay_out()
-         fail_todo self.class.name
+         # fail_todo self.class.name
       end
    end
 
@@ -52,13 +52,20 @@ class Productions
    end
 
 
-   class OrderBy
-      def lay_out()
-         @relation.lay_out()
-      end
-   end
-
-   
+   # class OrderBy
+   #    def lay_out()
+   #       @relation.lay_out()
+   #    end
+   # end
+   # 
+   # class RelatedTuples
+   #    def lay_out()
+   #       
+   #       
+   #       RelatedTuples   = Production.define( :relation, :link_path        )
+   #    end
+   # end
+   # 
    
 
 end # Productions

@@ -165,23 +165,23 @@ protected
    def initialize( name, version, &block )      
       @name      = name
       @version   = version
-      @tuples    = Registry.new("schema [#{@name}]", "a tuple"         )
-      @entities  = Registry.new("schema [#{@name}]", "an entity"       )
+      @tuples    = Registry.new("schema [#{@name}]", "a tuple"  )
+      @entities  = Registry.new("schema [#{@name}]", "an entity")
       @types     = TypeRegistry.new("schema [#{@name}]")
       @monitor   = Monitor.new()
       @schema_id = {}
          
       enter do
-         @types.register  UnknownType.new(:name => :unknown)
+         @types.register  UnknownType.new(:name => :unknown                                   )
          @types.register     VoidType.new(:name => :void      , :base_type => @types[:unknown])
          @types.register         Type.new(:name => :any       , :base_type => @types[:unknown])
                                                            
-         @types.register   StringType.new(:name => :binary    , :base_type => @types[:any]) ; warn_once( "BUG: does the binary type need a different loader?" )
-         @types.register   StringType.new(:name => :text      , :base_type => @types[:any])
-         @types.register  BooleanType.new(:name => :boolean   , :base_type => @types[:any])
-         @types.register DateTimeType.new(:name => :datetime  , :base_type => @types[:any])
-         @types.register  NumericType.new(:name => :real      , :base_type => @types[:any] , :default => 0.0 )
-         @types.register  IntegerType.new(:name => :integer   , :base_type => @types[:real]   )
+         @types.register   StringType.new(:name => :binary    , :base_type => @types[:any    ]) ; warn_once( "BUG: does the binary type need a different loader?" )
+         @types.register   StringType.new(:name => :text      , :base_type => @types[:any    ])
+         @types.register  BooleanType.new(:name => :boolean   , :base_type => @types[:any    ])
+         @types.register DateTimeType.new(:name => :datetime  , :base_type => @types[:any    ])
+         @types.register  NumericType.new(:name => :real      , :base_type => @types[:any    ] , :default => 0.0 )
+         @types.register  IntegerType.new(:name => :integer   , :base_type => @types[:real   ])
          @types.register  NumericType.new(:name => :identifier, :base_type => @types[:integer])
 
          @types.register UserDefinedType.new(:name => :ip, :base_type => @types[:text].make_specific(:length => 15))

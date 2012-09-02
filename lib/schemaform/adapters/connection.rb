@@ -54,7 +54,7 @@ class Connection
       fail_unless_overridden
    end
    
-   def execute( sql )
+   def execute( sql, *parameters )
       fail_unless_overridden
    end
    
@@ -78,6 +78,15 @@ class Connection
       end
       nil
    end   
+
+   
+   def retrieve_exists?( sql, *parameters )
+      retrieve(sql, *parameters) do |row|
+        return true
+      end
+      
+      false
+   end
 
 
 end # Connection

@@ -44,7 +44,7 @@ class TupleDefinition
       @schema = tuple.schema
    end
    
-   
+
    #
    # Imports (and potentially redefines) attributes from another tuple type.  Redefinitions
    # are provided as a block to the import command.
@@ -62,7 +62,7 @@ class TupleDefinition
    # Defines a required attribute or subtuple within the entity. To define a subtuple, supply a 
    # block instead of a type.
 
-   def required( name, type_name = nil, modifiers = {}, &block )
+   def expect( name, type_name = nil, modifiers = {}, &block )
       @tuple.register Model::RequiredAttribute.new(name, type_for(type_name, modifiers, name, &block))
    end
 
@@ -80,7 +80,7 @@ class TupleDefinition
    # block) in place of the type_name, which will be used as the default, with the attribute type 
    # inferred from the formula.
    
-   def optional( name, type_name = nil, modifiers = {}, &block )
+   def allow( name, type_name = nil, modifiers = {}, &block )
       if type_name.is_a?(Proc) then
          assert(block.nil?, "please use the formal syntax for default if you are defining a subtuple")
          @tuple.register Model::OptionalAttribute.new(name, nil, type_name)
@@ -95,7 +95,7 @@ class TupleDefinition
    # up to date for you by the system, and you can rely on it being up to date at the
    # end of every transaction. Supply a Proc or a block.  
 
-   def derived( name, *args, &block )
+   def derive( name, *args, &block )
       modifiers = args.first.is_a?(Hash) ? args.shift : {}
       proc      = block || args.shift
 

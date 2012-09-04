@@ -90,10 +90,10 @@ class EntityDefinition
    # a record within the set. 
    #
    # There are several ways to call it:
-   #    key *symbols
-   #    key name, :on => array of symbols
-   #    key name, :on => lambda expression that results in an array of attributes
-   #    key name, :on => nil do |tuple|
+   #    define_key *symbols
+   #    define_key name, :on => array of symbols
+   #    define_key name, :on => lambda expression that results in an array of attributes
+   #    define_key name, :on => nil do |tuple|
    #       [tuple.x, tuple.y, ...]
    #    end
    #
@@ -103,7 +103,7 @@ class EntityDefinition
    # takes the entity tuple as sole parameter. Note that you can only supply nil for one or the other
    # of :on or :where, if you want to use the block form. 
    
-   def key( *args, &block )
+   def define_key( *args, &block )
       assert(@entity.exists?, "you must define the entity using one \"each\" or \"as\" clause before defining any keys")
       args = [args.collect{|symbol| symbol.to_s}.join("_and_"), {:on => args}] unless args.last.is_a?(Hash)
       
@@ -125,13 +125,13 @@ class EntityDefinition
    # when tuples are retrieved.
    #
    # There are several ways to call it:
-   #    projection name, :project => array of symbols
-   #    projection name, :project => lambda expression that results in an array of attributes
-   #    projection name, :project => nil do |tuple|
+   #    define_projection name, :project => array of symbols
+   #    define_projection name, :project => lambda expression that results in an array of attributes
+   #    define_projection name, :project => nil do |tuple|
    #       [tuple.x, tuple.y, ...]
    #    end
    
-   def projection( name, details, &block )
+   def define_projection( name, details, &block )
       assert(@entity.exists?, "you must define the entity using one \"each\" or \"as\" clause before defining any projections")
       attributes = details.fetch(:project) || block
       @entity.projections.register Model::Projection.new(@entity, name, lambda{|entity| entity.project_attributes(attributes)})
@@ -143,14 +143,14 @@ class EntityDefinition
    # always project out the full entity.
    #
    # There are several ways to call it:
-   #    accessor *symbols
-   #    accessor name, :on => array of symbols
-   #    accessor name, :where => complete query on the entity that specifies the tuples to return
-   #    accessor name, :where => nil do |tuple|
+   #    define_accessor *symbols
+   #    define_accessor name, :on => array of symbols
+   #    define_accessor name, :where => complete query on the entity that specifies the tuples to return
+   #    define_accessor name, :where => nil do |tuple|
    #       tuple.x == parameter(0) & tuple.y == parameter(1)
    #    end
       
-   def accessor( *args, &block )
+   def define_accessor( *args, &block )
       assert(@entity.exists?, "you must define the entity using one \"each\" or \"as\" clause before defining any accessors")
       args = [args.collect{|symbol| symbol.to_s}.join("_and_"), {:on => args}] unless args.last.is_a?(Hash)
       
@@ -170,7 +170,7 @@ class EntityDefinition
    # Defines an operation on the entity. Operations are free-form methods added to the
    # Entity class internally.
    
-   def operation( name, &block )
+   def define_operation( name, &block )
       assert(@entity.exists?, "you must define the entity using one \"each\" or \"as\" clause before defining any operations")
       @entity.operations.register(block, name)
    end
